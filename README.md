@@ -1,14 +1,17 @@
 # Disaster-Recovery-System-Automation
 
 🔹 Overview
+
 This project provides a localhost automation tool to orchestrate disaster recovery (DR) workflows for workloads running on HPE Alletra MP storage and VMware SRM.
 The tool integrates storage failover, VM recovery, application restart, and DNS redirection into a single button‑driven interface.
 
 
 🔹 Architecture
+
 Frontend: Localhost web app with buttons for Failover and Failback.
 
 Backend Modules:
+
 - Storage API (HPE Alletra MP)
 - VM orchestration (VMware SRM)
 - Application recovery (Ansible playbooks)
@@ -17,6 +20,7 @@ Backend Modules:
 
 
 🔹 Workflow Steps
+
 Step 1: Storage Failover
 -Trigger Alletra MP replication to activate DR volumes.
 -Remount replicated datastores at DR site.
@@ -41,6 +45,7 @@ Step 4: DNS & Reporting
 
 
 🔹 Failback Workflow
+
 - Resync data from DR → Primary Alletra MP.
 - Power down DR VMs in sequence.
 - Remount datastores at primary site.
@@ -50,6 +55,7 @@ Step 4: DNS & Reporting
 
 
 🔹 Features
+
 - One‑click Failover and Failback.
 - Role‑based access (Operator vs Admin).
 - Snapshot‑based test recovery mode.
@@ -59,6 +65,7 @@ Step 4: DNS & Reporting
 
 
 🔹 Requirements
+
 - HPE Alletra MP with replication configured.
 - VMware SRM with recovery plans defined.
 - Ansible installed with playbooks for DB/App/Web.

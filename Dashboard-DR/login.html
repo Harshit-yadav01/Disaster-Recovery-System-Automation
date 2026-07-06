@@ -36,19 +36,21 @@
                 <span class="accent-line"></span>
 
                 <!-- Form -->
-                <form class="login-form" id="loginForm" novalidate>
+                <form class="login-form" id="loginForm" novalidate autocomplete="off">
                     <h2 class="form-title">Sign in to continue</h2>
+
+                    <p class="login-error" id="loginError" role="alert" hidden></p>
 
                     <label for="username">Username / Email</label>
                     <div class="field">
                         <i class="fa-regular fa-user"></i>
-                        <input type="text" id="username" placeholder="Enter your username or email" autocomplete="username" required>
+                        <input type="text" id="username" placeholder="Enter your username or email" autocomplete="off" required>
                     </div>
 
                     <label for="password">Password</label>
                     <div class="field">
                         <i class="fa-solid fa-lock"></i>
-                        <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" required>
+                        <input type="password" id="password" placeholder="Enter your password" autocomplete="new-password" required>
                         <i class="fa-solid fa-eye-slash toggle" id="pwdToggle" role="button" tabindex="0" aria-label="Show password"></i>
                     </div>
 
@@ -200,6 +202,8 @@
         </main>
     </div>
 
+    <script src="config.js"></script>
+    <script src="api.js"></script>
     <script src="login.js"></script>
 </body>
 </html>

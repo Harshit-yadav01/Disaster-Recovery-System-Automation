@@ -52,20 +52,46 @@ document.addEventListener("click", (e) => {
     if (!selectEnv.contains(e.target)) closeEnv();
 });
 
-// Sign in -> store user, then load the dashboard (index.html)
+// Sign in -> authenticate against the backend, store the JWT, then load the
+// dashboard (index.html). Shows an inline error if credentials are rejected.
 const form = document.getElementById("loginForm");
+const errorEl = document.getElementById("loginError");
+const submitBtn = form.querySelector(".btn-signin");
 
-form.addEventListener("submit", (e) => {
+function showError(message) {
+    if (!errorEl) return;
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+}
+
+function clearError() {
+    if (errorEl) errorEl.hidden = true;
+}
+
+form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    clearError();
 
     const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
     const environment = document.getElementById("environment").value;
 
-    // Persist a display name for the dashboard avatar (no password is stored)
-    if (username) {
-        localStorage.setItem("drUser", username);
+    if (!username || !password) {
+        showError("Please enter both username and password.");
+        return;
     }
-    localStorage.setItem("drEnvironment", environment);
 
-    window.location.href = "index.html";
+    submitBtn.disabled = true;
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = 'Signing in… <i class="fa-solid fa-spinner fa-spin"></i>';
+
+    try {
+        await window.api.login(username, password, environment);
+        localStorage.setItem("drEnvironment", environment);
+        window.location.href = "index.html";
+    } catch (err) {
+        showError(err.message || "Unable to sign in. Please try again.");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
 });

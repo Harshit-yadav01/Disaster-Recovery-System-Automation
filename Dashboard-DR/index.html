@@ -119,6 +119,8 @@ Disaster Recovery Dashboard
 
 <div class="profile">
 
+<span class="data-status" id="dataStatus" title="Live data source">Connecting…</span>
+
 <i class="fa-solid fa-bell"></i>
 
 <div class="avatar" id="avatar" title="Click to change your photo">
@@ -133,13 +135,17 @@ Disaster Recovery Dashboard
 
 <input type="file" id="avatarUpload" accept="image/*" hidden>
 
+<button class="logout-btn" id="logoutBtn" title="Sign out">
+<i class="fa-solid fa-right-from-bracket"></i>
+</button>
+
 </div>
 
 </div>
 
 <!-- Cards -->
 
-<div class="cards">
+<div class="cards" id="cardsGrid">
 
 <div class="card">
 
@@ -193,7 +199,7 @@ Replication Health
 
 </h2>
 
-<div class="replication">
+<div class="replication" id="replicationBox">
 
 <div class="box">
 
@@ -243,7 +249,7 @@ Synchronized
         <button>View Details</button>
     </div>
 
-    <div class="infra-grid">
+    <div class="infra-grid" id="infraGrid">
 
         <div class="infra-card">
 
@@ -306,7 +312,7 @@ Storage Health
 
 <h2>Storage Health</h2>
 
-<div class="storage">
+<div class="storage" id="storageGrid">
 
 <div class="storage-box">
 
@@ -364,7 +370,7 @@ Recent Alerts
 
 <h2>Recent Alerts</h2>
 
-<table>
+<table id="alertsTable">
 
 <tr>
 
@@ -430,7 +436,7 @@ Activity Timeline
 
 <h2>Automation Timeline</h2>
 
-<div class="timeline">
+<div class="timeline" id="timeline">
 
 <div class="event">
 
@@ -499,7 +505,7 @@ Performance Dashboard
 
 <h2>Performance Monitoring</h2>
 
-<div class="performance-grid">
+<div class="performance-grid" id="perfBars">
 
 <div class="performance-card">
 
@@ -587,7 +593,7 @@ VM Inventory
 
 <h2>Live Virtual Machines</h2>
 
-<table class="vm-table">
+<table class="vm-table" id="vmTable">
 
 <tr>
 
@@ -663,7 +669,7 @@ Network & Storage
 
 <h2>Network & Datastore Health</h2>
 
-<div class="network-grid">
+<div class="network-grid" id="networkGrid">
 
 <div class="network-card">
 
@@ -711,7 +717,7 @@ DR Readiness
 
 <h2>Disaster Recovery Readiness</h2>
 
-<div class="readiness">
+<div class="readiness" id="readinessBox">
 
 <div class="circle">
 
@@ -776,6 +782,8 @@ Quick Actions
 </div>
 
 </div>
+<script src="config.js"></script>
+<script src="api.js"></script>
 <script src="script.js"></script>
 </body>
 

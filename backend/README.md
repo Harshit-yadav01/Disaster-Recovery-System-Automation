@@ -63,6 +63,15 @@ Provide the management IP or hostname only — the provider adds `https://…:44
 automatically. (For an HTTP-only WSAPI or a non-standard port, pass a full URL,
 e.g. `http://<ip>:8080`.)
 
+The arrays use **self-signed certificates**. Two options:
+
+- `ALLETRA_VERIFY_SSL=false` (default) — accepts the self-signed cert without
+  verifying it. Fine on a trusted management network.
+- `ALLETRA_CA_CERT=/path/to/array-cert.pem` — **more secure**: pins and verifies
+  against the array's own certificate. Export the cert from the array (or with
+  `openssl s_client -connect <ip>:443 -showcerts`) and point this at the PEM
+  file. When set, it takes precedence over `ALLETRA_VERIFY_SSL`.
+
 WSAPI must be enabled on each array. On the array CLI:
 
 ```

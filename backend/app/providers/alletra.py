@@ -63,6 +63,7 @@ class ArrayConfig:
     username: str
     password: str
     verify_ssl: bool
+    ca_cert: str
     timeout: int
     role: str  # "primary" | "recovery"
 
@@ -96,6 +97,7 @@ class AlletraProvider(StorageProvider):
                 username=settings.alletra_username,
                 password=settings.alletra_password,
                 verify_ssl=settings.alletra_verify_ssl,
+                ca_cert=settings.alletra_ca_cert,
                 timeout=settings.alletra_timeout,
                 role="primary",
             )
@@ -107,6 +109,7 @@ class AlletraProvider(StorageProvider):
                     username=settings.alletra_username,
                     password=settings.alletra_password,
                     verify_ssl=settings.alletra_verify_ssl,
+                    ca_cert=settings.alletra_ca_cert,
                     timeout=settings.alletra_timeout,
                     role="recovery",
                 )
@@ -158,9 +161,12 @@ class AlletraProvider(StorageProvider):
 
     async def _fetch(self, cfg: ArrayConfig) -> ArrayData:
         base = self._normalize(cfg.base_url)
+        # Pin the array's self-signed cert when provided; otherwise fall back to
+        # the verify_ssl flag (False accepts a self-signed cert without checking).
+        verify = cfg.ca_cert or cfg.verify_ssl
         try:
             async with httpx.AsyncClient(
-                base_url=base, verify=cfg.verify_ssl, timeout=cfg.timeout
+                base_url=base, verify=verify, timeout=cfg.timeout
             ) as client:
                 key = await self._login(client, cfg)
                 headers = {

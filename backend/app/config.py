@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     alletra_username: str = ""
     alletra_password: str = ""
     alletra_verify_ssl: bool = False
+    # Optional path to the array's self-signed certificate (PEM). When set, TLS
+    # is verified against this cert instead of being disabled (more secure).
+    alletra_ca_cert: str = ""
     alletra_timeout: int = 15
     # Deprecated single-array alias (used as primary if the primary URL is blank).
     alletra_base_url: str = ""

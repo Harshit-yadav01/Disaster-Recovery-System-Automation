@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>HPE DR Automation</title>
+
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="logo">
+
+<div class="logo-brand">
+
+<span class="hpe-box"></span>
+
+<h2>HPE DR</h2>
+
+</div>
+
+<p>Automation</p>
+
+</div>
+
+<ul>
+
+<li class="active">
+
+<i class="fa-solid fa-house"></i>
+
+Dashboard
+
+</li>
+
+<li>
+
+<i class="fa-solid fa-database"></i>
+
+Replication
+
+</li>
+
+<li>
+
+<i class="fa-solid fa-chart-line"></i>
+
+Monitoring
+
+</li>
+
+<li>
+
+<i class="fa-solid fa-rotate"></i>
+
+Failover
+
+</li>
+
+<li>
+
+<i class="fa-solid fa-clock-rotate-left"></i>
+
+Failback
+
+</li>
+
+<li>
+
+<i class="fa-solid fa-file"></i>
+
+Reports
+
+</li>
+
+<li>
+
+<i class="fa-solid fa-gear"></i>
+
+Settings
+
+</li>
+
+</ul>
+
+</div>
+
+<!-- Main -->
+
+<div class="main">
+
+<!-- Topbar -->
+
+<div class="topbar">
+
+<h1>
+
+Disaster Recovery Dashboard
+
+</h1>
+
+<div class="profile">
+
+<i class="fa-solid fa-bell"></i>
+
+<div class="avatar" id="avatar" title="Click to change your photo">
+
+<span class="avatar-initials" id="avatarInitials">DR</span>
+
+<img class="avatar-img" id="avatarImg" alt="Profile" hidden>
+
+<span class="avatar-edit"><i class="fa-solid fa-camera"></i></span>
+
+</div>
+
+<input type="file" id="avatarUpload" accept="image/*" hidden>
+
+</div>
+
+</div>
+
+<!-- Cards -->
+
+<div class="cards">
+
+<div class="card">
+
+<h3>Protected VMs</h3>
+
+<h1>164</h1>
+
+<p>+12 Today</p>
+
+</div>
+
+<div class="card">
+
+<h3>Replication</h3>
+
+<h1>Healthy</h1>
+
+<p>0 Errors</p>
+
+</div>
+
+<div class="card">
+
+<h3>DR Readiness</h3>
+
+<h1>98%</h1>
+
+<p>Excellent</p>
+
+</div>
+
+<div class="card">
+
+<h3>Storage Usage</h3>
+
+<h1>71%</h1>
+
+<p>Healthy</p>
+
+</div>
+
+</div>
+
+<!-- Replication -->
+
+<div class="section">
+
+<h2>
+
+Replication Health
+
+</h2>
+
+<div class="replication">
+
+<div class="box">
+
+<h3>Primary Site</h3>
+
+<p>HPE Alletra 6000</p>
+
+<span class="green">
+
+Healthy
+
+</span>
+
+</div>
+
+<div class="arrow">
+
+<i class="fa-solid fa-arrow-right"></i>
+
+</div>
+
+<div class="box">
+
+<h3>Recovery Site</h3>
+
+<p>HPE Alletra 6000</p>
+
+<span class="green">
+
+Synchronized
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+<!-- ===========================
+     Infrastructure Health
+============================ -->
+
+<div class="section">
+
+    <div class="section-header">
+        <h2>Infrastructure Health</h2>
+        <button>View Details</button>
+    </div>
+
+    <div class="infra-grid">
+
+        <div class="infra-card">
+
+            <i class="fa-solid fa-server"></i>
+
+            <h3>ESXi Hosts</h3>
+
+            <h1>12</h1>
+
+            <p>All Connected</p>
+
+        </div>
+
+        <div class="infra-card">
+
+            <i class="fa-solid fa-hard-drive"></i>
+
+            <h3>Datastores</h3>
+
+            <h1>18</h1>
+
+            <p>Healthy</p>
+
+        </div>
+
+        <div class="infra-card">
+
+            <i class="fa-solid fa-network-wired"></i>
+
+            <h3>Networks</h3>
+
+            <h1>8</h1>
+
+            <p>No Packet Loss</p>
+
+        </div>
+
+        <div class="infra-card">
+
+            <i class="fa-solid fa-microchip"></i>
+
+            <h3>CPU Usage</h3>
+
+            <h1>37%</h1>
+
+            <p>Optimal</p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===========================
+Storage Health
+============================ -->
+
+<div class="section">
+
+<h2>Storage Health</h2>
+
+<div class="storage">
+
+<div class="storage-box">
+
+<h3>Primary Array</h3>
+
+<div class="progress">
+
+<div class="progress-fill" style="width:72%;"></div>
+
+</div>
+
+<p>72% Utilized</p>
+
+</div>
+
+<div class="storage-box">
+
+<h3>Recovery Array</h3>
+
+<div class="progress">
+
+<div class="progress-fill" style="width:55%;"></div>
+
+</div>
+
+<p>55% Utilized</p>
+
+</div>
+
+<div class="storage-box">
+
+<h3>Replication Bandwidth</h3>
+
+<div class="progress">
+
+<div class="progress-fill" style="width:84%;"></div>
+
+</div>
+
+<p>1.8 Gbps</p>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ===========================
+Recent Alerts
+============================ -->
+
+<div class="section">
+
+<h2>Recent Alerts</h2>
+
+<table>
+
+<tr>
+
+<th>Time</th>
+
+<th>Event</th>
+
+<th>Status</th>
+
+</tr>
+
+<tr>
+
+<td>10:14 AM</td>
+
+<td>Replication Completed</td>
+
+<td><span class="status green">Success</span></td>
+
+</tr>
+
+<tr>
+
+<td>10:18 AM</td>
+
+<td>Storage Health Verified</td>
+
+<td><span class="status green">Healthy</span></td>
+
+</tr>
+
+<tr>
+
+<td>10:21 AM</td>
+
+<td>Witness Connected</td>
+
+<td><span class="status green">Online</span></td>
+
+</tr>
+
+<tr>
+
+<td>10:29 AM</td>
+
+<td>Recovery Plan Validated</td>
+
+<td><span class="status blue">Ready</span></td>
+
+</tr>
+
+</table>
+
+</div>
+
+
+
+<!-- ===========================
+Activity Timeline
+============================ -->
+
+<div class="section">
+
+<h2>Automation Timeline</h2>
+
+<div class="timeline">
+
+<div class="event">
+
+<div class="dot"></div>
+
+<div>
+
+<h4>Environment Discovery</h4>
+
+<p>Completed Successfully</p>
+
+</div>
+
+</div>
+
+<div class="event">
+
+<div class="dot"></div>
+
+<div>
+
+<h4>Replication Validation</h4>
+
+<p>All Volumes Synchronized</p>
+
+</div>
+
+</div>
+
+<div class="event">
+
+<div class="dot"></div>
+
+<div>
+
+<h4>DR Readiness Check</h4>
+
+<p>98% Ready</p>
+
+</div>
+
+</div>
+
+<div class="event">
+
+<div class="dot"></div>
+
+<div>
+
+<h4>Recovery Plan Generated</h4>
+
+<p>Ready for Execution</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<!-- ===========================
+Performance Dashboard
+============================ -->
+
+<div class="section">
+
+<h2>Performance Monitoring</h2>
+
+<div class="performance-grid">
+
+<div class="performance-card">
+
+<h3>CPU Utilization</h3>
+
+<div class="chart-bar">
+
+<div class="chart-fill cpu"></div>
+
+</div>
+
+<p>37%</p>
+
+</div>
+
+<div class="performance-card">
+
+<h3>Memory Usage</h3>
+
+<div class="chart-bar">
+
+<div class="chart-fill memory"></div>
+
+</div>
+
+<p>62%</p>
+
+</div>
+
+<div class="performance-card">
+
+<h3>Storage IOPS</h3>
+
+<div class="chart-bar">
+
+<div class="chart-fill storage"></div>
+
+</div>
+
+<p>8.2K IOPS</p>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ===========================
+Performance Dashboard
+============================ -->
+
+<div class="section">
+
+<h2>Performance Analytics</h2>
+
+<div class="chart-container">
+
+<div class="chart-card">
+
+<h3>CPU Utilization</h3>
+
+<canvas id="cpuChart"></canvas>
+
+</div>
+
+<div class="chart-card">
+
+<h3>Memory Usage</h3>
+
+<canvas id="memoryChart"></canvas>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ===========================
+VM Inventory
+============================ -->
+
+<div class="section">
+
+<h2>Live Virtual Machines</h2>
+
+<table class="vm-table">
+
+<tr>
+
+<th>VM Name</th>
+
+<th>Host</th>
+
+<th>Status</th>
+
+<th>Replication</th>
+
+</tr>
+
+<tr>
+
+<td>ERP-APP-01</td>
+
+<td>ESXi-01</td>
+
+<td><span class="healthy">Running</span></td>
+
+<td>Healthy</td>
+
+</tr>
+
+<tr>
+
+<td>Oracle-DB</td>
+
+<td>ESXi-02</td>
+
+<td><span class="healthy">Running</span></td>
+
+<td>Healthy</td>
+
+</tr>
+
+<tr>
+
+<td>FileServer</td>
+
+<td>ESXi-03</td>
+
+<td><span class="warning">Warning</span></td>
+
+<td>Syncing</td>
+
+</tr>
+
+<tr>
+
+<td>WebServer</td>
+
+<td>ESXi-04</td>
+
+<td><span class="healthy">Running</span></td>
+
+<td>Healthy</td>
+
+</tr>
+
+</table>
+
+</div>
+
+
+
+<!-- ===========================
+Network & Storage
+============================ -->
+
+<div class="section">
+
+<h2>Network & Datastore Health</h2>
+
+<div class="network-grid">
+
+<div class="network-card">
+
+<h3>Network Latency</h3>
+
+<h1>2.3 ms</h1>
+
+<p>Excellent</p>
+
+</div>
+
+<div class="network-card">
+
+<h3>Bandwidth</h3>
+
+<h1>1.8 Gbps</h1>
+
+<p>Replication Link</p>
+
+</div>
+
+<div class="network-card">
+
+<h3>Datastore Usage</h3>
+
+<div class="progress">
+
+<div class="progress-fill" style="width:68%;"></div>
+
+</div>
+
+<p>68% Used</p>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ===========================
+DR Readiness
+============================ -->
+
+<div class="section">
+
+<h2>Disaster Recovery Readiness</h2>
+
+<div class="readiness">
+
+<div class="circle">
+
+<div class="inner-circle">
+
+98%
+
+</div>
+
+</div>
+
+<div>
+
+<h3>Environment Ready</h3>
+
+<p>
+
+✔ Replication Healthy<br>
+
+✔ Storage Online<br>
+
+✔ Witness Connected<br>
+
+✔ Recovery Plans Validated
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ===========================
+Quick Actions
+============================ -->
+
+<div class="section">
+
+<h2>Quick Actions</h2>
+
+<div class="actions">
+
+<button>Discover Environment</button>
+
+<button>Validate Configuration</button>
+
+<button>Run DR Test</button>
+
+<button>Execute Failover</button>
+
+<button>Generate Report</button>
+
+<button>Open Monitoring</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<script src="script.js"></script>
+</body>
+
+</html>

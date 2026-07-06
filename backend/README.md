@@ -1,7 +1,8 @@
 # HPE DR Automation — Backend
 
 FastAPI backend that authenticates dashboard users and serves live disaster
-recovery data. It talks to an **HPE Alletra 6000** array over its REST API, and
+recovery data. It talks to one or two **HPE Alletra Storage MP** arrays (a
+Primary and an optional Recovery) over the **WSAPI** (HTTPS, port 443), and
 falls back to **simulated data** so the whole stack runs with zero hardware.
 
 ## Architecture
@@ -14,7 +15,8 @@ Frontend (Dashboard-DR)  ──HTTP──▶  FastAPI (backend/app)
                                           ▼
                                    StorageProvider
                                    ├─ SimulatedProvider   (demo data)
-                                   └─ AlletraProvider  ──▶ HPE Alletra REST API
+                                   └─ AlletraProvider  ──▶ HPE Alletra MP WSAPI
+                                                           (Primary + Recovery)
 ```
 
 ## Setup
@@ -44,22 +46,50 @@ Then open **http://127.0.0.1:8000/** — you'll be redirected to the login page.
 - API docs (Swagger): **http://127.0.0.1:8000/docs**
 - Health check: **http://127.0.0.1:8000/api/health**
 
-## Connecting to a real HPE Alletra array
+## Connecting to real HPE Alletra Storage MP arrays
 
 Set these in `.env`:
 
 ```env
 STORAGE_PROVIDER=alletra
-ALLETRA_BASE_URL=https://<array-mgmt-ip>:5392
-ALLETRA_USERNAME=admin
+ALLETRA_PRIMARY_BASE_URL=<primary-array-mgmt-ip>
+ALLETRA_RECOVERY_BASE_URL=<recovery-array-mgmt-ip>   # optional; blank for one array
+ALLETRA_USERNAME=<array-username>
 ALLETRA_PASSWORD=<password>
 ALLETRA_VERIFY_SSL=false
 ```
 
-The `AlletraProvider` (`app/providers/alletra.py`) logs in to get a session
-token, then reads arrays, pools, volumes and replication partners and maps them
-to the dashboard contract. If the array is unreachable, the service logs a
-warning and returns simulated data so the UI never breaks.
+Provide the management IP or hostname only — the provider adds `https://…:443`
+automatically. (For an HTTP-only WSAPI or a non-standard port, pass a full URL,
+e.g. `http://<ip>:8080`.)
+
+WSAPI must be enabled on each array. On the array CLI:
+
+```
+showwsapi          # -State- should be Enabled/Active, HTTPS_Port 443
+startwsapi         # enable it if it is not
+```
+
+The `AlletraProvider` (`app/providers/alletra.py`) logs in via
+`POST /api/v1/credentials` to obtain a session key, then reads `system`,
+`volumes`, `remotecopygroups` and `cpgs` from each array and maps them to the
+dashboard contract. Only the **primary** is required: if it is unreachable the
+service logs a warning and returns simulated data so the UI never breaks; if
+only the **recovery** is unreachable the primary still renders and the recovery
+site is marked "Unreachable". The client is strictly read-only for storage data
+(the only writes are session login/logout).
+
+### Verify connectivity
+
+Before starting the server you can run the bundled read-only check (prints no
+password):
+
+```powershell
+.\.venv\Scripts\python.exe _conn_test.py
+```
+
+It reports TCP/TLS reachability and whether a WSAPI login succeeds against the
+configured primary array.
 
 > Note: ESXi host / VMware VM figures come from vCenter/SRM, not the array. Those
 > tiles show array-derived values when using the real provider; wire in a
@@ -91,7 +121,8 @@ backend/
     providers/
       __init__.py           StorageProvider interface
       simulated.py          demo data
-      alletra.py            real HPE Alletra REST client
+      alletra.py            real HPE Alletra MP WSAPI client (2 arrays)
+  _conn_test.py             read-only array connectivity checker
   requirements.txt
   .env.example
 ```

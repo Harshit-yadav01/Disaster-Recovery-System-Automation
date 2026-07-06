@@ -220,9 +220,7 @@ class AlletraProvider(StorageProvider):
                 if vn:
                     protected_names.add(vn)
 
-        repl_ok = bool(rcgroups)
-        repl_status = "Synchronized" if repl_ok else "No Remote Copy Groups"
-        repl_tone = "green" if repl_ok else "warning"
+        repl_ok, repl_status, repl_tone = self._rc_status(rcgroups)
 
         # Recovery site status
         if recovery is None:
@@ -325,6 +323,25 @@ class AlletraProvider(StorageProvider):
     def _util(cls, system: dict) -> int:
         """Utilization percent from WSAPI system capacity (MiB)."""
         return cls._pct(cls._used_mib(system), system.get("totalCapacityMiB") or 0)
+
+    @staticmethod
+    def _rc_status(rcgroups: list[dict]) -> tuple[bool, str, str]:
+        """Summarise remote-copy-group health -> (ok, status_text, tone).
+
+        Uses the WSAPI ``roleReversed`` target flag to detect an active
+        failover. Per-volume ``syncStatus`` can be layered in here once the
+        live ``/api/v1/remotecopygroups`` response is confirmed on the array.
+        """
+        if not rcgroups:
+            return False, "No Remote Copy Groups", "warning"
+        failover = any(
+            t.get("roleReversed")
+            for g in rcgroups
+            for t in g.get("targets", [])
+        )
+        if failover:
+            return True, "Failover Active", "blue"
+        return True, "Synchronized", "green"
 
     @staticmethod
     def _used_mib(system: dict) -> float:

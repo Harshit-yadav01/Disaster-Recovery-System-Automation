@@ -165,8 +165,12 @@ class AlletraProvider(StorageProvider):
         # the verify_ssl flag (False accepts a self-signed cert without checking).
         verify = cfg.ca_cert or cfg.verify_ssl
         try:
+            # trust_env=False: the array is an internal management endpoint that
+            # must be reached directly. Without this, httpx would honor the
+            # jumpbox's HTTP(S)_PROXY env vars and route the internal IP through
+            # the corporate proxy, which cannot reach it (ConnectTimeout).
             async with httpx.AsyncClient(
-                base_url=base, verify=verify, timeout=cfg.timeout
+                base_url=base, verify=verify, timeout=cfg.timeout, trust_env=False
             ) as client:
                 key = await self._login(client, cfg)
                 headers = {

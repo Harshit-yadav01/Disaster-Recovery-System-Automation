@@ -48,7 +48,9 @@ def tls_probe(port: int) -> str:
 def http_probe(port: int) -> str:
     """Is it plain HTTP (not TLS)?"""
     try:
-        r = httpx.get(f"http://{host}:{port}/api/v1/system", timeout=6)
+        r = httpx.get(
+            f"http://{host}:{port}/api/v1/system", timeout=6, trust_env=False
+        )
         return f"HTTP {r.status_code}"
     except Exception as exc:  # noqa: BLE001
         return f"HTTP FAIL - {type(exc).__name__}"
@@ -57,7 +59,10 @@ def http_probe(port: int) -> str:
 async def wsapi_login(scheme: str, port: int) -> str:
     try:
         async with httpx.AsyncClient(
-            base_url=f"{scheme}://{host}:{port}", verify=False, timeout=12
+            base_url=f"{scheme}://{host}:{port}",
+            verify=False,
+            timeout=12,
+            trust_env=False,
         ) as client:
             resp = await client.post(
                 "/api/v1/credentials",

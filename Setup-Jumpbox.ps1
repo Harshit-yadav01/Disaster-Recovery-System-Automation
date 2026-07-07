@@ -15,8 +15,11 @@
 $ErrorActionPreference = 'Stop'
 
 # ---- Settings --------------------------------------------------------------
-$RepoUrl    = 'https://github.com/rakshit-girish-ext_hpeprod/Disaster-Recovery-System-Automation.git'
-$ArrayIp    = '10.64.122.99'
+$RepoUrl    = 'https://github.com/Harshit-yadav01/Disaster-Recovery-System-Automation.git'
+# Primary = source/production array; Recovery = target/DR array.
+# Leave $RecoveryIp blank to be prompted at runtime (or to skip the 2nd array).
+$PrimaryIp  = '10.64.122.99'
+$RecoveryIp = ''
 $ArrayPort  = 443
 $ArrayUser  = '3paradm'
 $InstallDir = Join-Path $HOME 'Desktop'
@@ -62,9 +65,20 @@ $gh = Test-NetConnection github.com -Port 443 -WarningAction SilentlyContinue
 if ($gh.TcpTestSucceeded) { Ok 'github.com:443 reachable (can clone)' }
 else { Warn 'github.com not reachable - jumpbox may be isolated; you may need a proxy or to copy the repo over RDP' }
 
-$arr = Test-NetConnection $ArrayIp -Port $ArrayPort -WarningAction SilentlyContinue
-if ($arr.TcpTestSucceeded) { Ok "Array $ArrayIp`:$ArrayPort reachable (TCP open)" }
-else { Fail "Array $ArrayIp`:$ArrayPort NOT reachable - fix networking before the app can read data" }
+$arr = Test-NetConnection $PrimaryIp -Port $ArrayPort -WarningAction SilentlyContinue
+if ($arr.TcpTestSucceeded) { Ok "Primary array $PrimaryIp`:$ArrayPort reachable (TCP open)" }
+else { Fail "Primary array $PrimaryIp`:$ArrayPort NOT reachable - fix networking before the app can read data" }
+
+if (-not $RecoveryIp) {
+    $RecoveryIp = (Read-Host '  Enter the RECOVERY (target) array IP (blank = single-array mode)').Trim()
+}
+if ($RecoveryIp) {
+    $rec = Test-NetConnection $RecoveryIp -Port $ArrayPort -WarningAction SilentlyContinue
+    if ($rec.TcpTestSucceeded) { Ok "Recovery array $RecoveryIp`:$ArrayPort reachable (TCP open)" }
+    else { Warn "Recovery array $RecoveryIp`:$ArrayPort NOT reachable - dashboard will show recovery site as Unreachable" }
+} else {
+    Warn 'No recovery array given - running in single-array mode.'
+}
 
 # Stop if prerequisites are missing
 if (-not $hasGit -or -not $Py) { Fail 'Missing prerequisites - install the tools above and re-run.'; return }
@@ -111,13 +125,15 @@ if (-not (Test-Path '.env')) { Copy-Item .env.example .env; Ok 'Created .env fro
 
 # Set non-secret values line-by-line (safe against special characters)
 $envLines = Get-Content .env | ForEach-Object {
-    if ($_ -match '^STORAGE_PROVIDER=')          { 'STORAGE_PROVIDER=alletra' }
-    elseif ($_ -match '^ALLETRA_PRIMARY_BASE_URL=') { "ALLETRA_PRIMARY_BASE_URL=$ArrayIp" }
-    elseif ($_ -match '^ALLETRA_USERNAME=')       { "ALLETRA_USERNAME=$ArrayUser" }
+    if ($_ -match '^STORAGE_PROVIDER=')              { 'STORAGE_PROVIDER=alletra' }
+    elseif ($_ -match '^ALLETRA_PRIMARY_BASE_URL=')  { "ALLETRA_PRIMARY_BASE_URL=$PrimaryIp" }
+    elseif ($_ -match '^ALLETRA_RECOVERY_BASE_URL=') { "ALLETRA_RECOVERY_BASE_URL=$RecoveryIp" }
+    elseif ($_ -match '^ALLETRA_USERNAME=')          { "ALLETRA_USERNAME=$ArrayUser" }
     else { $_ }
 }
 $envLines | Set-Content .env
-Ok "Set provider=alletra, primary=$ArrayIp, user=$ArrayUser"
+if ($RecoveryIp) { Ok "Set provider=alletra, primary=$PrimaryIp, recovery=$RecoveryIp, user=$ArrayUser" }
+else             { Ok "Set provider=alletra, primary=$PrimaryIp (single-array), user=$ArrayUser" }
 
 Write-Host '  Enter the array password for 3paradm (input hidden; leave blank to edit .env manually later):' -ForegroundColor Yellow
 $sec = Read-Host 'Array password' -AsSecureString

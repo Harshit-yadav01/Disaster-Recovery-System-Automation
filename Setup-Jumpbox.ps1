@@ -18,8 +18,10 @@ $ErrorActionPreference = 'Stop'
 $RepoUrl    = 'https://github.com/Harshit-yadav01/Disaster-Recovery-System-Automation.git'
 # Primary = source/production array; Recovery = target/DR array.
 # Leave $RecoveryIp blank to be prompted at runtime (or to skip the 2nd array).
+# Run identify_arrays.py on the jumpbox to confirm which array is truly the
+# replication source; swap these two values if needed.
 $PrimaryIp  = '10.64.122.99'
-$RecoveryIp = ''
+$RecoveryIp = '10.64.154.190'
 $ArrayPort  = 443
 $ArrayUser  = '3paradm'
 $InstallDir = Join-Path $HOME 'Desktop'

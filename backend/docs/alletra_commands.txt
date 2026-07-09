@@ -1,0 +1,1708 @@
+AlletraMP cli% showrcopy -h
+showrcopy - Show details of the Remote Copy configuration
+
+SYNTAX
+    showrcopy [options <arg>] [links]
+    showrcopy [options <arg>] [hosts [<group_name_or_pattern> ...]]
+    showrcopy [options <arg>] [groups [<name_or_pattern> ...]]
+    showrcopy [options <arg>] [targets [<name_or_pattern> ...]]
+
+DESCRIPTION
+    The showrcopy command displays details of the Remote Copy configuration.
+
+AUTHORITY
+    Any role in the system
+
+OPTIONS
+    -d
+        Displays more detailed configuration information.
+
+    -qw
+        Display additional target specific Peer Persistence
+        related configuration where applicable.
+
+    -domain <domainname_or_pattern>[,<domainname_or_pattern>...]
+        Shows only Remote Copy groups whose virtual volumes are in domains with
+        names matching one or more of the specified domain name or pattern. This
+        option does not allow listing objects within a domain of which the user
+        is not a member.
+
+SPECIFIERS
+    links
+        Specifies all Remote Copy links.
+
+    hosts [<group_name_or_pattern>]
+        Specifies either all host definitions of specific group(s) by name or
+        glob-style patterns of Active Peer Persistence groups.
+
+    groups [<name_or_pattern>]
+        Specifies either all Remote Copy volume groups or specific Remote Copy
+        volume group(s) by name or glob-style patterns.
+
+    targets [<name_or_pattern>]
+        Specifies either all target definitions or specific target(s) definition
+        by name or glob-style patterns.
+
+NOTES
+    If the showrcopy command is used with no specifiers, all configuration
+    information is displayed.
+
+    If showrcopy links|groups|targets|hosts is used without specifying a name,
+    information for all links, groups, or targets is displayed.
+
+    See help on sub,globpat for information on glob-style patterns.
+
+    To limit the performance impact of remote copy on the rest of the system,
+    the number of volumes that are concurrently synchronizing is limited. This
+    limit is not user-configurable and applies to the initial synchronization
+    as well as subsequent resynchronizations for synchronous as well as
+    asynchronous periodic groups.
+
+    A Domain column may be included by using the setclienv command to
+    set listdom to 1.  The listdom option is also set to 1 if the CLI was
+    started with the -listdom option, or if the CLI was started with the
+    TPDLISTDOM environment variable set. Please run "cli -h"  and
+    "setclienv -h" for details of the environment variables.
+
+    Long names can cause the display to be very wide. Use -shortnames
+    to display shortened 31 character names for objects. Use the setclienv
+    command to set shortnames to 1. The -shortnames option is also set to 1
+    if the CLI was started with the -shortnames option, or if the CLI was
+    started with the TPDSHORTNAMES environment variable set. Run "cli -h"
+    and "setclienv -h" for details of the environment variables.
+
+EXAMPLES
+    The following example displays output from the showrcopy command:
+
+        cli% showrcopy
+
+    The following example displays output from the showrcopy groups <pat>
+    command, where <pat> is specified as b* and 1*:
+
+        cli% showrcopy groups b* l*
+
+    Use the following to get a description of each column in the above examples:
+        clihelp -col showrcopy
+
+AlletraMP cli% showcpg -h
+showcpg - Show Common Provisioning Groups.
+
+SYNTAX
+    showcpg [options <arg>] [<CPG_name>...|<pattern>...]
+
+DESCRIPTION
+    The showcpg command displays common provisioning groups (CPGs) in the
+    system.
+
+AUTHORITY
+    Any role in the system
+
+OPTIONS
+    -listcols
+        List the columns available to be shown in the -showcols option
+        described below (see "clihelp -col showcpg" for help on each column).
+
+    -showcols <column>[,<column>...]
+        Explicitly select the columns to be shown using a comma-separated list
+        of column names. For this option the full column names are shown in
+        the header.
+        Run "showcpg -listcols" to list the available columns.
+        Run "clihelp -col showcpg" for a description of each column.
+
+    The following options cannot be used together with other options except
+    -sortcol, -hist and -domain:
+
+    -d
+        Displays detailed information about the CPGs. The following columns
+        are shown:
+        Id Name Warn% VVs TPVVs TDVVs DataUsed Free Total LDUsr LDSnp
+        RC_UsageUsr DDSType
+
+    -r
+        Specifies that raw space used by the CPGs is displayed. The following
+        columns are shown:
+        Id Name Warn% VVs TPVVs TDVVs DataUsed DataRUsed Free RFree Total
+        RTotal
+
+    -alert
+        Indicates whether alerts are posted. The following columns are shown:
+        Id Name Warn% DataUsed DataWarn DataLimit DataAlertW% DataAlertW
+        DataAlertL DataAlertF
+
+    -alerttime
+        Show times when alerts were posted (when applicable). The following
+        columns are shown:
+        Id Name DataAlertW% DataAlertW DataAlertL DataAlertF
+
+    -sag
+        Specifies that the snapshot admin space auto-growth parameters are
+        displayed. The following columns are displayed:
+        Id Name AdmWarn AdmLimit AdmGrow AdmArgs
+
+    -sdg
+        Specifies that the snapshot data space auto-growth parameters are
+        displayed. The following columns are displayed:
+        Id Name DataWarn DataLimit DataGrow DataArgs
+
+    -space (-s)
+        Show the space saving of CPGs. The following columns are displayed:
+        Id Name Warn% Used Shared Free Total Thin Dedup Compress Reduction
+        Total Overprov
+
+    -allnames
+        Shows both the shortened and full name for the CPGs.  The following
+        columns are shown:
+        Id ShortName Name
+
+    The following options can be used together with other options:
+    -sortcol <col>[,<dir>][:<col>[,<dir>]...]
+        Sorts command output based on column number (<col>). Columns are
+        numbered from left to right, beginning with 0. At least one column must
+        be specified. In addition, the direction of sorting (<dir>) can be
+        specified as follows:
+          inc
+              Sort in increasing order (default).
+          dec
+              Sort in decreasing order.
+
+        Multiple columns can be specified and separated by a colon (:). Rows
+        with the same information in them as earlier columns will be sorted
+        by values in later columns.
+
+    -hist
+        Specifies that current data from the CPG, as well as the CPG's history
+        data is displayed.
+
+    -domain <domain_name_or_pattern,...>
+        Shows only CPGs that are in domains with names matching one or more of
+        the <domain_name_or_pattern> argument. This option does not allow
+        listing objects within a domain of which the user is not a member.
+        Patterns are glob-style (shell-style) patterns (see help on sub,globpat).
+
+SPECIFIERS
+    [<CPG_name>...|<pattern>...]
+        Specifies that CPGs matching either the specified CPG name or those
+        CPGs matching the specified pattern are displayed. This specifier can
+        be repeated to display information for multiple CPGs. If not specified,
+        all CPGs in the system are displayed.
+
+NOTES
+    When using the createvv command, the size of the logical disk space
+    created is the first integer multiple of the RAID set size that is large
+    enough to accommodate the requested virtual volume size.
+
+    For this command, 1 MiB = 1048576 bytes.
+
+    A Domain column may be included by using the setclienv command to
+    set listdom to 1.  The listdom option is also set to 1 if the CLI was
+    started with the -listdom option, or if the CLI was started with the
+    TPDLISTDOM environment variable set. Please run "cli -h"  and
+    "setclienv -h" for details of the environment variables.
+
+    Long names can cause the display to be very wide. Use -shortnames
+    to display shortened 31 character names for objects. Use the setclienv
+    command to set shortnames to 1. The -shortnames option is also set to 1
+    if the CLI was started with the -shortnames option, or if the CLI was
+    started with the TPDSHORTNAMES environment variable set. Run "cli -h"
+    and "setclienv -h" for details of the environment variables.
+
+EXAMPLES
+    The following example displays a system's CPGs:
+
+        cli% showcpg
+
+    The following example displays the historical data for the CPGs:
+
+        cli% showcpg -hist
+
+    The following example displays the snapshot data space's autogrowth
+    parameters for the CPGs:
+
+        cli% showcpg -sdg
+
+    The following example displays the alerts posted for the CPGs:
+
+        cli% showcpg -alert
+
+    Use the following to get a description of each column in the above examples:
+       clihelp -col showcpg
+
+AlletraMP cli% creatercopygroup -h
+creatercopygroup - Create a Remote Copy volume group.
+
+SYNTAX
+    creatercopygroup [options] <group_name> <target_name>:<mode>
+        [<target_name>:<mode>...]
+
+DESCRIPTION
+    The creatercopygroup command creates a remote copy volume group.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the rcopygroup_create right
+
+OPTIONS
+    -domain <domain>
+        Creates the remote copy group in the specified domain. The volume group
+        must be created by a member of a particular domain with Super or Edit
+        privileges.
+
+    -usr_cpg <cpg name> <target_name>:<cpg_name>...
+        Specify the local user CPG and target user CPG that will be used for
+        volumes that are auto-created. The local CPG will only be used after
+        failover and recovery.
+
+SPECIFIERS
+    <group_name>
+        Specifies the name of the volume group, using up to 22 characters if the
+        mirror_config policy is set, or up to 31 characters otherwise. This name
+        is assigned with this command.
+
+    <target_name>
+        Specifies the target name associated with this group. This name should
+        already have been assigned using the creatercopytarget command. The
+        <target_name>:<mode> pair can be repeated to specify multiple targets.
+
+    <mode>
+        Specifies that the mode of the created group, the available modes are:
+            sync     - synchronous replication
+            periodic - periodic asynchronous replication
+        The <target_name>:<mode> pair can be repeated to specify multiple targets.
+        Please refer to the remote copy users guide for a detailed description
+        of each operating mode.
+
+NOTES
+    When a Remote Copy group is created, a VV set will also be created.  Its
+    name will be the remote copy group's name prepended with "RCP_", with
+    numbers appended if necessary to make the set name unique.  Volumes will
+    automatically be added to and removed from this set when volumes are
+    admitted to and dismissed from the group.
+
+EXAMPLES
+    The following example creates an asynchronous periodic mode volume group
+    named Group1 whose target system is System2 (target name System2_out):
+
+        creatercopygroup Group1 System2_out:periodic
+
+    If you are using domains, the syntax is as follows:
+
+        creatercopygroup -domain domain2 Group1 System2_out:periodic
+
+    If you are using volume auto-create:
+
+        creatercopygroup  -usr_cpg Localcpg target:Targetcpg groupname target:periodic
+
+AlletraMP cli% createvv -h
+createvv - Create a virtual volume from a common provisioning group.
+
+SYNTAX
+    createvv {-tpvv|-reduce} [options] <usr_cpg> <vvname>[.<index>]
+    <size>[g|G|t|T]
+
+DESCRIPTION
+    The createvv command creates volumes that are provisioned from one or more
+    common provisioning groups.  Volumes can be thinly provisioned from a CPG.
+    Users can optionally specify a CPG for snapshot space. Users must specify
+    either -tpvv or -reduce to create a thin provisioned volume or a thin
+    provisioned volume with compression and dedup technologies.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the vv_create right
+
+OPTIONS
+    -i <ID>
+        Specifies the ID of the volume. By default, the next available ID is
+        chosen.
+
+    -cnt <count>
+        Specifies the number of identical VVs to create.  This must be an
+        integer from 1 through 999. If <id> is specified with -i option, it is
+        used as the id of the first VV and incremented by 1 for each
+        subsequent volume.
+
+    -exp <time>{d|D|h|H|m|M}
+        Specifies the relative time from the current time that volume will
+        expire. <time> is a positive integer value and in the range of
+        1 minute - 1825 days. Time can be specified in days, hours, or minutes.
+        Use "d" or "D" for days, "h" or "H" for hours, or "m" or "M" for minutes
+        following the entered time value.
+
+    -comment <comment>
+        Specifies any additional information up to 511 characters for the
+        volume.
+
+    -f
+        Do not ask for confirmation before creating a volume with retention time
+        (-retain).
+
+    -retain <time>{d|D|h|H|m|M}
+        Specifies the amount of time, relative to the current time, that the
+        volume will be retained. <time> is a positive integer value and in the
+        range of 1 minute - 1825 days. Time can be specified in days, hours, or
+        minutes.  Use "d" or "D" for days, "h" or "H" for hours, or "m" or "M"
+        for minutes following the entered time value.
+
+        Note: If the volume is not in any domain, then its retention time
+        cannot exceed the value of the system's VVRetentionTimeMax. The default
+        value for the system's VVRetentionTimeMax is 14 days. If the volume
+        belongs to a domain, then its retention time cannot exceed the value of
+        the domain's VVRetentionTimeMax, if set. The retention time cannot be
+        removed or reduced once it is set. If the volume has its retention time
+        set, it cannot be removed within its retention time. If both expiration
+        time and retention time are specified, then the retention time cannot
+        be longer than the expiration time.
+
+    -spt <sectors_per_track>
+        Defines the virtual volume geometry sectors per track value that is
+        reported to the hosts through the SCSI mode pages. The valid range is
+        between 4 to 8192 and the default value is 304.
+
+    -hpc <heads_per_cylinder>
+        Allows you to define the virtual volume geometry heads per cylinder
+        value that is reported to the hosts though the SCSI mode pages. The
+        valid range is between 1 to 255 and the default value is 8.
+
+    -pol <pol>[,<pol>...]
+
+        Specifies the following policies that the created virtual volume follows.
+
+        one_host
+            This constrains the export of a volume to one host or one host
+            cluster (when cluster names may be used as a host name).
+        no_one_host
+            This policy should only be used when exporting a virtual
+            volume to multiple hosts for use by a cluster-aware application,
+            or when "port presents" VLUNs are used. This is the default policy
+            setting.
+        rware
+            The virtual volume will enable ransomware detection.
+        no_rware
+            The virtual volume will disable ransomware detection (default).
+
+
+    The following options can be used when creating thinly provisioned volumes:
+
+    -tpvv
+        Specifies that the volume should be a thinly provisioned volume.
+
+    -reduce
+        Specifies that the volume should be a thinly deduplicated and compressed
+        volume. This option is automatically applied by default.
+
+    -minalloc <size>
+        This option specifies the default allocation size (in MB) to be set.
+        Allocation size specified should be at least (number-of-nodes * 256) and
+        less than the CPG grow size.
+
+    -usr_aw <percent>
+        This option enables user space allocation warning. Generates a warning
+        alert when the allocated data space of the TPVV exceeds the specified
+        percentage of the virtual volume size. Space allocated for snapshots
+        related to this VV do count against the warning. Therefore, the
+        percentage can be greater than 100.
+
+    -usr_al <percent>
+        Indicates the user space allocation limit. Generates a limit alert when
+        the allocated data space of the TPVV exceeds the specified percentage of
+        the virtual volume size. Space allocated for snapshots related to this
+        VV do count against the warning. Therefore, the percentage can be
+        greater than 100.
+
+SPECIFIERS
+    <usr_cpg>
+        Specifies the name of the CPG from which the volume user space will be
+        allocated. If the -tpvv option is specified, the volume is thinly provisioned.
+        If the -reduce option is specified, the volume is thinly provisioned with
+        compression and dedup technologies.
+
+    <vvname>[.<index>]
+        Specifies a VV name up to 255 characters in length. Valid characters
+        include alphanumeric characters, periods, dashes, and underscores. If
+        the -cnt option is used, the optional decimal number <index> specifies
+        the name of the first VV(<vvname>.<index>). The <index> is incremented
+        by 1 for each subsequent VV. The <index> must be an integer from 0 to
+        999999. All VV names have the same length constraint.
+
+    <size>[g|G|t|T]
+        Specifies the size for the volume in MB. The volume size is rounded up
+        to the next multiple of 256 MB. The size should be an integer. An
+        optional suffix (with no whitespace before the suffix) will modify the
+        units to GB (g or G suffix) or TB (t or T suffix).  If the size is to
+        be taken from a template, this field should be "-".
+
+NOTES
+    Access to all domains is required to run this command with logical disks
+    specified.
+
+    -minalloc can be used only with -tpvv.
+
+    Verify the creation of virtual volumes by issuing the showvv command.
+
+    Maximum size of reduced Volumes is 64 TiB.
+
+    Maximum size of Thin Provisioned Volumes is 64 TiB.
+
+    For this command MB = 1048576 bytes, GB = 1024MB, and TB = 1024GB.
+
+EXAMPLES
+    The following example creates a 10G TPVV named tpvv1 whose user space is
+    allocated from the common provisioning group cpg1. The user space allocation
+    warning is set to 50 and the user space allocation limit is set to 200:
+
+        cli% createvv -tpvv -usr_aw 50 -usr_al 200 cpg1 tpvv1 10G
+
+    The following example creates 3 TPVVs vv1.2, vv1.3, vv1.4:
+
+        cli% createvv -cnt 3 -tpvv cpg1 vv1.2 1g
+
+    The following example creates a TPVV with default allocation size of 2GB:
+
+        cli% createvv -tpvv -minalloc 2048 cpg2 tpvv1 1g
+
+    The following example creates a thinly deduplicated and compressed volume
+    of size 16GB:
+
+       cli% createvv -reduce cpg2 vv1 16g
+
+AlletraMP cli% showvv -h
+showvv - Show information about virtual volumes (VVs) in the system.
+
+SYNTAX
+    showvv [options] [<VV_name|pattern|VV_set> ...]
+    showvv -listcols
+
+DESCRIPTION
+    The showvv command displays information about all Virtual Volumes (VVs) or
+     a specific VV in a system.
+
+AUTHORITY
+    Any role in the system
+
+OPTIONS
+    -listcols
+        List the columns available to be shown in the -showcols option
+        described below (see 'clihelp -col showvv' for help on each column).
+
+    The [options] are generally of two kinds: those that select the type of
+    information that is displayed, and those that filter the list of VVs that
+    are displayed.
+
+    By default (if none of the information selection options below are
+    specified) the following columns are shown:
+    Id Name Prov Compr Deduplication Type CopyOf BsId Rd State Data_Rsvd_MB
+    VSize_MB
+
+    Options that select the type of information shown include the following:
+
+    -showcols <column>[,<column>...]
+        Explicitly select the columns to be shown using a comma-separated list
+        of column names.  For this option the full column names are shown in
+        the header.
+        Run 'showvv -listcols' to list the available columns.
+        Run 'clihelp -col showvv' for a description of each column.
+
+    -d
+        Displays detailed information about the VVs.  The following columns
+        are shown:
+        Id Name Rd Mstr Prnt Roch Rwch PPrnt SPrnt_Id PBlkRemain VV_WWN
+        CreationTime Udid
+
+    -nvme
+        Displays NGUID and EUI for all the VVs regardless of whether they are
+        exported to an NVMe host. This is useful for a user to identify a VV
+        from the NVMe host. The following columns are shown:
+        Id Name NGUID EUI64
+
+    -pol
+        Displays policy information about the VVs. The following columns
+        are shown: Id Name Policies
+
+    -space (-s)
+        Displays Logical Disk (LD) space use by the VVs.  The following columns
+        are shown:
+        Id Name Prov Compr Deduplication Type Data_Used_MB Data_Rsvd_MB
+        Host_Wrt_MB VSize_MB Used_Data_Perc Warn_Data_Perc Limit_Data_Perc
+        Branch_VSize_MB Branch_Used_MB Branch_Used_Perc Thin Compression Total
+
+        Note:
+        The Used_MB and the corresponding _Perc columns have a "*"
+        before the number if further space accounting is in-progress for
+        this volume. This occurs after snapshot deletions.
+
+        The Used (MiB), Host Wr (MiB), and Used (% VSize) columns may show
+        values greater than VSize (MiB) or over 100% Used. This will occur
+        with Base volumes that have snapshot shared space, which is tracked
+        in the Base volume's counters for these fields.
+
+        The "Branch" columns show space accounting stats on a branch level.
+        A branch is a RW volume, either a base or snapshot, with all
+        of its RO snapshots. This applies to three fields:
+        Branch_VSize_MB, Branch_Used_MB, and Branch_Used_Perc. Unlike the
+        per-VV values, the branch Used (MiB) and Used (% VSize) will not
+        exceed the values shown in the branch VSize (MiB) column or 100% Used.
+
+    -r
+        Displays raw space use by the VVs.  The following columns are shown:
+        Id Name Prov Compr Deduplication Type Data_RawRsvd_MB Data_Rsvd_MB
+        VSize_MB
+
+    -zone
+        Displays mapping zone information for VVs.
+        The following columns are shown:
+        Id Name Prov Compr Deduplication Type VSize_MB Adm_Zn Adm_Free_Zn
+        Data_Zn Data_Free_Zn
+
+    -g
+        Displays the SCSI geometry settings for the VVs.  The following
+        columns are shown: Id Name SPT HPC SctSz
+
+    -alert
+        Indicates whether alerts are posted on behalf of the VVs.
+        The following columns are shown:
+        Id Name Prov Compr Deduplication Type VSize_MB Used_Data_Perc
+        Warn_Data_Perc Limit_Data_Perc Alert_Adm_Fail_Y Alert_Data_Fail_Y
+        Alert_Data_Wrn_Y Alert_Data_Lim_Y
+
+    -alerttime
+        Shows times when alerts were posted (when applicable).
+        The following columns are shown:
+        Id Name Alert_Adm_Fail Alert_Data_Fail Alert_Data_Wrn
+        Alert_Data_Lim
+
+    -cpprog
+        Shows the physical copy and promote progress.
+        The following columns are shown:
+        Id Name Prov Compr Deduplication Type CopyOf VSize_MB Copied_MB
+        Copied_Perc
+
+    -cpgalloc
+        Shows CPGs associated with each VV.  The following columns are
+        shown:
+        Id Name Prov Compr Deduplication Type CPG AllocGrpId
+
+    -state
+        Shows the detailed state information for the VVs.  The following
+        columns are shown:
+        Id Name Prov Compr Deduplication Type State Detailed_State
+
+    -allnames
+        Shows both the shortened and full name for the VVs.  The following
+        columns are shown:
+        Id ShortName Name
+
+    -hist
+        Shows the history information of the VVs.
+        The following columns are shown:
+        Id Name Prov Compr Deduplication Type CreationTime RetentionEndTime
+        ExpirationTime SpaceCalcTime EfficiencyUpdateTime UnrefSpaceFreedTime
+        Comment
+
+    -rcopy
+        This option appends two columns, RcopyStatus and RcopyGroup, to
+        any of the display options above.
+
+    -notree
+        Do not display VV names in tree format.
+        Unless either the -notree or the -sortcol option described below
+        are specified, the VVs are ordered and the names are indented in
+        tree format to indicate the virtual copy snapshot hierarchy.
+
+    -grow
+        Shows the actual size of the VV along with the presented size in MiB.
+        The following columns are shown:
+        Id Name VSize_MB ASize_MB
+
+    -sortcol <col>[,<dir>][:<col>[,<dir>]...]
+        Sorts command output based on column number (<col>). Columns are
+        numbered from left to right, beginning with 0. At least one column must
+        be specified. In addition, the direction of sorting (<dir>) can be
+        specified as follows:
+          inc
+              Sort in increasing order (default).
+          dec
+              Sort in decreasing order.
+
+        Multiple columns can be specified and separated by a colon (:). Rows
+        with the same information in them as earlier columns will be sorted
+        by values in later columns.
+
+    A Domain column may be included by using the setclienv command to
+    set listdom to 1.  The listdom option is also set to 1 if the CLI was
+    started with the -listdom option, or if the CLI was started with the
+    TPDLISTDOM environment variable set. Please run "cli -h"  and
+    "setclienv -h" for details of the environment variables.
+
+    The VV filtering option include:
+
+    -p <pattern>
+        Pattern for matching VVs to show (see below for description
+        of <pattern>) If the -p option is specified multiple times, each
+        instance of <pattern> adds additional candidate VVs that match that
+        pattern.
+
+        A <pattern> is one or more of the following:
+
+        -cpg {<cpgname>|<pattern>}[,{<cpgname>|<pattern>}...]
+            Show only VVs whose CPG matches the one or more of the
+            cpgname_or_patterns.
+        -prov {<prov>|<pattern>}[,{<prov>|<pattern>}...]
+            Show only VVs with Prov (provisioning) values that match the
+            prov_or_pattern.
+        -type {<type>|<pattern>}[,{<type>|<pattern>}...]
+            Show only VVs of types that match the type_or_pattern.
+        -host {<hostname>|<pattern>}[,{<hostname>|<pattern>}...]
+            Show only VVs that are exported as VLUNs to hosts with names that
+            match one or more of the hostname_or_patterns.
+        -baseid {<baseid>|<pattern>}[,{<baseid>|<pattern>}...]
+            Show only VVs whose BsId column matches one more of the
+            baseid_or_patterns.
+        -copyof {<vvname>|<pattern>}[,{<vvname>|<pattern>}...]
+            Show only VVs whose CopyOf column matches one more of the
+            vvname_or_patterns.
+        -rcopygroup {<groupname>|<pattern>}[,{<groupname>|<pattern>}...]
+            Show only VVs that are in Remote Copy groups that match
+            one or more of the groupname_or_patterns.
+        -policy {<policy>|<pattern>}[,{<policy>|<pattern>}...]
+            Show only VVs whose policy matches the one or more of the
+            policy_or_pattern.
+        -vmname {<vmname>|<pattern>}[,{<vmname>|<pattern>}...]
+            Show only VVs whose vmname matches one or more of the
+            vvname_or_patterns.
+        -vmid {<vmid>|<pattern>}[,{<vmid>|<pattern>}...]
+            Show only VVs whose vmid matches one or more of the
+            vmids.
+        -vmhost {<vmhost>|<pattern>}[,{<vmhost>|<pattern>}...]
+            Show only VVs whose vmhost matches one or more of the
+            vmhost_or_patterns.
+        -vvolstate {<bound|unbound>}
+            Show only VVs whose vvolstate matches the specified
+            state - bound or unbound.
+        -vvolsc {<scname>|<pattern>}[,{<scname>|<pattern>}...]
+            Show only VVs whose storage container name matches one
+            or more of the scname_or_patterns.
+
+    -domain <domain_name|pattern>[,<domain_name|pattern>...]
+        Shows only VVs that are in domains with names matching one or more of
+        the specified domain_name or patterns. This option does not allow
+        listing objects within a domain of which the user is not a member.
+        Multiple domain names or patterns can be repeated using a
+        comma-separated list (for example -domain <domain_name>,
+        <domain_name>...).
+
+    -expired
+        Show only VVs that have expired.
+
+    -exp <time>{d|D|h|H|m|M}
+        Specifies the relative time from the current time that volume will
+        expire. <time> is a positive integer value and in the range of
+        1 minute - 1825 days. Time can be specified in days, hours, or
+        minutes.  Use "d" or "D" for days, "h" or "H" for hours, or "m" or "M"
+        for minutes following the entered time value.
+
+    -retained
+        Shows only VVs that have a retention time.
+
+    -failed
+        Shows only failed VVs.
+
+    The following VV filtering options are deprecated and will be removed in
+    a future release.  Instead, use the appropriate -p <pattern> option
+    described above.
+
+    -cpg {<cpgname>|<pattern>}[,{<cpgname>|<pattern>}...]
+        Show only VVs whose CPG matches the one or more of the
+        cpgname_or_patterns.  This option is deprecated without the
+        preceding -p. Use -p -cpg option described above instead.
+    -tpvv
+        Show only thin provisioned VVs (TPVVs).  This option is deprecated.
+        Use the -p -prov tp* option described above instead.
+    -host {<hostname>|<pattern>}[,{<hostname>|<pattern>}...]
+        Show only VVs that are exported as VLUNs to hosts with names that
+        match one or more of the hostname_or_patterns.
+        This option is deprecated without the preceding -p.
+        Use -p -host option described above instead.
+    -rcopygroup {<groupname>|<pattern>}[,{<groupname>|<pattern>}...]
+        Show only VVs that are in Remote Copy groups that match one or
+        more of the groupname_or_patterns.
+        This option is deprecated without the preceding -p.
+        Use -p -rcopygroup option described above instead.
+
+SPECIFIERS
+    <VV_name|pattern|VV_set>...
+        Specifies the VVs with the specified name (up to 255 characters in
+        length), matching the glob-style pattern or that are members of the
+        supplied VV set will have their information displayed. The VV set name
+        must start with "set:". This specifier can be repeated to display
+        configuration information about multiple VVs. This specifier is not
+        required. If not specified, configuration information for all VVs in
+        the system is displayed.
+
+NOTES
+    For all the <name_or_pattern> fields, the patterns are glob-style
+    (shell-style) patterns (see help on sub,globpat).
+
+    If the -showcols option is used, the full column names are shown in the
+    header; otherwise, the header contains abbreviated column names.
+
+    Note:
+    Compression column is under Efficiency column which displays the
+    compression ratio. Compr column denotes the current Compression state of the
+    thinly compressed volume.
+    The Compr column holds one of the following values:
+        v1  - Compression version 1 is enabled on this VV.
+        v2  - Compression version 2 is enabled on this VV.
+        No  - Compression is currently disabled.
+        NA  - Compression is not applicable. (In case of non-compressed volumes)
+
+    The Dedup column indicates whether it is a thinly deduplicated volume or not.
+        Yes - Deduplicated volume.
+        No  - Not a Deduplicated volume.
+
+
+    A Domain column may be included by using the setclienv command to
+    set listdom to 1.  The listdom option is also set to 1 if the CLI was
+    started with the -listdom option, or if the CLI was started with the
+    TPDLISTDOM environment variable set. Please run "cli -h"  and
+    "setclienv -h" for details of the environment variables.
+
+    Long names can cause the display to be very wide. Use -shortnames
+    to display shortened 31 character names for objects. Use the setclienv
+    command to set shortnames to 1. The -shortnames option is also set to 1
+    if the CLI was started with the -shortnames option, or if the CLI was
+    started with the TPDSHORTNAMES environment variable set. Run "cli -h"
+    and "setclienv -h" for details of the environment variables.
+
+    If there are greater than 8192 VVs and snapshots on the system, then
+    there may be issues displaying the Shared volume and TDVV tree. Some
+    TDVVs may not appear under the Shared volume and instead appear later
+    in the list.
+
+    For this command, 1 MB = 1048576 bytes.
+
+EXAMPLES
+    The following example displays space usage information for thin provisioned
+     VVs that are exported to host hname:
+
+        cli% showvv -s -p -prov tp* -host hname
+
+     Note that the 'tp*' matches tpvv as well as tpsd.
+
+     The following example displays raw space usage information for thin
+     provisioned VVs exported to host hname and all VVs in the tree with the
+     base VV of Id 50.
+
+         cli% showvv -r -p -prov tp* -host hname -p -baseid 50
+
+     The following example lists the Id, Name and VSize_MB columns only for thin
+     provisioned VVs exported to host hname:
+
+        cli% showvv -showcols Id,Name,VSize_MB -p -prov tp* -host hname
+
+     The following will show all VVs in VV set vv_set:
+
+        cli% showvv set:vv_set
+
+AlletraMP cli% admitrcopyvv -h
+admitrcopyvv - Add one or more volumes to a remote copy volume group
+
+SYNTAX
+    admitrcopyvv [options] <VV_name>[:<snapname>][,<psnapname>] <group_name> <target_name>:<sec_VV_name>...
+    admitrcopyvv [options] <set:setname> <group_name> <target_name>:<sec_set>
+    admitrcopyvv [options] -pat [<set:setname>:]<VV_pattern> <group_name> <target_name>:<sec_set>:<sec_VV_pattern>...
+
+DESCRIPTION
+    The admitrcopyvv command adds an existing virtual volume to an existing remote copy
+    volume group.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the rcopyvv_admit right
+
+OPTIONS
+    -pat
+        Specifies that the <VV_name> is treated as a glob-style pattern and that
+        all remote copy volumes matching the specified pattern are admitted to the
+        remote copy group. When this option is used the <sec_VV_name> and
+        <snapname> (if specified) are also treated as patterns. It is required
+        that the secondary volume names and snapshot names can be derived from the
+        local volume name by adding a prefix, suffix or both. <snapname> and
+        <sec_VV_name> should take the form prefix@vvname@suffix, where @vvname@
+        resolves to the name of each volume that matches the <VV_name> pattern.
+
+    -createvv
+        Specifies that the secondary volumes should be created automatically. This
+        specifier cannot be used when starting snapshots (<VV_name>:<snapname>) are
+        specified.
+        If primary volumes are of DECO(dedup and compr) type and the target CPG is not capable
+        of DECO(dedup and compr), then TPVV volumes will be created in secondary system.
+
+    -nowwn
+        When used with -createvv, it ensures a different WWN is
+        used on the secondary volume. Without this option -createvv will use the same
+        WWN for both primary and secondary volumes.
+
+    -nosync
+        Specifies that the volume should skip the initial sync. This is for the
+        admission of volumes that have been pre-synced with the target volume.
+        This specifier cannot be used when starting snapshots (<VV_name>:<snapname>)
+        are specified.
+
+SPECIFIERS
+    <set>
+       Name of the set of volumes admitted to the RC group.
+
+    <VV_name>
+        Specifies the name of the existing virtual volume to be admitted to an
+        existing remote copy volume group that was created with the
+        creatercopygroup command.
+
+    <snapname>
+        An optional read-only snapshot <snapname> can be specified along with
+        the virtual volume name <VV_name>. This snapshot is a starting snapshot.
+        When the group is started, a full sync is not performed. Instead, for
+        synchronous groups, the volume will synchronize deltas between <snapname>
+        and the base volume. For asynchronous periodic groups, the volume will
+        synchronize deltas between <snapname> and a snapshot of the base.
+
+    <psnapname>
+        Valid only for SLD/3DCPP configuration. An optional read-only snapshot
+        <psnapname> for periodic target can be specified along with <snapname>
+        separated by ",". <snapname> is considered as snapshot for the sync target.
+        Only automatically created snapshots are allowed.
+
+    <group_name>
+        Specifies the name of the existing remote copy volume group created with
+        the creatercopygroup command, to which the volume will be added.
+
+    <sec_vv_pattern>
+        Specifies the pattern that is used to create the secondary virtual
+        volume on the target system.
+
+    <target_name>:<sec_VV_name>
+        The target name associated with this group, as set with the
+        creatercopygroup command. The target is created with the
+        creatercopytarget command. <sec_VV_name> specifies the name of the
+        secondary volume on the target system.  One <target_name>:<sec_VV_name>
+        must be specified for each target of the group.
+
+    <target_name>:<sec_set_name>
+        The target name associated with this group, as set with the
+        creatercopygroup command. The target is created with the
+        creatercopytarget command. <sec_set> specifies the name of the
+        secondary set on the target system. One <target_name>:<sec_set>
+        must be specified for each target of the group.
+
+    <target_name>:<sec_set_name>:<sec_VV_name>
+        The target name associated with this group, as set with the
+        creatercopygroup command. The target is created with the
+        creatercopytarget command. <sec_set> specifies the name of the
+        secondary set and <sec_VV_name> specifies the name of the
+        secondary volume on the target system. One <target_name>:<sec_set>:<sec_VV_name>
+        must be specified for each target of the group.
+
+    <pattern>
+        Specifies a glob-style pattern. If this specifier is not used, the
+        <VV_name> specifier must be used. For more information, issue: clihelp
+        sub,globpat.
+
+NOTES
+    A secondary volume mapping must be provided for each target in the group.
+
+    The virtual volume and the remote copy group must be in the same domain or
+    both in no domain.
+
+    The -nosync option will skip the full synchronization of this volume once
+    the remote copy group is started. On the primary system the showrcopy
+    SyncStatus will appear as New-PreSynced. On the secondary the SyncStatus
+    will appear as "New".
+
+    When a starting snapshot is specified, the snapshot will not be automatically
+    deleted after the group is started and resynced.
+
+    When a starting snapshot is specified, any changes between the specified
+    snapshot and the point when the group is started will be resynced. This is
+    done instead of a full synchronization. On the primary system the showrcopy
+    SyncStatus will appear as New-SyncFromSnap. On the secondary the SyncStatus
+    will appear as New.
+
+    If the -nosync option is not used and a starting snapshot is not specified,
+    the volume will undergo a full synchronization when the group is started.
+    The showrcopy SyncStatus will appear as New on both primary and secondary
+    systems.
+
+    If a group's target has the mirror_config policy set and the group is a
+    primary group, then this command is mirrored to that target and the volume
+    is added to the secondary volume group. If the policy is set and the group
+    is a secondary, this command fails.
+
+    For multiple target remote copy groups, in addition to adding the
+    primary/secondary mapping on the target systems, the relevant mapping
+    between the target systems will be added to the backup groups.
+
+    For peer persistence groups, if the primary volume being admitted has an
+    associated VLUN template, then for the secondary volume also, a VLUN
+    template will be automatically created. This will have the same exported
+    LUN value as primary, if that value was available.
+
+EXAMPLES
+    In the following example, the admitrcopyvv command adds the volume vv1 to
+    the primary volume group Group1. At the same time, it adds the secondary
+    volume vv1_remote on the target system System2 to the corresponding secondary
+    volume group (Group1.r<sys_ID>), which was previously created when the
+    creatercopygroup command was issued:
+
+        cli% admitrcopyvv vv1 Group1 System2:vv1_remote
+
+    In the following example, the admitrcopyvv command adds all volumes beginning
+    with tpvv to the primary volume group (Group1). At the same time, it adds
+    the secondary volumes, which are named the same as the primary volumes
+    (as specified by @vvname@), on the target system System2 to the corresponding
+    secondary volume group (Group1.r<sys_ID>):
+
+        cli% admitrcopyvv -pat tpvv* Group1 System2:@vvname@
+
+    In the following example, the admitrcopyvv command adds the volume vv1 to
+    the primary volume group (Group1). At the same time, it creates and adds the
+    volume vv1.r on the target system storage1_in to the corresponding secondary
+    volume group that was previously created when the creatercopygroup command
+    was issued:
+
+        cli% admitrcopyvv -createvv vv1 Group1 storage1_in:vv1.r
+
+    In the following example, the admitrcopyvv command adds the volume vv1 to
+    the primary volume group (Group1). At the same time, it adds the volume vv1.r
+    on the target system storage1_in to the corresponding secondary volume group
+    that was previously created when the creatercopygroup command was issued.
+    It also specifies that the volume should not undergo an initial synchronization
+    when the group is started:
+
+        cli% admitrcopyvv -nosync vv1 Group1 storage1_in:vv1.r
+
+    In the following example, the admitrcopyvv command adds the volume vv1 to
+    the primary volume group (Group1). At the same time, it adds the volume vv1.r
+    on the target system storage1_in to the corresponding secondary volume group
+    that was previously created when the creatercopygroup command was issued.
+    It also specifies that the volume should be synced using rosv_vv1 as the
+    starting snapshot:
+
+        cli% admitrcopyvv vv1:rosv_vv1 Group1 storage1_in:vv1.r
+
+    In the following example, the admitrcopyvv command adds all the volumes that
+    start with the name testvv to the primary volume group (Group1). At the same
+    time, it adds all the volume testvv*.r on the target system storage1_in to the
+    corresponding secondary volume group that was previously created when
+    the creatercopygroup command was issued. It also specifies that each volume
+    should be synchronized using rosv_testvv* as the starting snapshot:
+
+        cli% admitrcopyvv -pat testvv*:rosv_@vvname@ Group1 storage1_in:@vvname@.r
+
+    In the following example, the admitrcopyvv command admits all volumes in the
+    set (vvset1) to the the primary volume group (Group1). At the same time,
+    it creates remote set (vvset1.r) and volumes (suffix with ".r") on the target
+    system storage1_in to the corresponding secondary volume group that was
+    previously created when the creatercopygroup command was issued:
+
+        cli% admitrcopyvv -createvv set:vvset1 Group1 storage1_in:vvset1.r
+
+    In the following example, the admitrcopyvv command adds all the volumes in set
+    that start with the name testvv to the primary volume group (Group1). At the same
+    time, it adds all the volumes in vvset matches testvv*.r on the target system
+    storage1_in to the corresponding secondary volume group that was previously created when
+    the creatercopygroup command was issued. It also specifies that each volume
+    should be synchronized using rosv_testvv* as the starting snapshot:
+
+        cli% admitrcopyvv -pat set:vvset1:testvv*:rosv_@vvname@ Group1 storage1_in:vvset1.r:@vvname@.r
+
+AlletraMP cli% startrcopygroup -h
+startrcopygroup - Starts one or multiple Remote Copy groups
+
+SYNTAX
+    startrcopygroup [options] <group_name> [<vv:sv> ...]
+                    [options] <pattern>
+
+DESCRIPTION
+    The startrcopygroup command enables Remote Copy for the specified Remote
+    Copy volume groups.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the rcopygroup_start right
+
+OPTIONS
+    -nosync
+        Prevents the initial synchronization and sets the virtual volumes to a
+        synchronized state.
+
+    -wait
+        Specifies that the command waits until the initial synchronization is
+        completed. The system generates an event when the synchronization is
+        completed.
+
+        If a group's target has the mirror_config policy set and the group is
+        a secondary group, -wait option is not supported. If startrcopygroup
+        command is run on secondary group with -wait specified, then the
+        command will fail.
+
+    -t <target_name>
+        Only start the group on the specified target.
+
+    -pat
+        Specifies that specified patterns are treated as glob-style patterns
+        and all Remote Copy groups matching the specified pattern will be
+        started. -pat can specify a list of patterns.  This option must be
+        used if pattern specifier is used.
+
+SPECIFIERS
+    <group_name>
+        The name of the Remote Copy volume group. The group name can be obtained
+        using the "showrcopy" command.
+
+    <pattern>
+        Specifies a glob-style pattern (see help on sub,globpat). This specifier
+        can be repeated to start multiple groups. If this specifier
+        is not used, the <group_name> specifier must be used.
+
+    <vv:sv>
+        Member volumes and snapshots can be specified by vv:sv syntax, where vv is
+        the base volume name and sv is the snapshot volume name. To indicate a full
+        resync, specify the starting, read-only snapshot with "-".
+
+        When starting snapshots are applied, all vvs must be specified.
+
+        If a group's target has the mirror_config policy set and the group is a
+        secondary group, startrcopygroup command will be forwarded to the corresponding
+        primary group but starting snapshots (vv:sv) are not supported in this case.
+
+NOTES
+    Synchronous groups are automatically synchronized when started. Asynchronous
+    periodic volume groups are synchronized only on the first time they are
+    started.
+
+    You must enter this command on the secondary server before entering it on
+    the primary if the mirror_config policy is not set.
+
+    If a group's target has the mirror_config policy set and the group is a
+    primary group, then this command will be mirrored to that target and the
+    corresponding secondary group will be started. If the policy is set and the
+    group is a secondary, then this command will be automatically forwarded
+    to the corresponding primary group on remote side.
+
+    If the mirror_config policy is not set, then the corresponding secondary
+    group must already be started or this command will fail.
+
+    When a secondary group says that it is in the started state, it does not
+    necessarily mean that the group is receiving data from the primary system.
+    The primary group might be stopped, or its system might even be down. The
+    fact that the group is started only indicates that the group is ready to
+    receive writes from the primary group. To determine if writes to the volumes
+    of the primary group are being mirrored to the secondary group, the status
+    of the primary group must be examined.
+
+EXAMPLES
+    The following example starts Remote Copy for Group1:
+
+        cli% startrcopygroup Group1
+
+    To start Group2, which contains 4 vvs and specify starting snapshots, with
+    vv4 starting from a full resync:
+
+        cli% startrcopygroup Group2 vv1:sv1 vv2:sv2 vv3:sv3 vv4:-
+
+AlletraMP cli% setrcopygroup -h
+setrcopygroup - set the volume group's policy for dealing with I/O failure and
+    error handling, or switch the direction of transfer of a volume group.
+
+SYNTAX
+    The syntax for the setrcopygroup command can be one of the following:
+        setrcopygroup pol [option] [<pattern>] <policy> [<group_name>]
+        setrcopygroup period [option] [<pattern>] <period_value> <target_name> [<group_name>]
+        setrcopygroup mode  [option] [<pattern>]<mode_value> <target_name> [<group_name>]
+        setrcopygroup <dr_operation> [options] [<pattern>] [<target_name|group_name>...]
+        setrcopygroup cpg -usr_cpg <cpg_name> <target_name>:<cpg_name>...
+                                   <group_name>
+        setrcopygroup cpg -usr_cpg_unset <group_name>
+        setrcopygroup vvol -removetest <group_name>
+
+SUBCOMMANDS
+    pol
+        Sets the policy of the Remote Copy volume groups for dealing with I/O
+        failure and error handling.
+
+    period
+        Specifies that groups that are in asynchronous periodic mode should
+        be periodically synchronized in accordance with the specified
+        <period_value>.
+
+    mode
+        Specifies the mode to which the volume group is set.
+
+    cpg
+        Specifies the local and target cpg
+
+    <dr_operation>
+        Specifies the operation of the group(s). Valid operations are:
+
+        reverse
+            Changes the natural and current direction of all specified groups.
+            The operation is mirrored resulting in a direction change on both
+            systems. This option is very flexible depending on the options that
+            are provided, however it should not be used as a part of the normal
+            disaster recovery process. It should be used only to reverse
+            direction on consistent copies.
+
+        failover
+            Changes secondary volume groups to primary volume groups on the
+            active system in the event of a server failure. If the group has
+            multiple targets it will also attempt to pull more recent data from
+            other targets and start Remote Copy to those targets when complete.
+
+        switchover
+            Migrates the remote copy group from primary to secondary without
+            impacting the host IO. This command requires that associated hosts
+            are connected to both the primary and secondary arrays. The WWNs
+            of primary and secondary volumes are consistent and the host persona
+            of the host must support RTPG.
+
+        recover
+            Used for groups on which the failover operation has already been
+            run. Changes matching primary volume groups on the backup system to
+            secondary volume groups and then starts and synchronizes all groups.
+
+        restore
+            Used for groups on which the failover operation has already been
+            run. The restore command will implicitly execute the recover
+            operation on any group after a failover, which has not yet been
+            recovered, prior to performing the restore. It identifies and
+            differentiates between those groups requiring a simple restore and
+            those requiring both a recover and then a restore, and orchestrates
+            the execution of the required tasks to returns all groups to their
+            natural direction and starts them. In addition to being context
+            specific, the execution of the restore operation now takes a best
+            effort approach. If one or more groups in the list of groups passed
+            to the operation is not in the correct state for a restore or a
+            combined recover and restore, it will return to the user with an
+            error code. However, it will process those groups that are deemed
+            eligible for the simple or combined operation before returning.
+
+            If a primary AA/PP group is in Failsafe mode, restore can be called
+            on the secondary instead of calling recover, then reverse -natural,
+            then switchover.
+
+        override
+            This command overrides the failsafe state which is applied to
+            remote copy group allowing the associated volumes to be exported to
+            attached hosts.
+
+    vvol
+        This command specifies a VMware vVol specific operation on the
+        remote copy group. Valid operations are:
+
+        -removetest
+            Specifies that the INTEST state of this VMware vVol group be cleaned up.
+
+DESCRIPTION
+    The setrcopygroup command performs the following actions:
+
+        Sets the policy of the remote copy volume group for dealing with I/O
+        failure and error handling.
+
+        Switches the direction of transfer between volume groups.
+
+        Sets a resynchronization period for volume groups in asynchronous
+        periodic mode.
+
+        Sets the group's mode.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the rcopygroup_set right
+
+OPTIONS
+    -t <tname>
+        When used with <dr_operation> subcommands, specifies the target to which
+        the <dr_operation> command applies to.  This is optional for single
+        target groups, but is required for multi-target groups. If no groups are
+        specified, it applies to all relevant groups. When used with the pol subcommand,
+        specified for a group with multiple targets then the command only applies to
+        that target, otherwise it will be applied to all targets.
+
+        NOTE: The -t option without the groups listed in the command, will only work
+        in a unidirectional configuration. For bidirectional configurations, the -t
+        option must be used along with the groups listed in the command.
+
+    -f
+        Does not ask for confirmation for disaster recovery commands.
+
+    -nostart
+        Specifies that groups are not started after role reversal is completed.
+        This option can be used for failover, recover and restore subcommands.
+
+    -nosync
+        Specifies that groups are not synced after role reversal is completed
+        through the recover, restore and failover specifiers.
+
+    -discard
+        Specifies not to check a group's other targets to see if newer data
+        should be pushed from them if the group has multiple targets. The use
+        of this option can result in the loss of the most recent changes to
+        the group's volumes and should be used carefully. This option is only
+        valid for the failover specifier.
+
+    -nopromote
+        This option is only valid for the failover and reverse specifiers.  When
+        used with the reverse specifier, specifies that the synchronized snapshots
+        of groups that are switched from primary to secondary not be promoted to
+        the base volume. When used with the failover specifier, it indicates that
+        snapshots of groups that are switched from secondary to primary should not
+        be promoted to the base volume in the case where all volumes of the group
+        were not synchronized to the same time point.
+        The incorrect use of this option can lead to the primary secondary volumes
+        not being consistent.
+
+    -nosnap
+        Specifies that snapshots are not taken of groups that are switched from
+        secondary to primary. Additionally, existing snapshots are deleted
+        if groups are switched from primary to secondary. The use of this option
+        may result in a full synchronization of the secondary volumes. This
+        option can be used for failover, restore, reverse, and switchover
+        subcommands.
+
+    -stopgroups
+        Specifies that groups are stopped before running the reverse subcommand.
+
+    -local
+        The -local option only applies to the "reverse" operation and then
+        only when the -natural or -current options to the "reverse" operation
+        are specified. Specifying -local with the "reverse" operation and an
+        associated -natural or -current option will only affect the array
+        where the command is issued and will not be mirrored to any other
+        arrays in the Remote Copy configuration.
+
+    -natural
+        Specifying the -natural option with the "reverse" operation changes
+        the role of the groups but not the direction of data flow between the
+        groups on the arrays. For example, if the role of the groups are
+        "primary" and "secondary", issuing the -natural option with the
+        "reverse" operation will result in the role of the groups becoming
+        "primary-rev" and "secondary-rev" respectively. The direction of data
+        flow between the groups is not affected only the roles. Since the
+        -natural option does not change the direction of data flow between
+        groups it does not require the groups be stopped.
+
+    -current
+        Specifying the -current option with the "reverse" operation changes
+        both the role and the direction of data flow between the groups. For
+        example, if the roles of the groups are "primary" and "secondary",
+        issuing the -current option to the "reverse" operation will result in
+        the roles of the group becoming "secondary-rev" and "primary-rev"
+        respectively and the direction data flow between the groups is
+        reversed. Since the -current option actually reverses the direction of
+        data replication it requires the group be stopped.
+
+        Both the -natural and -current options must be used with care to
+        ensure the Remote Copy groups do not end up in a non-deterministic
+        state (like "secondary", "secondary-rev" for example) and to ensure
+        data loss does not occur by inadvertently changing the direction of
+        data flow and re-syncing old data on top of newer data.
+
+    -waittask
+        Wait for all tasks created by this command to complete before returning.
+        This option applies to the failover, recover, restore, and reverse subcommands.
+
+    -pat
+        Specifies that specified patterns are treated as glob-style patterns
+        and all remote copy groups matching the specified pattern will be
+        set. The -pat option can specify a list of patterns. This option must be used
+        if <pattern> specifier is used.
+
+    -usr_cpg <cpg name> <target_name>:<cpg_name>
+        Specifies the local user CPG and target user CPG that will be used for
+        volumes that are auto-created. The local CPG will only be used after failover
+        and recover.
+
+    -usr_cpg_unset
+        Unset all user CPGs that are associated with this group.
+
+    -forceppfailover
+        Specifies that the Peer Persistence failover operation is forced
+        overriding data inconsistency warnings. All I/O to the existing
+        primary volumes should be quiesced when using this option.
+
+SPECIFIERS
+    <pattern>
+        Specifies a glob-style pattern(see help on sub,globpat). If this specifier
+        is not used, the <group_name> or <target_name> specifier must be used.
+
+    <policy>
+        Specifies the policy to assign to the group. This specifier can only be
+        used with the pol subcommand.
+
+        Valid policies are:
+
+        auto_failover
+            Configure automatic failover on a remote copy group. This feature
+            will perform an automatic failover on a remote copy group when used
+            in conjunction with the Quorum Witness functionality.
+            Secondary volumes will be subject to a remote copy failover
+            operation. Any of the secondary volumes that are exported to
+            attached hosts will become accessible.
+            If a network fails and prompts a failover, any primary volumes will
+            be placed into a failsafe state to prevent data corruption and
+            inconsistency between primary and secondary volumes.
+
+        no_auto_failover
+            Remote-copy groups will not be subject to automatic failover
+            (default).
+
+        auto_failover_ext
+            Configure extended automatic failover on a remote copy group.
+            This feature will perform an automatic failover any time the
+            primary system becomes isolated from the quorum witness and
+            communication between arrays subsequently goes down (for example,
+            during a rolling network failure that is outside the fail_timeout
+            window where the quorum witness link fails before the remote copy
+            links fail). The remote/secondary system initiates a failover when
+            the remote copy links are down and information from the quorum
+            witness indicates that the primary is not communicating with the
+            quorum witness.
+            The auto_failover policy is a prerequisite and is automatically set
+            when the auto_failover_ext policy is enabled. Clearing the
+            auto_failover policy also clears this policy setting.
+
+        no_auto_failover_ext
+            Remote-copy groups will not be subject to extended automatic
+            failover (default).
+
+        auto_recover
+            Specifies that if the remote copy group is stopped as a result of the remote
+            copy links going down, the group is restarted automatically after the links come
+            back up. If this policy is enabled for a group while the group is stopped
+            after link failures it will only be started when the links come up for the
+            failed target. If the links are already up at the time the policy is set then
+            the group will not be restarted at that time.
+
+        no_auto_recover
+            Specifies that if the remote copy is stopped as a result of the remote copy
+            links going down, the group must be restarted manually after the links come
+            back up (default).
+
+        auto_synchronize
+            Remote Copy system automatically recovers and synchronizes all
+            volumes in the group after a system failover, for either automatic
+            or manual failover scenarios. Synchronization occurs after system
+            recovery completes and the Remote Copy links recover.
+            This policy also allows the failover command to be used when
+            synchronous groups are started and online. It is no longer necessary
+            to stop the synchronous groups before initiating a failover command
+            to the secondary system.
+
+        no_auto_synchronize
+            Remote Copy groups will not be subject to automatic synchronization
+            after failover (default).
+
+        over_per_alert
+            If a synchronization of a periodic remote copy group takes longer to complete
+            than its synchronization period then an alert will be generated. This is
+            the default behavior.
+
+        no_over_per_alert
+            If a synchronization of a periodic remote copy group takes longer to complete
+            than its synchronization period then an alert will not be generated.
+
+        path_management
+            Volumes in the specified group will be enabled to support ALUA. The Target Port
+            Group states of the volumes will be presented as ACTIVE on the primary and as
+            STANDBY on the secondary.
+
+        no_path_management
+            ALUA behavior will be disabled for volumes in the group. The Target Port Group
+            state of the volumes will be presented as ACTIVE (default).
+
+        mt_pp
+            Specifies that the group is participating in a multi-target Peer Persistence
+            configuration. The group must have two targets, one of which must be
+            synchronous.  The path_management and auto_failover policies will also be
+            set for the synchronous group target.
+
+        no_mt_pp
+            Disables the multi-target Peer Persistence configuration. This will also remove
+            the path_management and auto_failover policies.
+
+        active_active
+            Volumes in the specified group will be enabled for host reads and
+            writes from both the primary and the secondary.
+            This policy will also set the auto_synchronize and auto_recover
+            policies to the group.
+
+        no_active_active
+            Disable the the active_active policy, allowing host writes only to
+            the primary. Host reads from secondary, would depend on if
+            path_management is still set. Disabling the active_active policy,
+            does not disable auto_synchronize and auto_recover policies.
+            (default).
+
+    <group_name>
+        Specifies the name of the volume group whose policy is set, or whose target
+        direction is switched.
+
+    <target_name>
+        Specifies the target name for the target definition created with the
+        creatercopytarget command.
+
+    <mode_value>
+        Specifies the mode, sync or periodic to which the group is set. This
+        specifier can only be used with the mode subcommand.
+
+    <period_value>s|m|h|d
+        Specifies the time period in units of seconds (s), minutes (m), hours
+        (h), or days (d), for automatic resynchronization (eg. 14h for 14 hours).
+        The time can be a minimum of 15 seconds (for asynchronous periodic groups)
+        and up to a maximum of one year, or set to zero. This specifier can only be
+        used with the period subcommand.
+
+        For asynchronous periodic mode, this value is used to specify the time period for
+        automatic resynchronization. A <period_value> of 0 will prevent automatic
+        resynchronization.
+
+NOTES
+    When issuing the setrcopygroup <dr_operation> command, either the
+    <group_name> specifier, the <target_name> specifier, or the <pattern>
+    specifier must be specified.
+
+    Do not use the reverse value of the <dr_operation> as part of the normal
+    disaster recovery process.
+
+    The period can be set only for groups whose mode is asynchronous periodic
+    (see creatercopygroup).
+
+    Reversing the direction of primary volumes will result in the loss of any
+    data changed after the group was stopped.
+
+    There is no default resynchronization period. For groups whose mode is
+    asynchronous periodic, you must specify a resynchronization period using
+    setrcopygroup period <value> or resynchronizations will not automatically
+    take place.
+
+    The minimum interval for periodic resynchronizations is 15 seconds.
+
+    If the mirror_config policy is set for this group's target and the group is
+    a primary group, then the setrcopygroup command is mirrored to the target
+    when the period and pol subcommands are used.
+
+    Use the -nosnap option when the primary server has failed or where the disks
+    are ruined or in an unknown state. For example, an uncontrolled shutdown can
+    result in loss of data. If you suspect that the primary volumes are not in a
+    known good state, you should use this option to force a FULL RESYNC when the
+    primary system is restored.
+
+    The -nosnap option can be used when making a secondary group take over as
+    the primary after a disaster takes down the primary (setrcopygroup failover
+    -nosnap...). This option indicates that no incremental resynchronization of
+    the primary group is possible while the primary system is coming back
+    online. Without this option, a snapshot is taken when the secondary server
+    takes over as the primary. That snapshot is used to do an INCREMENTAL
+    synchronization of the primary after it is restored. This assumes that there
+    was no loss of data in the primary volumes when the primary server went
+    down.
+
+    The switchover command is only supported for synchronous remote copy
+    groups that are started and synced. The command must be issued on
+    the primary array and upon completion of the command the remote copy
+    group will be restarted in the reverse direction.
+
+EXAMPLES
+    The following example sets the group policy for Group1:
+
+        setrcopygroup pol auto_recover Group1
+
+     The following example sets the group policy for all the groups  that
+     start with the name testgroup:
+
+        setrcopygroup pol  -pat testgroup* auto_recover
+
+    The following example reverses the current direction of secondary group
+     (Group1) so that I/O might be applied to the group after disaster recovery:
+
+        setrcopygroup failover Group1.r121
+
+    The following example reverses the current direction of all secondary groups
+     that start with the name testgroup so that I/O can be applied to the groups
+     during disaster recovery:
+
+        setrcopygroup failover  -pat testgroup*
+
+     The following example sets Group1 to be automatically synchronized every 30
+     minutes to System2:
+
+        setrcopygroup period 30m System2 Group1
+
+    The following example sets volume groups that start with the name testgroup to synchronize
+    to its asynchronous periodic mode target array2 every 30 minutes:
+
+       setrcopygroup period  -pat testgroup* 30m array2
+
+    The following example sets the local user CPG for the group testgroup:
+
+       setrcopygroup cpg -usr_cpg u_cpg RC603:remote_u_cpg testgroup
+
+    The following example will unset the local user CPG for the group
+    testgroup:
+
+       setrcopygroup cpg -usr_cpg_unset testgroup
+
+AlletraMP cli% stoprcopygroup -h
+stoprcopygroup - Stops Remote Copy of one or more groups.
+
+SYNTAX
+    stoprcopygroup [option <arg>] [<group_name> | <pattern>...]
+
+DESCRIPTION
+    The stoprcopygroup command stops the Remote Copy functionality for the
+    specified Remote Copy volume groups.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the rcopygroup_stop right
+
+OPTIONS
+    -nosnap
+        In synchronous mode, this option turns off the creation of snapshots.
+        This is useful if removercopygroup is to be run to remove Remote Copy.
+        In asynchronous periodic mode, this option deletes any current
+        synchronization snapshots. Using this option will result in a full
+        resync being required if the group is later restarted.
+
+    -t <targetname>
+        Only stop the group on the specified target.
+
+    -f
+        Specifies that the command is forced. If this option is not used, the
+        command requires confirmation before proceeding with its operation.
+
+    -pat
+        Specifies that specified patterns are treated as glob-style patterns
+        and all Remote Copy groups matching the specified pattern will be
+        stopped. The -pat option can specify a list of patterns. By default, confirmation
+        is required to proceed with the command unless the -f option is
+        specified. A maximum of 512 Remote Copy groups can be stopped using the -pat option.
+        -pat must be used if the <pattern> specifier is used.
+
+    -remote
+        This option can be used to stop the group from the secondary array.
+        It is ignored when issued from the primary array. Behaves the same way as if the
+        command is run on the primary array without this option. When run from the
+        secondary array without -t <target> option, it stops specified group on all targets
+        on primary side. When specified with -t <target>, it stops group on specified
+        target on primary.
+
+        On SLD and 3DC-PP configurations, this option will work only when all arrays support this option.
+
+SPECIFIERS
+    <group_name>
+        The name of the Remote Copy volume group to stop.
+
+    <pattern>
+        Specifies a glob-style pattern(see help on sub,globpat). This specifier
+        can be repeated to stop multiple groups. If this specifier
+        is not used, the <group_name> specifier must be used.
+
+NOTES
+    In sync mode, this command creates snapshots that are used for synchronizing
+    the primary and secondary groups if startrcopygroup is run later.
+
+    If a group target has the mirror_config policy set and the group is a primary
+    group, then this command will be mirrored to that target and the corresponding
+    secondary group will be stopped. If the mirror_config policy is set and the
+    group is a secondary, then this command will fail if the user does not specify
+    -remote option.
+
+    If the mirror_config policy is not set and this command is issued on a
+    secondary group, then the corresponding primary group will also be stopped
+    as a result of this command.
+
+EXAMPLES
+    The following example stops Remote Copy for Group1:
+
+        cli% stoprcopygroup Group1
+
+    The following example stops Remote Copy Groups that start with the name testgroup:
+
+        cli% stoprcopygroup -pat testgroup*
+
+AlletraMP cli% syncrcopy -h
+syncrcopy - Synchronize Remote Copy groups.
+
+SYNTAX
+    syncrcopy [options] [<group_name> | <pattern>...]
+
+DESCRIPTION
+    The syncrcopy command manually synchronizes remote copy volume groups.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the rcopy_sync right
+
+OPTIONS
+    -w
+        Wait for synchronization to complete before returning to a command
+        prompt.
+
+        -w option is not supported if the group is a secondary group.
+        If syncrcopy command is run on secondary group with -w specified,
+        the command will fail.
+
+    -n
+        Do not save resynchronization snapshot. This option is only relevant for
+        asynchronous periodic mode groups.
+
+    -ovrd
+        Force full synchronization without prompting for confirmation, even if
+        volumes are already synchronized. This option is only relevant for synchronous
+        mode volume groups and can be used to re-synchronize volumes that have become
+        inconsistent.
+
+    -t <targetname>
+        Indicates that only the group on the specified target is synchronized. If
+        this option is not used, by default, the syncrcopy command will affect all
+        of a group's targets.
+
+    -pat
+        Specifies that the patterns specified are treated as glob-style patterns
+        and all remote copy groups matching the specified pattern will be
+        synced. The -pat option can specify a list of patterns. This option must be
+        used if the <pattern> specifier is used.
+
+SPECIFIERS
+    <group_name>
+        Specifies the name of the remote copy volume group to be synchronized.
+        This name can be obtained using the showrcopy command.
+
+     <pattern>
+        Specifies a glob-style pattern. This specifier can be repeated to sync
+        multiple groups. If the <pattern> specifier is not used, the <group_name>
+        specifier must be used.
+
+NOTES
+    Mode (synchronous or asynchronous periodic) is set using the
+    creatercopygroup command. For information about modes and creating Remote Copy
+    volume groups, see creatercopygroup.
+
+    For information about setting targets, see creatercopytarget.
+
+    Using the -n option requires a full synchronization at the next sync.
+
+EXAMPLES
+    The following example specifies that remote copy volume group Group1 should
+    be synchronized with its corresponding secondary volume group:
+
+        syncrcopy Group1
+        Synchronization request issued for group Group1
+
+     The following example specifies that all remote copy volume groups that
+     start with the name testgroup should be synchronized with their corresponding
+     secondary volume group:
+
+         syncrcopy  -pat testgroup*
+
+

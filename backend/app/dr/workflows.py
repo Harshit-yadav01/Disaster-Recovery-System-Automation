@@ -251,3 +251,262 @@ def run_link_op(
         )
 
     return results
+
+
+# --------------------------------------------------------------------------- #
+# Failover / Failback (chunk 2)
+#
+# WHERE each command runs is decided by the CONFIGURED roles (primary array vs
+# recovery array), which is robust across the -Rev states. The exact group name
+# and -t target are DISCOVERED per array from showrcopy. Verification checks the
+# role transitions on the relevant array(s).
+#
+#   FAILOVER : stop on primary  ->  setrcopygroup failover -f -t <t> <dr_group>
+#   FAILBACK : (all on the DR array that took over)
+#              setrcopygroup recover -f -t <t> <dr_group>
+#              syncrcopy <dr_group>  (wait Synced)
+#              setrcopygroup restore -f -t <t> <dr_group>  (wait natural roles)
+# --------------------------------------------------------------------------- #
+def _primary_host(settings: Settings) -> str:
+    return settings.alletra_primary_base_url or settings.alletra_base_url
+
+
+def _recovery_host(settings: Settings) -> str:
+    return settings.alletra_recovery_base_url
+
+
+def _gather_groups(settings: Settings, base_group: str) -> dict[str, RcopyGroup | None]:
+    """Return {clean_host: group_or_None} for every configured array."""
+    out: dict[str, RcopyGroup | None] = {}
+    for role_label, host in _configured_arrays(settings):
+        key = SSHConfig.clean_host(host)
+        try:
+            with ArraySSH(_ssh_cfg(settings, host, role_label)) as arr:
+                text = arr.run("showrcopy")
+            out[key] = parse_showrcopy(text).find_group(base_group)
+        except SSHError as exc:
+            logger.warning("gather: %s (%s) SSH error: %s", role_label, host, exc)
+            out[key] = None
+    return out
+
+
+def _exec_on(settings: Settings, host: str, command: str) -> tuple[bool, str]:
+    """Run a single command on one array. Returns (ok, output_or_error)."""
+    try:
+        with ArraySSH(_ssh_cfg(settings, host, "target")) as arr:
+            out = arr.run(command)
+        return True, out.strip()
+    except SSHError as exc:
+        return False, str(exc)
+
+
+def _poll(
+    settings: Settings,
+    base_group: str,
+    predicate,
+    timeout: int,
+    poll_interval: int,
+) -> tuple[bool, dict[str, RcopyGroup | None]]:
+    """Poll both arrays' state until ``predicate(groups)`` holds or timeout."""
+    deadline = time.time() + timeout
+    while True:
+        groups = _gather_groups(settings, base_group)
+        if predicate(groups):
+            return True, groups
+        if time.time() >= deadline:
+            return False, groups
+        time.sleep(poll_interval)
+
+
+def _g_detail(groups: dict[str, RcopyGroup | None], host: str) -> str:
+    g = groups.get(SSHConfig.clean_host(host))
+    if not g:
+        return f"{SSHConfig.clean_host(host)}: group absent/unreachable"
+    return (
+        f"{SSHConfig.clean_host(host)}: role={g.role}, status={g.status}, "
+        f"synced={g.all_synced()}"
+    )
+
+
+def failover(
+    settings: Settings,
+    base_group: str = DEFAULT_GROUP,
+    *,
+    dry_run: bool = True,
+    timeout: int = 180,
+    poll_interval: int = 5,
+) -> list[StepResult]:
+    """Planned failover: stop the primary group, then promote the DR group.
+
+    NOTE: performs NO health check on the primary. The operator must ensure the
+    primary site is failed/inaccessible (or, for a planned test, accept the stop).
+    """
+    results: list[StepResult] = []
+    p_host = _primary_host(settings)
+    d_host = _recovery_host(settings)
+    if not p_host or not d_host:
+        raise DrError("Both primary and recovery arrays must be configured for failover.")
+
+    clean_p = SSHConfig.clean_host(p_host)
+    clean_d = SSHConfig.clean_host(d_host)
+
+    groups = _gather_groups(settings, base_group)
+    p = groups.get(clean_p)
+    d = groups.get(clean_d)
+    if not p or not d:
+        raise DrError(
+            f"Group '{base_group}' not found on both arrays "
+            f"(primary={p.role if p else 'absent'}, dr={d.role if d else 'absent'})."
+        )
+    if not (p.is_primary and d.is_secondary):
+        raise DrError(
+            "Failover precondition not met: expected primary=Primary, dr=Secondary; "
+            f"saw primary={p.role}, dr={d.role}. Aborting to avoid an unsafe change."
+        )
+
+    stop_cmd = f"stoprcopygroup -f {p.name}"
+    failover_cmd = f"setrcopygroup failover -f -t {d.target} {d.name}"
+
+    results.append(
+        StepResult(
+            name="plan",
+            command="",
+            ok=True,
+            detail=(
+                f"stop primary {clean_p} '{p.name}'; then failover DR {clean_d} "
+                f"'{d.name}' (-t {d.target})"
+            ),
+        )
+    )
+
+    if dry_run:
+        results.append(StepResult("stop primary", stop_cmd, True, "DRY-RUN: not executed"))
+        results.append(StepResult("failover DR", failover_cmd, True, "DRY-RUN: not executed"))
+        return results
+
+    # 1) Stop the primary group.
+    ok, out = _exec_on(settings, p_host, stop_cmd)
+    results.append(StepResult("stop primary", stop_cmd, ok, out if ok else f"SSH error: {out}"))
+    if not ok:
+        return results
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: bool(gs.get(clean_p)) and gs[clean_p].is_stopped,
+        timeout, poll_interval,
+    )
+    results.append(StepResult("verify stop", "showrcopy", ok, _g_detail(groups, p_host)))
+    if not ok:
+        results.append(StepResult("abort", "", False, "primary did not reach Stopped; not failing over"))
+        return results
+
+    # 2) Fail over on the DR array.
+    ok, out = _exec_on(settings, d_host, failover_cmd)
+    results.append(StepResult("failover DR", failover_cmd, ok, out if ok else f"SSH error: {out}"))
+    if not ok:
+        return results
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: bool(gs.get(clean_d)) and gs[clean_d].is_primary,
+        timeout, poll_interval,
+    )
+    results.append(StepResult("verify failover", "showrcopy", ok, _g_detail(groups, d_host)))
+    return results
+
+
+def failback(
+    settings: Settings,
+    base_group: str = DEFAULT_GROUP,
+    *,
+    dry_run: bool = True,
+    timeout: int = 300,
+    poll_interval: int = 5,
+) -> list[StepResult]:
+    """Failback (Option 2): recover -> sync -> restore, back to natural direction.
+
+    All commands run on the DR array that took over during failover.
+    """
+    results: list[StepResult] = []
+    p_host = _primary_host(settings)
+    d_host = _recovery_host(settings)
+    if not p_host or not d_host:
+        raise DrError("Both primary and recovery arrays must be configured for failback.")
+
+    clean_p = SSHConfig.clean_host(p_host)
+    clean_d = SSHConfig.clean_host(d_host)
+
+    groups = _gather_groups(settings, base_group)
+    d = groups.get(clean_d)
+    if not d:
+        raise DrError(f"Group '{base_group}' not found on the DR array {clean_d}.")
+    if not d.is_primary:
+        raise DrError(
+            "Failback precondition not met: the DR array is not holding the group as "
+            f"primary (role={d.role}). Run a failover first. Aborting."
+        )
+
+    recover_cmd = f"setrcopygroup recover -f -t {d.target} {d.name}"
+    sync_cmd = f"syncrcopy {d.name}"
+    restore_cmd = f"setrcopygroup restore -f -t {d.target} {d.name}"
+
+    results.append(
+        StepResult(
+            name="plan",
+            command="",
+            ok=True,
+            detail=(
+                f"on DR {clean_d} '{d.name}' (-t {d.target}): "
+                f"recover -> sync -> restore; verify primary back on {clean_p}"
+            ),
+        )
+    )
+
+    if dry_run:
+        results.append(StepResult("recover", recover_cmd, True, "DRY-RUN: not executed"))
+        results.append(StepResult("sync", sync_cmd, True, "DRY-RUN: not executed"))
+        results.append(StepResult("restore", restore_cmd, True, "DRY-RUN: not executed"))
+        return results
+
+    # 1) Recover: reverse replication (original primary becomes secondary).
+    ok, out = _exec_on(settings, d_host, recover_cmd)
+    results.append(StepResult("recover", recover_cmd, ok, out if ok else f"SSH error: {out}"))
+    if not ok:
+        return results
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: bool(gs.get(clean_p)) and gs[clean_p].is_secondary,
+        timeout, poll_interval,
+    )
+    results.append(StepResult("verify recover", "showrcopy", ok, _g_detail(groups, p_host)))
+    if not ok:
+        return results
+
+    # 2) Sync DR -> original primary and wait until Synced.
+    ok, out = _exec_on(settings, d_host, sync_cmd)
+    results.append(StepResult("sync", sync_cmd, ok, out if ok else f"SSH error: {out}"))
+    if not ok:
+        return results
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: bool(gs.get(clean_d)) and gs[clean_d].all_synced(),
+        timeout, poll_interval,
+    )
+    results.append(StepResult("verify sync", "showrcopy", ok, _g_detail(groups, d_host)))
+    if not ok:
+        return results
+
+    # 3) Restore: return to natural direction (primary R/W, DR read-only).
+    ok, out = _exec_on(settings, d_host, restore_cmd)
+    results.append(StepResult("restore", restore_cmd, ok, out if ok else f"SSH error: {out}"))
+    if not ok:
+        return results
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: (
+            bool(gs.get(clean_p)) and gs[clean_p].is_primary
+            and bool(gs.get(clean_d)) and gs[clean_d].is_secondary
+        ),
+        timeout, poll_interval,
+    )
+    detail = f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}"
+    results.append(StepResult("verify restore", "showrcopy", ok, detail))
+    return results

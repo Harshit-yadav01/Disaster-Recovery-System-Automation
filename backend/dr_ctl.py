@@ -32,6 +32,8 @@ from app.dr.workflows import (  # noqa: E402
     DEFAULT_GROUP,
     DrError,
     StepResult,
+    failback,
+    failover,
     gather_status,
     resolve_primary,
     run_link_op,
@@ -92,6 +94,25 @@ def _confirm(op: str, settings, base_group: str, assume_yes: bool) -> bool:
     return answer == op
 
 
+def _confirm_workflow(op: str, assume_yes: bool) -> bool:
+    print("=" * 64)
+    if op == "failover":
+        print("  ABOUT TO FAIL OVER 'Intern_Automation' from Primary to DR.")
+        print("  Sequence: stop primary group -> promote DR group (R/W).")
+        print("  NO health check is performed on the primary - ensure the primary")
+        print("  site is failed/inaccessible (or accept the stop for a planned test).")
+    else:
+        print("  ABOUT TO FAIL BACK 'Intern_Automation' to its original direction.")
+        print("  Sequence: recover -> sync -> restore (on the DR array).")
+        print("  This reverses replication and returns Primary=R/W, DR=Read-Only.")
+    print("  This changes live replication state on both arrays.")
+    print("=" * 64)
+    if assume_yes:
+        return True
+    answer = input(f"  Type '{op}' to proceed (anything else aborts): ").strip()
+    return answer == op
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="dr_ctl.py",
@@ -112,6 +133,22 @@ def main() -> int:
         sp.add_argument("--timeout", type=int, default=180,
                         help="Seconds to wait for the expected state (default 180)")
 
+    p_fo = sub.add_parser("failover", help="Planned failover: stop primary, promote DR")
+    p_fo.add_argument("--group", default=DEFAULT_GROUP, help="Group base name")
+    p_fo.add_argument("--execute", action="store_true",
+                      help="Actually run it (omit for a dry-run preview)")
+    p_fo.add_argument("--yes", action="store_true", help="Skip confirmation prompt")
+    p_fo.add_argument("--timeout", type=int, default=180,
+                      help="Seconds to wait per verify step (default 180)")
+
+    p_fb = sub.add_parser("failback", help="Failback (Option 2): recover -> sync -> restore")
+    p_fb.add_argument("--group", default=DEFAULT_GROUP, help="Group base name")
+    p_fb.add_argument("--execute", action="store_true",
+                      help="Actually run it (omit for a dry-run preview)")
+    p_fb.add_argument("--yes", action="store_true", help="Skip confirmation prompt")
+    p_fb.add_argument("--timeout", type=int, default=300,
+                      help="Seconds to wait per verify step (default 300)")
+
     args = parser.parse_args()
 
     settings = get_settings()
@@ -124,6 +161,24 @@ def main() -> int:
 
     op = args.command
     dry_run = not args.execute
+
+    # Failover / failback are multi-step workflows with their own confirmation.
+    if op in ("failover", "failback"):
+        if not dry_run and not _confirm_workflow(op, args.yes):
+            print("Aborted - no changes made.")
+            return 1
+        try:
+            if op == "failover":
+                results = failover(settings, args.group, dry_run=dry_run, timeout=args.timeout)
+            else:
+                results = failback(settings, args.group, dry_run=dry_run, timeout=args.timeout)
+        except DrError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 2
+        rc = _print_results(op, results)
+        if dry_run:
+            print("\n(DRY-RUN: nothing was changed. Re-run with --execute to apply.)")
+        return rc
 
     if not dry_run:
         if not _confirm(op, settings, args.group, args.yes):

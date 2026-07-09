@@ -197,7 +197,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("status", help="List Remote Copy groups and roles (read-only)")
     add_common(sp)
 
-    for phase in ("failover", "recover", "restore", "stop", "start"):
+    for phase in ("failover", "recover", "restore", "stop", "start", "switchover"):
         sp = sub.add_parser(phase, help=f"{phase.capitalize()} Remote Copy groups")
         add_common(sp)
         sp.add_argument("--execute", action="store_true",

@@ -37,6 +37,7 @@ logger = logging.getLogger("dr.remotecopy")
 ACTION_START = 3     # start replication
 ACTION_STOP = 4      # stop replication (required before a planned failover)
 ACTION_SYNC = 5      # synchronize
+ACTION_SWITCHOVER = 6  # RC_ACTION_CHANGE_DIRECTION (planned graceful reversal)
 ACTION_FAILOVER = 7  # RC_ACTION_CHANGE_TO_PRIMARY
 ACTION_RECOVER = 8   # RC_ACTION_MIGRATE_GROUP
 ACTION_RESTORE = 9   # RC_ACTION_CHANGE_TO_SECONDARY
@@ -45,6 +46,7 @@ ACTIONS = {
     "start": ACTION_START,
     "stop": ACTION_STOP,
     "sync": ACTION_SYNC,
+    "switchover": ACTION_SWITCHOVER,
     "failover": ACTION_FAILOVER,
     "recover": ACTION_RECOVER,
     "restore": ACTION_RESTORE,
@@ -242,6 +244,13 @@ class DrManager:
     def start(self, groups: list[str] | None = None) -> list[GroupResult]:
         """START (resume) the replication link."""
         return self._run_action("start", groups)
+
+    def switchover(self, groups: list[str] | None = None) -> list[GroupResult]:
+        """SWITCHOVER: planned, graceful role reversal for when BOTH arrays are
+        healthy. Swaps primary<->secondary and continues replication in the new
+        direction (no split-brain). Use this to demo failover with both sites up;
+        a true failover requires the primary to be down."""
+        return self._run_action("switchover", groups)
 
     # ------------------------------------------------------------------ #
     # Host presentation (VLUNs)

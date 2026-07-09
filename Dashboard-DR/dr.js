@@ -410,11 +410,25 @@
         const hr = $("drHistoryRefresh");
         if (hr) hr.addEventListener("click", loadHistory);
 
-        document.querySelectorAll(".sidebar li").forEach((li) => {
+        // Sidebar navigation: highlight the item, jump to the DR panel, flash it.
+        const sidebarItems = document.querySelectorAll(".sidebar li");
+        sidebarItems.forEach((li) => {
             const t = li.textContent.trim().toLowerCase();
-            if (["failover", "failback", "replication"].includes(t)) {
-                li.addEventListener("click", () => $("drPanel").scrollIntoView({ behavior: "smooth" }));
-            }
+            li.addEventListener("click", () => {
+                if (["failover", "failback", "replication"].includes(t)) {
+                    sidebarItems.forEach((x) => x.classList.remove("active"));
+                    li.classList.add("active");
+                    const panel = $("drPanel");
+                    panel.scrollIntoView({ behavior: "smooth", block: "start" });
+                    panel.classList.remove("flash");
+                    void panel.offsetWidth; // restart the animation
+                    panel.classList.add("flash");
+                } else if (t === "dashboard") {
+                    sidebarItems.forEach((x) => x.classList.remove("active"));
+                    li.classList.add("active");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+            });
         });
 
         loadStatus();

@@ -1091,3 +1091,5 @@ transform:translateY(-6px);
 .hist-state.running,.hist-state.pending{color:#00b4ff;}
 .hist-detail{margin-top:12px;padding-top:12px;border-top:1px solid #16273a;}
 @media(max-width:900px){.dr-job-body{grid-template-columns:1fr;}.dr-topology{flex-direction:column;gap:14px;}.dr-link{width:100%;flex-direction:row;}.link-track{flex:1;}}
+.dr-panel.flash{animation:drflash 1.2s ease;}
+@keyframes drflash{0%{box-shadow:0 0 0 3px rgba(0,208,132,.65);}70%{box-shadow:0 0 0 6px rgba(0,208,132,.15);}100%{box-shadow:0 0 0 3px rgba(0,208,132,0);}}

@@ -143,64 +143,8 @@ Disaster Recovery Dashboard
 
 </div>
 
-<!-- ===========================
-     Disaster Recovery Operations
-============================ -->
-<div class="section dr-panel" id="drPanel">
-    <div class="section-header">
-        <h2>Disaster Recovery &mdash; Replication Control</h2>
-        <span class="dr-source"><i class="fa-solid fa-terminal"></i> Live SSH &bull; Group: Intern_Automation</span>
-    </div>
-
-    <!-- Live topology map -->
-    <div class="dr-topology" id="drTopology">
-        <p class="dr-loading">Loading replication topology&hellip;</p>
-    </div>
-
-    <!-- Controls -->
-    <div class="dr-actions">
-        <label class="dr-dryrun">
-            <input type="checkbox" id="drDryRun" checked>
-            <span>Dry-run (preview only)</span>
-        </label>
-        <div class="dr-buttons">
-            <button class="dr-btn danger" id="btnFailover"><i class="fa-solid fa-power-off"></i> Failover</button>
-            <button class="dr-btn primary" id="btnFailback"><i class="fa-solid fa-arrow-rotate-left"></i> Failback</button>
-            <button class="dr-btn ghost" id="btnStart">Start</button>
-            <button class="dr-btn ghost" id="btnStop">Stop</button>
-            <button class="dr-btn ghost" id="btnSync">Sync</button>
-        </div>
-    </div>
-
-    <!-- Live operation -->
-    <div class="dr-job" id="drJob" hidden>
-        <div class="dr-job-head">
-            <h3 id="drJobTitle">Operation</h3>
-            <span class="dr-job-state running" id="drJobState">running</span>
-        </div>
-        <div class="dr-stepper" id="drStepper"></div>
-        <div class="dr-proof" id="drProof" hidden></div>
-        <div class="dr-job-body">
-            <div class="dr-console">
-                <div class="dr-console-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span> array console</div>
-                <div class="dr-console-body" id="drConsoleBody"></div>
-            </div>
-            <div class="dr-steps-wrap">
-                <div class="dr-steps-title">Verification steps</div>
-                <div class="dr-steps" id="drSteps"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- History -->
-    <div class="dr-history">
-        <div class="dr-history-head">
-            <h3>Operation History</h3>
-            <button class="dr-refresh" id="drHistoryRefresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button>
-        </div>
-        <div id="drHistory"><p class="dr-loading">No operations yet.</p></div>
-    </div>
-</div>
+<!-- ============ Dashboard view ============ -->
+<div class="view active" id="view-dashboard">
 
 <!-- Cards -->
 
@@ -836,6 +780,52 @@ Quick Actions
 
 </div>
 
+</div>
+</div>
+<!-- /view-dashboard -->
+
+<!-- ============ Replication view ============ -->
+<div class="view" id="view-replication">
+<div class="section">
+<div class="section-header"><h2>Replication</h2><button class="dr-refresh" id="repRefresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button></div>
+<div class="rep-banner" id="repBanner"><i class="fa-solid fa-circle-notch fa-spin"></i> Checking replication&hellip;</div>
+<div class="dr-status-grid" id="repStatus"></div>
+</div>
+</div>
+
+<!-- ============ Failover view ============ -->
+<div class="view" id="view-failover">
+<div class="section">
+<div class="section-header"><h2>Failover</h2></div>
+<p class="view-desc">Promote the Secondary (DR) array to Primary (Read/Write). This stops replication on the Primary group, then fails over the DR group. No health check is performed on the Primary &mdash; ensure the Primary is failed or inaccessible before executing.</p>
+<div class="view-controls">
+<label class="dr-dryrun"><input type="checkbox" id="foDry" checked> <span>Dry-run (preview only)</span></label>
+<button class="dr-btn danger" id="btnFailover"><i class="fa-solid fa-power-off"></i> Execute Failover</button>
+</div>
+<div class="dr-stages" id="foStages"></div>
+<div class="status-title">Array status (live)</div>
+<div class="dr-status-grid" id="foStatus"></div>
+</div>
+</div>
+
+<!-- ============ Failback view ============ -->
+<div class="view" id="view-failback">
+<div class="section">
+<div class="section-header"><h2>Failback</h2></div>
+<p class="view-desc">Return replication to its original direction: recover &rarr; sync &rarr; restore on the DR array, making the Primary Read/Write (source) again and the DR Read-Only (target).</p>
+<div class="view-controls">
+<label class="dr-dryrun"><input type="checkbox" id="fbDry" checked> <span>Dry-run (preview only)</span></label>
+<button class="dr-btn primary" id="btnFailback"><i class="fa-solid fa-arrow-rotate-left"></i> Execute Failback</button>
+</div>
+<div class="dr-stages" id="fbStages"></div>
+<div class="status-title">Array status (live)</div>
+<div class="dr-status-grid" id="fbStatus"></div>
+</div>
+</div>
+
+<!-- ============ Placeholder view ============ -->
+<div class="view" id="view-placeholder">
+<div class="section"><h2 id="phTitle">Coming soon</h2><p class="view-desc">This section is not part of the DR automation scope yet.</p></div>
 </div>
 
 </div>

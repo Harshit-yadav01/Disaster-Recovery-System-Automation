@@ -1093,3 +1093,58 @@ transform:translateY(-6px);
 @media(max-width:900px){.dr-job-body{grid-template-columns:1fr;}.dr-topology{flex-direction:column;gap:14px;}.dr-link{width:100%;flex-direction:row;}.link-track{flex:1;}}
 .dr-panel.flash{animation:drflash 1.2s ease;}
 @keyframes drflash{0%{box-shadow:0 0 0 3px rgba(0,208,132,.65);}70%{box-shadow:0 0 0 6px rgba(0,208,132,.15);}100%{box-shadow:0 0 0 3px rgba(0,208,132,0);}}
+
+/* ===========================
+   Tab views + staged process + array status
+============================ */
+.view{display:none;}
+.view.active{display:block;}
+.view-desc{color:#9aa7b8;font-size:14px;line-height:1.6;margin-bottom:18px;max-width:820px;}
+.view-controls{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-bottom:24px;}
+.status-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#7d8da0;margin:24px 0 12px;}
+.rep-banner{padding:16px 20px;border-radius:12px;font-size:15px;font-weight:600;margin-bottom:22px;display:flex;align-items:center;gap:10px;}
+.rep-banner.active{background:rgba(0,208,132,.12);color:#00d084;border:1px solid rgba(0,208,132,.3);}
+.rep-banner.failed{background:rgba(255,193,7,.12);color:#ffc107;border:1px solid rgba(255,193,7,.3);}
+.rep-banner.down{background:rgba(224,83,61,.12);color:#e0533d;border:1px solid rgba(224,83,61,.3);}
+.dr-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.stat-card{background:#0e1b29;border:1px solid #1c2c3f;border-radius:12px;padding:18px;}
+.stat-card.source{border-color:rgba(0,208,132,.45);box-shadow:0 0 22px rgba(0,208,132,.08);}
+.stat-card.target{border-color:rgba(0,180,255,.35);}
+.stat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.stat-site{font-size:12px;letter-spacing:1.5px;color:#7d8da0;text-transform:uppercase;}
+.stat-host{font-family:monospace;color:#cdd8e6;font-size:13px;}
+.stat-line{font-size:13px;color:#9aa7b8;margin:7px 0;}
+.stat-line b{color:#e8eef5;font-weight:600;}
+.role-badge{padding:3px 12px;border-radius:14px;font-size:12px;font-weight:700;}
+.role-badge.green{background:rgba(0,208,132,.15);color:#00d084;}
+.role-badge.blue{background:rgba(0,180,255,.15);color:#00b4ff;}
+.role-badge.grey{background:rgba(154,167,184,.15);color:#9aa7b8;}
+.stat-vols{width:100%;border-collapse:collapse;margin-top:12px;}
+.stat-vols td{text-align:left;padding:6px 6px;font-size:12px;border-bottom:1px solid #16273a;color:#9aa7b8;font-family:monospace;}
+.sync-badge{padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;}
+.sync-badge.green{background:rgba(0,208,132,.15);color:#00d084;}
+.sync-badge.amber{background:rgba(255,193,7,.15);color:#ffc107;}
+.sync-badge.grey{background:rgba(154,167,184,.15);color:#9aa7b8;}
+.dr-stages{display:flex;flex-direction:column;gap:12px;margin:6px 0;}
+.stage{display:flex;align-items:center;gap:14px;background:#0e1b29;border:1px solid #1c2c3f;border-left-width:3px;border-radius:10px;padding:14px 16px;}
+.stage.done{border-left-color:#00d084;}
+.stage.active{border-left-color:#00b4ff;}
+.stage.failed{border-left-color:#e0533d;}
+.stage.pending{opacity:.55;}
+.stage-num{width:32px;height:32px;border-radius:50%;background:#16273a;display:flex;align-items:center;justify-content:center;font-weight:700;color:#7d8da0;flex-shrink:0;}
+.stage.done .stage-num{background:rgba(0,208,132,.15);color:#00d084;}
+.stage.active .stage-num{background:rgba(0,180,255,.15);color:#00b4ff;}
+.stage.failed .stage-num{background:rgba(224,83,61,.15);color:#e0533d;}
+.stage-body{flex:1;}
+.stage-body h4{font-size:14px;color:#e8eef5;margin-bottom:3px;}
+.stage-body p{font-size:12.5px;color:#8fa2b5;}
+.stage-state{font-size:12px;font-weight:600;text-transform:capitalize;}
+.stage.done .stage-state{color:#00d084;}
+.stage.active .stage-state{color:#00b4ff;}
+.stage.failed .stage-state{color:#e0533d;}
+.stage.pending .stage-state{color:#7d8da0;}
+.stage-note{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;}
+.stage-note.info{background:rgba(0,180,255,.1);color:#00b4ff;}
+.stage-note.ok{background:rgba(0,208,132,.12);color:#00d084;}
+.stage-note.warn{background:rgba(255,193,7,.12);color:#ffc107;}
+@media(max-width:900px){.dr-status-grid{grid-template-columns:1fr;}}

@@ -53,6 +53,9 @@ class StepResult:
     role: str | None = None
     status: str | None = None
     synced: bool | None = None
+    # Structured both-array state after this step, so the dashboard topology can
+    # animate the role/direction changes: {"primary": {...}|None, "dr": {...}|None}.
+    snapshot: dict | None = None
 
 
 @dataclass
@@ -356,6 +359,32 @@ def _run_critical(
     return True
 
 
+def _one_snap(g: RcopyGroup | None) -> dict | None:
+    if not g:
+        return None
+    return {
+        "name": g.name,
+        "role": g.role,
+        "status": g.status,
+        "synced": g.all_synced(),
+        "is_primary": g.is_primary,
+        "is_secondary": g.is_secondary,
+        "is_reversed": g.is_reversed,
+    }
+
+
+def _snapshot(settings: Settings, groups: dict[str, RcopyGroup | None]) -> dict:
+    """Both-array state keyed by configured role, for the dashboard topology."""
+    p = groups.get(SSHConfig.clean_host(_primary_host(settings)))
+    d = groups.get(SSHConfig.clean_host(_recovery_host(settings)))
+    return {
+        "primary": {"host": SSHConfig.clean_host(_primary_host(settings)), **(_one_snap(p) or {})}
+        if p else {"host": SSHConfig.clean_host(_primary_host(settings))},
+        "dr": {"host": SSHConfig.clean_host(_recovery_host(settings)), **(_one_snap(d) or {})}
+        if d else {"host": SSHConfig.clean_host(_recovery_host(settings))},
+    }
+
+
 def failover(
     settings: Settings,
     base_group: str = DEFAULT_GROUP,
@@ -406,6 +435,7 @@ def failover(
                 f"stop primary {clean_p} '{p.name}'; then failover DR {clean_d} "
                 f"'{d.name}' (-t {d.target})"
             ),
+            snapshot=_snapshot(settings, groups),
         )
     )
 
@@ -432,7 +462,8 @@ def failover(
         lambda gs: bool(gs.get(clean_p)) and gs[clean_p].is_stopped,
         timeout, poll_interval,
     )
-    results.append(StepResult("verify stop", "showrcopy", ok, _g_detail(groups, p_host)))
+    results.append(StepResult("verify stop", "showrcopy", ok, _g_detail(groups, p_host),
+                              snapshot=_snapshot(settings, groups)))
     if not ok:
         results.append(StepResult("abort", "", False, "primary did not reach Stopped; not failing over"))
         return results
@@ -445,7 +476,8 @@ def failover(
         lambda gs: bool(gs.get(clean_d)) and gs[clean_d].is_primary,
         timeout, poll_interval,
     )
-    results.append(StepResult("verify failover", "showrcopy", ok, _g_detail(groups, d_host)))
+    results.append(StepResult("verify failover", "showrcopy", ok, _g_detail(groups, d_host),
+                              snapshot=_snapshot(settings, groups)))
     return results
 
 
@@ -495,6 +527,7 @@ def failback(
                 f"on DR {clean_d} '{d.name}' (-t {d.target}): "
                 f"recover -> sync -> restore; verify primary back on {clean_p}"
             ),
+            snapshot=_snapshot(settings, groups),
         )
     )
 
@@ -529,7 +562,8 @@ def failback(
     )
     results.append(StepResult(
         "verify recover", "showrcopy", ok,
-        f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}"))
+        f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}",
+        snapshot=_snapshot(settings, groups)))
     if not ok:
         return results
 
@@ -549,7 +583,8 @@ def failback(
         lambda gs: bool(gs.get(clean_d)) and gs[clean_d].all_synced(),
         timeout, poll_interval,
     )
-    results.append(StepResult("verify sync", "showrcopy", ok, _g_detail(groups, d_host)))
+    results.append(StepResult("verify sync", "showrcopy", ok, _g_detail(groups, d_host),
+                              snapshot=_snapshot(settings, groups)))
     if not ok:
         return results
 
@@ -565,5 +600,6 @@ def failback(
         timeout, poll_interval,
     )
     detail = f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}"
-    results.append(StepResult("verify restore", "showrcopy", ok, detail))
+    results.append(StepResult("verify restore", "showrcopy", ok, detail,
+                              snapshot=_snapshot(settings, groups)))
     return results

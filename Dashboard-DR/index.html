@@ -149,13 +149,15 @@ Disaster Recovery Dashboard
 <div class="section dr-panel" id="drPanel">
     <div class="section-header">
         <h2>Disaster Recovery &mdash; Replication Control</h2>
-        <span class="dr-source"><i class="fa-solid fa-terminal"></i> SSH &bull; Live (Intern_Automation)</span>
+        <span class="dr-source"><i class="fa-solid fa-terminal"></i> Live SSH &bull; Group: Intern_Automation</span>
     </div>
 
-    <div class="dr-status" id="drStatus">
-        <p class="dr-loading">Loading replication status&hellip;</p>
+    <!-- Live topology map -->
+    <div class="dr-topology" id="drTopology">
+        <p class="dr-loading">Loading replication topology&hellip;</p>
     </div>
 
+    <!-- Controls -->
     <div class="dr-actions">
         <label class="dr-dryrun">
             <input type="checkbox" id="drDryRun" checked>
@@ -170,12 +172,33 @@ Disaster Recovery Dashboard
         </div>
     </div>
 
+    <!-- Live operation -->
     <div class="dr-job" id="drJob" hidden>
         <div class="dr-job-head">
             <h3 id="drJobTitle">Operation</h3>
             <span class="dr-job-state running" id="drJobState">running</span>
         </div>
-        <div class="dr-steps" id="drSteps"></div>
+        <div class="dr-stepper" id="drStepper"></div>
+        <div class="dr-proof" id="drProof" hidden></div>
+        <div class="dr-job-body">
+            <div class="dr-console">
+                <div class="dr-console-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span> array console</div>
+                <div class="dr-console-body" id="drConsoleBody"></div>
+            </div>
+            <div class="dr-steps-wrap">
+                <div class="dr-steps-title">Verification steps</div>
+                <div class="dr-steps" id="drSteps"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History -->
+    <div class="dr-history">
+        <div class="dr-history-head">
+            <h3>Operation History</h3>
+            <button class="dr-refresh" id="drHistoryRefresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button>
+        </div>
+        <div id="drHistory"><p class="dr-loading">No operations yet.</p></div>
     </div>
 </div>
 

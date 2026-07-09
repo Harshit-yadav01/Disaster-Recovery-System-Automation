@@ -136,6 +136,24 @@ def dr_sync(
     return _start("sync", payload, settings)
 
 
+@router.get("/jobs")
+def dr_jobs(limit: int = 10, current_user: str = Depends(get_current_user)) -> dict:
+    """Recent DR jobs (newest first) for the operation-history view."""
+    return {
+        "jobs": [
+            {
+                "id": j.id,
+                "kind": j.kind,
+                "state": j.state,
+                "dry_run": j.dry_run,
+                "created_at": j.created_at,
+                "finished_at": j.finished_at,
+            }
+            for j in jobs.recent_jobs(limit)
+        ]
+    }
+
+
 @router.get("/jobs/{job_id}")
 def dr_job(job_id: str, current_user: str = Depends(get_current_user)) -> dict:
     job = jobs.get_job(job_id)

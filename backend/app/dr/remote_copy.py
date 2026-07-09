@@ -50,6 +50,10 @@ ACTIONS = {
     "restore": ACTION_RESTORE,
 }
 
+# start/stop/sync modify the replication link -> PUT /remotecopygroups/{name}.
+# failover/recover/restore are disaster-recovery role changes -> POST.
+_PUT_PHASES = {"start", "stop", "sync"}
+
 
 class DrError(RuntimeError):
     """Raised when the array cannot be reached or authenticated."""
@@ -193,8 +197,10 @@ class DrManager:
             try:
                 logger.info("%s group '%s' (action=%s) on %s ...", phase, name, action, self.host)
                 # Body carries only {"action": N}: no auto_synchronize / auto
-                # flags are ever sent, keeping each phase manual.
-                resp = self._client.post(
+                # flags are ever sent, keeping each phase manual. start/stop/sync
+                # use PUT; failover/recover/restore use POST.
+                request = self._client.put if phase in _PUT_PHASES else self._client.post
+                resp = request(
                     f"/api/v1/remotecopygroups/{name}", json={"action": action}
                 )
                 if resp.status_code >= 400:

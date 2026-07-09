@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     # is verified against this cert instead of being disabled (more secure).
     alletra_ca_cert: str = ""
     alletra_timeout: int = 15
+    # SSH port for the CLI-based DR automation (read/verify + failover/failback).
+    # Reuses ALLETRA_USERNAME / ALLETRA_PASSWORD for the SSH login.
+    alletra_ssh_port: int = 22
     # Deprecated single-array alias (used as primary if the primary URL is blank).
     alletra_base_url: str = ""
 

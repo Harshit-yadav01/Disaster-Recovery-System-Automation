@@ -1,0 +1,57 @@
+Replication failover, recover and restore - proposed planned steps/workflow -
+
+Sample demo steps - 
+To test the replicaton failover and failback, following were executed.
+Replication group was stopped first at the primary site.
+stoprcopygroip <rcg_name.
+From the DR site, we failed over the replication group.
+setrcopygroup failover <rcg_name>.<r1>
+At this stage both the copies are RW mode.
+To enable the DR site replication groups to have communicated to the original replication group (Reversal), then the command was executed.
+setrcopygroup recover <rcg_name>.<r1>
+Target <target> of group <rcg_name>.<r1> was switched from primary to secondary.
+Syn the rcopy group using command - syncrcopy <rcg_name>.<r1>
+Modified the data on the DR site to see if the data still exists when we restore the replication group back to the original. Using below command.
+setrcopygroup restore <rcg_name>.<r>
+This command will cause all indicated groups to be returned to their natural direction on both the local and target systems.
+Once sync is completed then the original state will happen.
+Customer did verify the data which was modified on DR site was still exist on the Prod site.
+
+Proposed workflow - 
+Automate the complete replication lifecycle, including:
+Failover
+Recover
+Restore
+
+Although we have the auto_synchronize policy feature available, which automatically performs reverse synchronization from the Secondary array back to the Source array after failover, the customer requirement is to keep this feature disabled.
+The reason for disabling auto_synchronize is well understood, as the customer wants better control over the replication cycle and wants to avoid the Secondary array automatically overwriting the Source array. This also provides flexibility in scenarios where the customer decides to discard the changes made on the Secondary system and continue production using older data.
+
+Keeping this in mind, the following high-level workflow is proposed to be executed through scripting:
+Failover Script- The Failover script will:
+
+Execute a Failover operation on all Remote Copy Groups, Present the Secondary volumes to the hosts at the Secondary site.
+The plan is to use the Remote Copy Group names as variables instead of hardcoding them into the script (to be further validated with the Automation team).
+Note:
+This script will not perform any health checks or failure validation on the Primary array. The customer must ensure that the Primary site is either failed or inaccessible before initiating the Failover script.
+
+Recover Script- Once the Primary site is back online, the Recover script can be executed.
+
+This script will:
+Perform reverse replication from the Secondary site back to the Primary site
+Overwrite the data on the original Source array with the data from the Secondary array
+
+Post-Recovery Options
+Once recovery is completed and replication from Secondary to Primary is running successfully, the customer will have two options:
+
+Option 1 – Make the Role Change Permanent
+Keep the replication direction as it is
+Continue operating with the Secondary site acting as Primary and the original Primary acting as Secondary
+A separate script can be used to finalize and maintain the new role configuration.
+
+Option 2 – Restore Original Replication Direction
+If the customer decides to revert back to the original setup, the Restore script can be executed.
+
+The Restore script will:
+Reverse the replication direction back to the original state
+Make the Primary array Read/Write (Source)
+Make the Secondary array Read-Only (Target)

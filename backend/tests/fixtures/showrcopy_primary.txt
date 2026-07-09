@@ -1,0 +1,27 @@
+AlletraMP_D22U27 cli% showrcopy
+
+Remote Copy System Information
+Status: Started, Normal
+
+Target Information
+
+Name             ID Type Status Options Policy
+AlletraMP_E18U31  5 IP   ready  -       mirror_config
+
+Link Information
+
+Target           Node  Address       Status Options
+AlletraMP_E18U31 <> 	<> 		Up     -
+AlletraMP_E18U31 <> 	<> 		Down   -
+receive          <>	<>		Up     -
+receive          <>	<>		Up     -
+
+Group Information
+
+Name              Target           Status   Role          Mode     Options
+Intern_Automation AlletraMP_E18U31 Started  Secondary-Rev Sync
+  LocalVV      ID   RemoteVV     ID   SyncStatus    LastSyncTime
+  Automation1  6199 Automation1   687 Synced        NA
+  Automation2  6200 Automation2   688 Synced        NA
+  Automation3  6201 Automation3   689 Synced        NA
+  Automation4  6202 Automation4   690 Synced        NA

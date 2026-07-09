@@ -213,7 +213,11 @@ def run_link_op(
         except SSHError as exc:
             results.append(StepResult(op, cmd, False, f"SSH error: {exc}"))
             return results
-        results.append(StepResult(op, cmd, True, out.strip() or "command issued"))
+        out_stripped = out.strip()
+        if _looks_like_error(out_stripped):
+            results.append(StepResult(op, cmd, False, f"command error: {out_stripped}"))
+            return results
+        results.append(StepResult(op, cmd, True, out_stripped or "command issued"))
 
         # Verify by polling showrcopy on the same connection.
         predicate = _verify_predicate(op)
@@ -328,6 +332,28 @@ def _g_detail(groups: dict[str, RcopyGroup | None], host: str) -> str:
     )
 
 
+def _looks_like_error(output: str) -> bool:
+    """Detect a CLI error in command output (3PAR/Alletra print 'Error: ...')."""
+    low = output.strip().lower()
+    return low.startswith("error") or "error:" in low
+
+
+def _run_critical(
+    settings: Settings, host: str, name: str, command: str, results: list[StepResult]
+) -> bool:
+    """Run a must-succeed command. Appends a StepResult; returns False (and marks
+    the step failed) if SSH fails OR the CLI output looks like an error."""
+    ok, out = _exec_on(settings, host, command)
+    if not ok:
+        results.append(StepResult(name, command, False, f"SSH error: {out}"))
+        return False
+    if _looks_like_error(out):
+        results.append(StepResult(name, command, False, f"command error: {out}"))
+        return False
+    results.append(StepResult(name, command, True, out or "command issued"))
+    return True
+
+
 def failover(
     settings: Settings,
     base_group: str = DEFAULT_GROUP,
@@ -395,9 +421,7 @@ def failover(
         )
 
     # 1) Stop the primary group.
-    ok, out = _exec_on(settings, p_host, stop_cmd)
-    results.append(StepResult("stop primary", stop_cmd, ok, out if ok else f"SSH error: {out}"))
-    if not ok:
+    if not _run_critical(settings, p_host, "stop primary", stop_cmd, results):
         return results
     ok, groups = _poll(
         settings, base_group,
@@ -410,9 +434,7 @@ def failover(
         return results
 
     # 2) Fail over on the DR array.
-    ok, out = _exec_on(settings, d_host, failover_cmd)
-    results.append(StepResult("failover DR", failover_cmd, ok, out if ok else f"SSH error: {out}"))
-    if not ok:
+    if not _run_critical(settings, d_host, "failover DR", failover_cmd, results):
         return results
     ok, groups = _poll(
         settings, base_group,
@@ -486,24 +508,36 @@ def failback(
         )
 
     # 1) Recover: reverse replication (original primary becomes secondary).
-    ok, out = _exec_on(settings, d_host, recover_cmd)
-    results.append(StepResult("recover", recover_cmd, ok, out if ok else f"SSH error: {out}"))
-    if not ok:
+    if not _run_critical(settings, d_host, "recover", recover_cmd, results):
         return results
+    # Wait until the original primary flips to secondary AND the DR group is
+    # Started - recover starts+syncs the group, and syncing before it is Started
+    # fails with "Group isn't started".
     ok, groups = _poll(
         settings, base_group,
-        lambda gs: bool(gs.get(clean_p)) and gs[clean_p].is_secondary,
+        lambda gs: (
+            bool(gs.get(clean_p)) and gs[clean_p].is_secondary
+            and bool(gs.get(clean_d)) and gs[clean_d].is_started
+        ),
         timeout, poll_interval,
     )
-    results.append(StepResult("verify recover", "showrcopy", ok, _g_detail(groups, p_host)))
+    results.append(StepResult(
+        "verify recover", "showrcopy", ok,
+        f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}"))
     if not ok:
         return results
 
-    # 2) Sync DR -> original primary and wait until Synced.
+    # 2) Sync DR -> original primary and wait until Synced. The command may warn
+    # if recover already synced; the verify gate below is authoritative, so a
+    # command warning does not halt the workflow.
     ok, out = _exec_on(settings, d_host, sync_cmd)
-    results.append(StepResult("sync", sync_cmd, ok, out if ok else f"SSH error: {out}"))
     if not ok:
+        results.append(StepResult("sync", sync_cmd, False, f"SSH error: {out}"))
         return results
+    cmd_warn = _looks_like_error(out)
+    results.append(StepResult(
+        "sync", sync_cmd, not cmd_warn,
+        (f"non-fatal warning (verify is authoritative): {out}" if cmd_warn else (out or "sync issued"))))
     ok, groups = _poll(
         settings, base_group,
         lambda gs: bool(gs.get(clean_d)) and gs[clean_d].all_synced(),
@@ -514,9 +548,7 @@ def failback(
         return results
 
     # 3) Restore: return to natural direction (primary R/W, DR read-only).
-    ok, out = _exec_on(settings, d_host, restore_cmd)
-    results.append(StepResult("restore", restore_cmd, ok, out if ok else f"SSH error: {out}"))
-    if not ok:
+    if not _run_critical(settings, d_host, "restore", restore_cmd, results):
         return results
     ok, groups = _poll(
         settings, base_group,

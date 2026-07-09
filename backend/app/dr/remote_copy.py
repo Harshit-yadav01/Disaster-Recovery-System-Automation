@@ -31,12 +31,20 @@ import httpx
 
 logger = logging.getLogger("dr.remotecopy")
 
-# Verified WSAPI action codes for recoverRemoteCopyGroupFromDisaster.
+# Verified WSAPI action codes for POST /remotecopygroups/{name} {"action": N}.
+# Start/stop/sync manage the replication link; failover/recover/restore drive
+# the disaster-recovery role changes.
+ACTION_START = 3     # start replication
+ACTION_STOP = 4      # stop replication (required before a planned failover)
+ACTION_SYNC = 5      # synchronize
 ACTION_FAILOVER = 7  # RC_ACTION_CHANGE_TO_PRIMARY
 ACTION_RECOVER = 8   # RC_ACTION_MIGRATE_GROUP
 ACTION_RESTORE = 9   # RC_ACTION_CHANGE_TO_SECONDARY
 
 ACTIONS = {
+    "start": ACTION_START,
+    "stop": ACTION_STOP,
+    "sync": ACTION_SYNC,
     "failover": ACTION_FAILOVER,
     "recover": ACTION_RECOVER,
     "restore": ACTION_RESTORE,
@@ -219,6 +227,15 @@ class DrManager:
         """RESTORE: return replication to its original direction (primary
         becomes source/RW, secondary becomes target/Read-Only)."""
         return self._run_action("restore", groups)
+
+    def stop(self, groups: list[str] | None = None) -> list[GroupResult]:
+        """STOP the replication link (required before a planned failover on a
+        group that is still actively replicating)."""
+        return self._run_action("stop", groups)
+
+    def start(self, groups: list[str] | None = None) -> list[GroupResult]:
+        """START (resume) the replication link."""
+        return self._run_action("start", groups)
 
     # ------------------------------------------------------------------ #
     # Host presentation (VLUNs)

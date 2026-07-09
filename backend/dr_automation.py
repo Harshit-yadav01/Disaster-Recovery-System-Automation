@@ -131,8 +131,15 @@ def _run_phase(phase: str, args, settings) -> int:
 
     with DrManager(host, settings.alletra_username, settings.alletra_password,
                    timeout=settings.alletra_timeout, dry_run=dry_run) as dr:
+        rc = 0
+        # A planned failover needs the group stopped first (the array rejects
+        # failover on an actively-replicating group). --stop-first does that.
+        if phase == "failover" and getattr(args, "stop_first", False):
+            stop_results = dr.stop(groups=groups)
+            rc |= _print_results("stop", stop_results)
+
         results = getattr(dr, phase)(groups=groups)
-        rc = _print_results(phase, results)
+        rc |= _print_results(phase, results)
 
         # Failover optionally presents the secondary volumes to a host.
         if phase == "failover" and args.present_host:
@@ -159,7 +166,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("status", help="List Remote Copy groups and roles (read-only)")
     add_common(sp)
 
-    for phase in ("failover", "recover", "restore"):
+    for phase in ("failover", "recover", "restore", "stop", "start"):
         sp = sub.add_parser(phase, help=f"{phase.capitalize()} Remote Copy groups")
         add_common(sp)
         sp.add_argument("--execute", action="store_true",
@@ -167,6 +174,9 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--yes", action="store_true",
                         help="Skip the interactive confirmation prompt")
         if phase == "failover":
+            sp.add_argument("--stop-first", action="store_true",
+                            help="Stop the group before failover (needed for a "
+                                 "planned failover on a running group)")
             sp.add_argument("--present-host",
                             help="After failover, present the group volumes to this "
                                  "host at the secondary site")

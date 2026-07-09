@@ -246,37 +246,91 @@ class DrManager:
     # ------------------------------------------------------------------ #
     # Host presentation (VLUNs)
     # ------------------------------------------------------------------ #
-    def present_group_volumes(
-        self, host: str, groups: list[str] | None = None
-    ) -> list[GroupResult]:
-        """Export the volumes of the selected Remote Copy groups to a host at
-        the secondary site (creates VLUNs with an auto-assigned LUN)."""
+    def _group_volume_names(self, groups: list[str] | None) -> list[str]:
+        """Return the volume names belonging to the selected Remote Copy groups."""
         selected = self._select(groups)
         by_name = {g["name"]: g for g in self.list_groups() if g.get("name")}
-        results: list[GroupResult] = []
+        names: list[str] = []
         for name in selected:
             for vol in by_name.get(name, {}).get("volumes", []):
                 vol_name = vol.get("localVolumeName") or vol.get("name")
-                if not vol_name:
-                    continue
-                if self.dry_run:
-                    logger.info("[DRY-RUN] would present volume '%s' to host '%s'", vol_name, host)
-                    results.append(GroupResult(vol_name, True, "dry-run"))
-                    continue
-                try:
-                    resp = self._client.post(
-                        "/api/v1/vluns",
-                        json={"volumeName": vol_name, "hostname": host, "autoLun": True},
-                    )
-                    if resp.status_code >= 400:
-                        detail = self._error_detail(resp)
-                        logger.warning("Present '%s' -> '%s': HTTP %s %s",
-                                       vol_name, host, resp.status_code, detail)
-                        results.append(GroupResult(vol_name, False, f"HTTP {resp.status_code}: {detail}"))
-                    else:
-                        logger.info("Presented volume '%s' to host '%s'", vol_name, host)
-                        results.append(GroupResult(vol_name, True, "presented"))
-                except httpx.HTTPError as exc:
-                    logger.warning("Present '%s' -> '%s': %s", vol_name, host, exc)
-                    results.append(GroupResult(vol_name, False, str(exc)))
+                if vol_name:
+                    names.append(vol_name)
+        return names
+
+    def present_group_volumes(
+        self, host: str, groups: list[str] | None = None
+    ) -> list[GroupResult]:
+        """Export the volumes of the selected Remote Copy groups to a host
+        (creates VLUNs with an auto-assigned LUN)."""
+        results: list[GroupResult] = []
+        for vol_name in self._group_volume_names(groups):
+            if self.dry_run:
+                logger.info("[DRY-RUN] would present volume '%s' to host '%s'", vol_name, host)
+                results.append(GroupResult(vol_name, True, "dry-run"))
+                continue
+            try:
+                resp = self._client.post(
+                    "/api/v1/vluns",
+                    json={"volumeName": vol_name, "hostname": host, "autoLun": True},
+                )
+                if resp.status_code >= 400:
+                    detail = self._error_detail(resp)
+                    logger.warning("Present '%s' -> '%s': HTTP %s %s",
+                                   vol_name, host, resp.status_code, detail)
+                    results.append(GroupResult(vol_name, False, f"HTTP {resp.status_code}: {detail}"))
+                else:
+                    logger.info("Presented volume '%s' to host '%s'", vol_name, host)
+                    results.append(GroupResult(vol_name, True, "presented"))
+            except httpx.HTTPError as exc:
+                logger.warning("Present '%s' -> '%s': %s", vol_name, host, exc)
+                results.append(GroupResult(vol_name, False, str(exc)))
         return results
+
+    def unpresent_group_volumes(
+        self, groups: list[str] | None = None, host: str | None = None
+    ) -> list[GroupResult]:
+        """Remove the VLUNs (host exports) for the selected groups' volumes.
+
+        If ``host`` is given, only exports to that host are removed; otherwise
+        every export of those volumes is removed.
+        """
+        wanted = set(self._group_volume_names(groups))
+        results: list[GroupResult] = []
+        if not wanted:
+            return results
+
+        resp = self._client.get("/api/v1/vluns")
+        resp.raise_for_status()
+        vluns = resp.json().get("members", [])
+        for v in vluns:
+            vol_name = v.get("volumeName")
+            hostname = v.get("hostname")
+            if vol_name not in wanted:
+                continue
+            if host and hostname != host:
+                continue
+            # WSAPI VLUN id: volumeName,lun,hostname[,node:slot:port]
+            key = f"{vol_name},{v.get('lun')},{hostname or ''}"
+            pos = v.get("portPos")
+            if pos:
+                key += f",{pos.get('node')}:{pos.get('slot')}:{pos.get('cardPort')}"
+            label = f"{vol_name} @ {hostname}"
+            if self.dry_run:
+                logger.info("[DRY-RUN] would unpresent VLUN '%s'", key)
+                results.append(GroupResult(label, True, "dry-run"))
+                continue
+            try:
+                dresp = self._client.delete(f"/api/v1/vluns/{key}")
+                if dresp.status_code >= 400:
+                    detail = self._error_detail(dresp)
+                    logger.warning("Unpresent '%s': HTTP %s %s", key, dresp.status_code, detail)
+                    results.append(GroupResult(label, False, f"HTTP {dresp.status_code}: {detail}"))
+                else:
+                    logger.info("Unpresented VLUN '%s'", key)
+                    results.append(GroupResult(label, True, "unpresented"))
+            except httpx.HTTPError as exc:
+                logger.warning("Unpresent '%s': %s", key, exc)
+                results.append(GroupResult(label, False, str(exc)))
+        return results
+

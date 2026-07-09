@@ -151,6 +151,37 @@ def _run_phase(phase: str, args, settings) -> int:
     return rc
 
 
+def cmd_present(args, settings) -> int:
+    host = _host_for(args, settings)
+    groups = _parse_groups(args.groups)
+    dry_run = not args.execute
+    if not dry_run and not _confirm("present", host, groups, args.yes):
+        print("Aborted - no changes made.")
+        return 1
+    with DrManager(host, settings.alletra_username, settings.alletra_password,
+                   timeout=settings.alletra_timeout, dry_run=dry_run) as dr:
+        rc = _print_results("present", dr.present_group_volumes(args.to_host, groups=groups))
+    if dry_run:
+        print("\n(DRY-RUN: nothing was changed. Re-run with --execute to apply.)")
+    return rc
+
+
+def cmd_unpresent(args, settings) -> int:
+    host = _host_for(args, settings)
+    groups = _parse_groups(args.groups)
+    dry_run = not args.execute
+    if not dry_run and not _confirm("unpresent", host, groups, args.yes):
+        print("Aborted - no changes made.")
+        return 1
+    with DrManager(host, settings.alletra_username, settings.alletra_password,
+                   timeout=settings.alletra_timeout, dry_run=dry_run) as dr:
+        rc = _print_results("unpresent",
+                            dr.unpresent_group_volumes(groups=groups, host=args.from_host))
+    if dry_run:
+        print("\n(DRY-RUN: nothing was changed. Re-run with --execute to apply.)")
+    return rc
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="dr_automation.py",
@@ -180,6 +211,19 @@ def build_parser() -> argparse.ArgumentParser:
             sp.add_argument("--present-host",
                             help="After failover, present the group volumes to this "
                                  "host at the secondary site")
+
+    # present / unpresent volumes (VLUNs) for the cycle's steps 2/3/5/7
+    sp = sub.add_parser("present", help="Present group volumes to a host (create VLUNs)")
+    add_common(sp)
+    sp.add_argument("--to-host", required=True, help="Host to present the volumes to")
+    sp.add_argument("--execute", action="store_true", help="Apply (omit for dry-run)")
+    sp.add_argument("--yes", action="store_true", help="Skip the confirmation prompt")
+
+    sp = sub.add_parser("unpresent", help="Remove group volume exports (delete VLUNs)")
+    add_common(sp)
+    sp.add_argument("--from-host", help="Only remove exports to this host (default: all)")
+    sp.add_argument("--execute", action="store_true", help="Apply (omit for dry-run)")
+    sp.add_argument("--yes", action="store_true", help="Skip the confirmation prompt")
     return p
 
 
@@ -194,6 +238,10 @@ def main() -> int:
 
     if args.command == "status":
         return cmd_status(args, settings)
+    if args.command == "present":
+        return cmd_present(args, settings)
+    if args.command == "unpresent":
+        return cmd_unpresent(args, settings)
     return _run_phase(args.command, args, settings)
 
 

@@ -946,3 +946,63 @@ transition:.3s;
 transform:translateY(-6px);
 
 }
+
+/* ===========================
+   Disaster Recovery panel
+============================ */
+.dr-panel .section-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.dr-source{color:#00d084;font-size:13px;font-weight:600;}
+.dr-source i{margin-right:6px;}
+.dr-arrays{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:18px 0;}
+.dr-array{background:#0e1b29;border:1px solid #1c2c3f;border-radius:12px;padding:18px;}
+.dr-array h4{color:#9aa7b8;font-size:13px;letter-spacing:.5px;margin-bottom:12px;}
+.dr-array-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.dr-group-name{color:#cdd8e6;font-size:13px;margin-bottom:12px;font-family:monospace;word-break:break-all;}
+.dr-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block;}
+.dr-badge.green{background:rgba(0,208,132,.15);color:#00d084;}
+.dr-badge.blue{background:rgba(0,180,255,.15);color:#00b4ff;}
+.dr-badge.amber{background:rgba(255,193,7,.15);color:#ffc107;}
+.dr-badge.grey{background:rgba(154,167,184,.15);color:#9aa7b8;}
+.dr-vols{width:100%;border-collapse:collapse;margin-top:8px;}
+.dr-vols th,.dr-vols td{text-align:left;padding:7px 8px;font-size:12px;border-bottom:1px solid #172636;}
+.dr-vols th{color:#7d8da0;font-weight:500;}
+.dr-actions{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;margin-top:12px;}
+.dr-dryrun{display:flex;align-items:center;gap:8px;color:#cdd8e6;font-size:14px;cursor:pointer;}
+.dr-buttons{display:flex;gap:10px;flex-wrap:wrap;}
+.dr-btn{padding:11px 20px;border:none;border-radius:8px;font-weight:600;cursor:pointer;color:#fff;transition:.2s;}
+.dr-btn i{margin-right:6px;}
+.dr-btn.danger{background:#e0533d;}
+.dr-btn.primary{background:#00b4ff;color:#08121d;}
+.dr-btn.ghost{background:#18283d;color:#cdd8e6;}
+.dr-btn:hover:not(:disabled){filter:brightness(1.12);}
+.dr-btn:disabled{opacity:.4;cursor:not-allowed;}
+.dr-job{margin-top:22px;background:#0e1b29;border:1px solid #1c2c3f;border-radius:12px;padding:18px;}
+.dr-job-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.dr-job-state{padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;text-transform:capitalize;}
+.dr-job-state.running{background:rgba(0,180,255,.15);color:#00b4ff;}
+.dr-job-state.pending{background:rgba(154,167,184,.15);color:#9aa7b8;}
+.dr-job-state.succeeded{background:rgba(0,208,132,.15);color:#00d084;}
+.dr-job-state.failed{background:rgba(224,83,61,.15);color:#e0533d;}
+.dr-steps{display:flex;flex-direction:column;gap:10px;}
+.dr-step{background:#0b1622;border-left:3px solid #1c2c3f;border-radius:6px;padding:11px 14px;}
+.dr-step.ok{border-left-color:#00d084;}
+.dr-step.fail{border-left-color:#e0533d;}
+.dr-step.running{border-left-color:#00b4ff;color:#00b4ff;font-size:13px;}
+.dr-step-head{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;}
+.dr-ok{color:#00d084;}
+.dr-fail{color:#e0533d;}
+.dr-step-detail{color:#9aa7b8;font-size:13px;margin-top:5px;}
+.dr-step-cmd{color:#7d8da0;font-family:monospace;font-size:12px;margin-top:5px;}
+.dr-error{color:#e0533d;}
+.dr-loading{color:#9aa7b8;}
+.dr-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.dr-modal-overlay[hidden]{display:none;}
+.dr-modal{background:#101b28;border:1px solid #1c2c3f;border-radius:14px;padding:26px;width:470px;max-width:92vw;}
+.dr-modal h3{margin-bottom:12px;color:#fff;}
+.dr-modal p{color:#cdd8e6;font-size:14px;margin-bottom:14px;line-height:1.5;}
+.dr-ack{margin-bottom:14px;color:#ffc107;font-size:13px;}
+.dr-ack label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;}
+.dr-type{display:block;color:#cdd8e6;font-size:13px;margin-bottom:20px;}
+.dr-type input{width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px solid #1c2c3f;background:#0b1622;color:#fff;font-size:14px;}
+.dr-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+@media(max-width:900px){.dr-arrays{grid-template-columns:1fr;}}

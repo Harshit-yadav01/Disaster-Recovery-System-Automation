@@ -18,7 +18,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
-from .routers import auth, dashboard
+from .routers import auth, dashboard, dr
 
 logging.basicConfig(level=logging.INFO)
 
@@ -37,6 +37,7 @@ app.add_middleware(
 # API routers
 app.include_router(auth.router)
 app.include_router(dashboard.router)
+app.include_router(dr.router)
 
 
 @app.get("/api/health", tags=["health"])

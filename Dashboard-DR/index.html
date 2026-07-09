@@ -143,6 +143,42 @@ Disaster Recovery Dashboard
 
 </div>
 
+<!-- ===========================
+     Disaster Recovery Operations
+============================ -->
+<div class="section dr-panel" id="drPanel">
+    <div class="section-header">
+        <h2>Disaster Recovery &mdash; Replication Control</h2>
+        <span class="dr-source"><i class="fa-solid fa-terminal"></i> SSH &bull; Live (Intern_Automation)</span>
+    </div>
+
+    <div class="dr-status" id="drStatus">
+        <p class="dr-loading">Loading replication status&hellip;</p>
+    </div>
+
+    <div class="dr-actions">
+        <label class="dr-dryrun">
+            <input type="checkbox" id="drDryRun" checked>
+            <span>Dry-run (preview only)</span>
+        </label>
+        <div class="dr-buttons">
+            <button class="dr-btn danger" id="btnFailover"><i class="fa-solid fa-power-off"></i> Failover</button>
+            <button class="dr-btn primary" id="btnFailback"><i class="fa-solid fa-arrow-rotate-left"></i> Failback</button>
+            <button class="dr-btn ghost" id="btnStart">Start</button>
+            <button class="dr-btn ghost" id="btnStop">Stop</button>
+            <button class="dr-btn ghost" id="btnSync">Sync</button>
+        </div>
+    </div>
+
+    <div class="dr-job" id="drJob" hidden>
+        <div class="dr-job-head">
+            <h3 id="drJobTitle">Operation</h3>
+            <span class="dr-job-state running" id="drJobState">running</span>
+        </div>
+        <div class="dr-steps" id="drSteps"></div>
+    </div>
+</div>
+
 <!-- Cards -->
 
 <div class="cards" id="cardsGrid">
@@ -782,9 +818,28 @@ Quick Actions
 </div>
 
 </div>
+<!-- DR confirmation modal -->
+<div class="dr-modal-overlay" id="drModal" hidden>
+    <div class="dr-modal">
+        <h3 id="drModalTitle">Confirm</h3>
+        <p id="drModalBody"></p>
+        <div class="dr-ack" id="drAckWrap" hidden>
+            <label><input type="checkbox" id="drAck"> I confirm the Primary site is failed / inaccessible.</label>
+        </div>
+        <label class="dr-type">Type <b id="drTypeWord">failover</b> to proceed:
+            <input type="text" id="drTypeInput" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="dr-modal-actions">
+            <button class="dr-btn ghost" id="drCancel">Cancel</button>
+            <button class="dr-btn danger" id="drConfirm" disabled>Confirm</button>
+        </div>
+    </div>
+</div>
+
 <script src="config.js"></script>
 <script src="api.js"></script>
 <script src="script.js"></script>
+<script src="dr.js"></script>
 </body>
 
 </html>

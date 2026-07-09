@@ -66,6 +66,29 @@
         getDashboard() {
             return this.get("/dashboard");
         },
+
+        // Authenticated POST that returns parsed JSON.
+        async post(path, body) {
+            const res = await fetch(`${cfg.API_BASE}${path}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${this.getToken()}`,
+                },
+                body: JSON.stringify(body || {}),
+            });
+
+            if (res.status === 401) {
+                this.clearSession();
+                window.location.href = "login.html";
+                throw new Error("Session expired");
+            }
+            if (!res.ok) {
+                const detail = await safeDetail(res);
+                throw new Error(detail || `Request failed (${res.status})`);
+            }
+            return res.json();
+        },
     };
 
     async function safeDetail(res) {

@@ -167,15 +167,17 @@ def run_link_op(
     dry_run: bool = True,
     timeout: int = 180,
     poll_interval: int = 5,
+    sink: list[StepResult] | None = None,
 ) -> list[StepResult]:
     """Run a start/stop/sync operation on ``base_group`` and verify the result.
 
     Dry-run (default) resolves + prints the exact command without executing it.
+    ``sink`` lets a background job observe steps live as they are appended.
     """
     if op not in LINK_OPS:
         raise DrError(f"Unsupported op '{op}'. Expected one of {LINK_OPS}.")
 
-    results: list[StepResult] = []
+    results: list[StepResult] = sink if sink is not None else []
 
     host, group_name, group = resolve_primary(settings, base_group)
     role, status, synced = _snapshot(group)
@@ -361,13 +363,15 @@ def failover(
     dry_run: bool = True,
     timeout: int = 180,
     poll_interval: int = 5,
+    sink: list[StepResult] | None = None,
 ) -> list[StepResult]:
     """Planned failover: stop the primary group, then promote the DR group.
 
     NOTE: performs NO health check on the primary. The operator must ensure the
     primary site is failed/inaccessible (or, for a planned test, accept the stop).
+    ``sink`` lets a background job observe steps live as they are appended.
     """
-    results: list[StepResult] = []
+    results: list[StepResult] = sink if sink is not None else []
     p_host = _primary_host(settings)
     d_host = _recovery_host(settings)
     if not p_host or not d_host:
@@ -452,12 +456,14 @@ def failback(
     dry_run: bool = True,
     timeout: int = 300,
     poll_interval: int = 5,
+    sink: list[StepResult] | None = None,
 ) -> list[StepResult]:
     """Failback (Option 2): recover -> sync -> restore, back to natural direction.
 
     All commands run on the DR array that took over during failover.
+    ``sink`` lets a background job observe steps live as they are appended.
     """
-    results: list[StepResult] = []
+    results: list[StepResult] = sink if sink is not None else []
     p_host = _primary_host(settings)
     d_host = _recovery_host(settings)
     if not p_host or not d_host:

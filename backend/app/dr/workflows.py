@@ -358,11 +358,11 @@ def failover(
             f"Group '{base_group}' not found on both arrays "
             f"(primary={p.role if p else 'absent'}, dr={d.role if d else 'absent'})."
         )
-    if not (p.is_primary and d.is_secondary):
-        raise DrError(
-            "Failover precondition not met: expected primary=Primary, dr=Secondary; "
-            f"saw primary={p.role}, dr={d.role}. Aborting to avoid an unsafe change."
-        )
+    precond_ok = p.is_primary and d.is_secondary
+    precond_msg = (
+        None if precond_ok
+        else f"expected primary=Primary, dr=Secondary; saw primary={p.role}, dr={d.role}"
+    )
 
     stop_cmd = f"stoprcopygroup -f {p.name}"
     failover_cmd = f"setrcopygroup failover -f -t {d.target} {d.name}"
@@ -380,9 +380,19 @@ def failover(
     )
 
     if dry_run:
+        if precond_msg:
+            results.append(StepResult(
+                "precondition", "", False,
+                f"execution would be BLOCKED: {precond_msg}"))
         results.append(StepResult("stop primary", stop_cmd, True, "DRY-RUN: not executed"))
         results.append(StepResult("failover DR", failover_cmd, True, "DRY-RUN: not executed"))
         return results
+
+    if not precond_ok:
+        raise DrError(
+            "Failover precondition not met: " + precond_msg
+            + ". Aborting to avoid an unsafe change."
+        )
 
     # 1) Stop the primary group.
     ok, out = _exec_on(settings, p_host, stop_cmd)
@@ -438,11 +448,11 @@ def failback(
     d = groups.get(clean_d)
     if not d:
         raise DrError(f"Group '{base_group}' not found on the DR array {clean_d}.")
-    if not d.is_primary:
-        raise DrError(
-            "Failback precondition not met: the DR array is not holding the group as "
-            f"primary (role={d.role}). Run a failover first. Aborting."
-        )
+    precond_ok = d.is_primary
+    precond_msg = (
+        None if precond_ok
+        else f"DR array is not holding the group as primary (role={d.role}); run a failover first"
+    )
 
     recover_cmd = f"setrcopygroup recover -f -t {d.target} {d.name}"
     sync_cmd = f"syncrcopy {d.name}"
@@ -461,10 +471,19 @@ def failback(
     )
 
     if dry_run:
+        if precond_msg:
+            results.append(StepResult(
+                "precondition", "", False,
+                f"execution would be BLOCKED: {precond_msg}"))
         results.append(StepResult("recover", recover_cmd, True, "DRY-RUN: not executed"))
         results.append(StepResult("sync", sync_cmd, True, "DRY-RUN: not executed"))
         results.append(StepResult("restore", restore_cmd, True, "DRY-RUN: not executed"))
         return results
+
+    if not precond_ok:
+        raise DrError(
+            "Failback precondition not met: " + precond_msg + ". Aborting."
+        )
 
     # 1) Recover: reverse replication (original primary becomes secondary).
     ok, out = _exec_on(settings, d_host, recover_cmd)

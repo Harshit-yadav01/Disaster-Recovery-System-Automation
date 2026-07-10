@@ -1150,58 +1150,89 @@ transform:translateY(-6px);
 @media(max-width:900px){.dr-status-grid{grid-template-columns:1fr;}}
 
 /* =========================================================
-   HPE brand theme  (background + text + HPE-green boxes)
-   Cosmetic only. Loaded last so it overrides earlier rules.
-   HPE green = #01A982 ; dark on-green text for AA contrast.
+   HPE LIGHT theme (cosmetic only; loaded last -> overrides).
+   Light surfaces, dark text, HPE green (#01A982) accents.
    ========================================================= */
 :root{
   --hpe-green:#01A982;
   --hpe-green-d:#017a5e;
-  --hpe-bg:#0b1519;
-  --hpe-panel:#111e24;
-  --hpe-text:#eef3f6;
-  --hpe-dim:#9fb1bd;
-  --on-green:#04241c;
+  --pg-bg:#eef1f4;      /* page background */
+  --surface:#ffffff;    /* sidebar / panels / boxes */
+  --surface-2:#f4f6f8;  /* subtle fills */
+  --line:#e2e6ea;       /* borders */
+  --ink:#1c2733;        /* primary text */
+  --ink-dim:#5a6b7a;    /* secondary text */
 }
-body{background:var(--hpe-bg);color:var(--hpe-text);}
-.sidebar{background:var(--hpe-panel);}
-.logo h2{color:var(--hpe-green);}
-.hpe-box{border-color:var(--hpe-green);}
-.sidebar .active{background:var(--hpe-green);color:var(--on-green);font-weight:600;}
-.main .topbar h1{color:var(--hpe-text);}
-.section{background:var(--hpe-panel);}
+body{background:var(--pg-bg);color:var(--ink);}
 
-/* ---- Boxes: HPE green fill with dark, high-contrast text ---- */
-.card,.box,.infra-card,.storage-box,.performance-card,.network-card,.stat-card{
-  background:var(--hpe-green);
-  color:var(--on-green);
-  border:1px solid var(--hpe-green-d);
+/* Sidebar */
+.sidebar{background:var(--surface);border-right:1px solid var(--line);}
+.logo h2{color:var(--hpe-green);}
+.logo p{color:var(--ink-dim);}
+.hpe-box{border-color:var(--hpe-green);}
+.sidebar li{color:var(--ink);}
+.sidebar li:hover{background:var(--surface-2);}
+.sidebar .active{background:var(--hpe-green);color:#ffffff;font-weight:600;}
+.sidebar i{color:inherit;}
+
+/* Topbar / headers */
+.main .topbar h1{color:var(--ink);}
+.topbar i{color:var(--ink-dim);}
+.logout-btn{color:var(--ink-dim);}
+.section h2,.section-header h2,.dr-history-head h3,.status-title{color:var(--ink);}
+.view-desc,.stat-site,.node-site{color:var(--ink-dim);}
+.section-header button{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);padding:8px 14px;border-radius:8px;cursor:pointer;}
+
+/* Panels & boxes -> white with border + subtle shadow */
+.section,.card,.box,.infra-card,.storage-box,.performance-card,.network-card,
+.chart-card,.stat-card,.stage,.hist-row,.dr-modal{
+  background:var(--surface);
+  color:var(--ink);
+  border:1px solid var(--line);
+  box-shadow:0 1px 3px rgba(16,32,48,.05);
 }
-.card h1,.card h2,.card h3,.card p,
-.box h3,.box p,.box span,
-.infra-card h1,.infra-card h3,.infra-card p,.infra-card i,
+.card h2,.card h3,.card p,
+.box h3,.box p,
+.infra-card h3,.infra-card p,
 .storage-box h3,.storage-box p,
 .performance-card h3,.performance-card p,
-.network-card h1,.network-card h3,.network-card p,
-.stat-card .stat-site,.stat-card .stat-host,.stat-card .stat-line,.stat-card .stat-line b,
-.stat-card .stat-vols td{
-  color:var(--on-green);
-}
-/* progress bars sitting on green boxes */
-.storage-box .progress,.network-card .progress{background:rgba(0,0,0,.22);}
-.storage-box .progress-fill,.network-card .progress-fill{background:var(--on-green);}
-/* badges must stay legible on green: dark translucent pill + light text */
-.stat-card .role-badge,.stat-card .sync-badge{background:rgba(0,0,0,.3);}
-.stat-card .role-badge.green,.stat-card .sync-badge.green{color:#bff7e6;}
-.stat-card .role-badge.blue{color:#bfe9ff;}
-.stat-card .sync-badge.amber{color:#ffe08a;}
-.stat-card .role-badge.grey,.stat-card .sync-badge.grey{color:#dbe3ea;}
-.stat-card.source{box-shadow:0 0 22px rgba(1,169,130,.18);}
+.network-card h3,.network-card p,
+.stat-host,.stat-line,.stat-line b,.stat-vols td,
+.stage-body h4,.event h4,.dr-modal h3{color:var(--ink);}
+.card p,.storage-box p,.network-card p,.stage-body p,.dr-modal p,.dr-type,
+.event p,.data-status{color:var(--ink-dim);}
+.infra-card i{color:var(--hpe-green);}
+/* Big metric values in HPE green for emphasis */
+.card h1,.infra-card h1,.network-card h1{color:var(--hpe-green);}
 
-/* ---- Accent elements to HPE green ---- */
-.actions button{background:var(--hpe-green);color:var(--on-green);}
-.actions button:hover{background:var(--hpe-green-d);}
-.dr-btn.primary{background:var(--hpe-green);color:var(--on-green);}
+/* Progress bars */
+.progress,.chart-bar{background:var(--line);}
+.progress-fill,.chart-fill,.chart-fill.cpu,.chart-fill.memory,.chart-fill.storage{background:var(--hpe-green);}
+
+/* Tables */
+.vm-table th,#alertsTable th{background:var(--surface-2);color:var(--ink);}
+.vm-table td,#alertsTable td,.stat-vols td{border-bottom:1px solid var(--line);color:var(--ink);}
+
+/* Badges on light: soft tinted pills */
+.role-badge.green,.sync-badge.green{background:rgba(1,169,130,.14);color:var(--hpe-green-d);}
+.role-badge.blue,.sync-badge.blue{background:rgba(10,107,184,.12);color:#0a6bb8;}
+.sync-badge.amber{background:rgba(181,125,0,.14);color:#b57d00;}
+.role-badge.grey,.sync-badge.grey{background:rgba(90,107,122,.14);color:#5a6b7a;}
+
+/* Buttons */
+.dr-btn.primary{background:var(--hpe-green);color:#ffffff;}
 .dr-btn.primary:hover:not(:disabled){background:var(--hpe-green-d);}
-.rep-banner.active{background:rgba(1,169,130,.14);color:var(--hpe-green);border-color:rgba(1,169,130,.35);}
-.dot{background:var(--hpe-green);box-shadow:0 0 12px var(--hpe-green);}
+.dr-btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);}
+.actions button{background:var(--hpe-green);color:#ffffff;}
+.actions button:hover{background:var(--hpe-green-d);}
+.dr-refresh{background:var(--surface-2);color:var(--ink-dim);}
+.dr-dryrun{color:var(--ink);}
+
+/* Banners */
+.rep-banner.active{background:rgba(1,169,130,.12);color:var(--hpe-green-d);border:1px solid rgba(1,169,130,.3);}
+
+/* Timeline */
+.dot{background:var(--hpe-green);box-shadow:0 0 10px rgba(1,169,130,.4);}
+
+/* Modal input */
+.dr-type input{background:#ffffff;border:1px solid var(--line);color:var(--ink);}

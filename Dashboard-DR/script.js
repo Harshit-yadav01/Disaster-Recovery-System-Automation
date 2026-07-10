@@ -189,8 +189,8 @@ function renderCharts(charts) {
                 ],
             },
             options: {
-                plugins: { legend: { labels: { color: "white" } } },
-                scales: { x: { ticks: { color: "white" } }, y: { ticks: { color: "white" } } },
+                plugins: { legend: { labels: { color: "#33414f" } } },
+                scales: { x: { ticks: { color: "#5a6b7a" } }, y: { ticks: { color: "#5a6b7a" } } },
             },
         });
     }
@@ -207,8 +207,8 @@ function renderCharts(charts) {
                 datasets: [{ label: "Memory %", data: charts.memory_series, backgroundColor: "#00b4ff" }],
             },
             options: {
-                plugins: { legend: { labels: { color: "white" } } },
-                scales: { x: { ticks: { color: "white" } }, y: { ticks: { color: "white" } } },
+                plugins: { legend: { labels: { color: "#33414f" } } },
+                scales: { x: { ticks: { color: "#5a6b7a" } }, y: { ticks: { color: "#5a6b7a" } } },
             },
         });
     }

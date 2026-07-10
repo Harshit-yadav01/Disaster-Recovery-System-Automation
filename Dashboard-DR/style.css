@@ -1238,30 +1238,29 @@ body{background:var(--pg-bg);color:var(--ink);}
 .dr-type input{background:#ffffff;border:1px solid var(--line);color:var(--ink);}
 
 /* ===== Logo: box | HPE | service name (per HPE format) ===== */
-.logo-brand{display:flex;align-items:center;gap:12px;}
-.brand-name{font-size:15px;color:var(--ink-dim);line-height:1.3;}
-.brand-name strong{color:var(--ink);font-weight:800;margin-right:5px;}
+.logo-brand{display:flex;align-items:center;gap:10px;}
+.brand-name{display:flex;flex-direction:column;line-height:1.2;}
+.brand-name strong{color:var(--ink);font-weight:800;font-size:17px;}
+.brand-sub{color:var(--ink-dim);font-size:11px;white-space:nowrap;}
 
 /* ===== Dashboard: green boxes, black text, neutral seamless gaps ===== */
 #view-dashboard{padding-top:18px;}
 #view-dashboard .section{background:transparent;border:none;box-shadow:none;margin-bottom:32px;}
-#view-dashboard .card,#view-dashboard .box,#view-dashboard .infra-card,
-#view-dashboard .storage-box,#view-dashboard .network-card{
+/* Only the sub-information detail boxes are HPE green; everything else neutral */
+#view-dashboard .infra-card,#view-dashboard .storage-box,#view-dashboard .network-card{
   background:var(--hpe-green);
   color:#0d221b;
   border:none;
   box-shadow:none;
   border-radius:14px;
 }
-#view-dashboard .card h1,#view-dashboard .card h2,#view-dashboard .card h3,#view-dashboard .card p,
-#view-dashboard .box h3,#view-dashboard .box p,#view-dashboard .box span,
 #view-dashboard .infra-card h1,#view-dashboard .infra-card h3,#view-dashboard .infra-card p,#view-dashboard .infra-card i,
 #view-dashboard .storage-box h3,#view-dashboard .storage-box p,
 #view-dashboard .network-card h1,#view-dashboard .network-card h3,#view-dashboard .network-card p{
   color:#0d221b;
 }
-#view-dashboard .progress,#view-dashboard .chart-bar{background:rgba(0,0,0,.16);}
-#view-dashboard .progress-fill{background:#0d221b;}
+#view-dashboard .storage-box .progress,#view-dashboard .network-card .progress{background:rgba(0,0,0,.16);}
+#view-dashboard .storage-box .progress-fill,#view-dashboard .network-card .progress-fill{background:#0d221b;}
 
 /* ===== Larger text in Replication / Failover / Failback tabs ===== */
 #view-replication .rep-banner{font-size:16px;}

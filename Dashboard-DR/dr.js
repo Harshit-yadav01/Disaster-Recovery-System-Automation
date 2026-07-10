@@ -94,19 +94,6 @@
         return { primary: mk("PRIMARY SITE", snap.primary), recovery: mk("DR SITE", snap.dr) };
     }
 
-    // Display-only: once the DR array has taken over (Primary-Rev), show the
-    // original Primary as Secondary-Rev to convey the role swap. Does NOT change
-    // any array/backend state - purely how roles are labelled in the UI.
-    function applyRoleSwap(cards) {
-        const p = cards.primary, d = cards.recovery;
-        if (p && d && d.is_primary && String(d.role || "").toLowerCase().endsWith("-rev") && p.is_primary) {
-            p.role = "Secondary-Rev";
-            p.is_primary = false;
-            p.is_secondary = true;
-        }
-        return cards;
-    }
-
     function renderStatusInto(containerId, cards) {
         const el = $(containerId);
         if (!el) return;
@@ -133,7 +120,7 @@
     async function loadStatus() {
         try {
             latestStatus = await window.api.get("/dr/status");
-            const cards = applyRoleSwap(cardsFromStatus(latestStatus));
+            const cards = cardsFromStatus(latestStatus);
             renderBanner(cards);
             ["repStatus", "foStatus", "fbStatus"].forEach((id) => renderStatusInto(id, cards));
         } catch (err) {
@@ -199,7 +186,7 @@
             const job = await window.api.get(`/dr/jobs/${jobId}`);
             renderStages(cont.stages, job);
             const snaps = (job.steps || []).filter((s) => s.snapshot);
-            if (snaps.length) renderStatusInto(cont.status, applyRoleSwap(cardsFromSnapshot(snaps[snaps.length - 1].snapshot)));
+            if (snaps.length) renderStatusInto(cont.status, cardsFromSnapshot(snaps[snaps.length - 1].snapshot));
             if (job.state === "running" || job.state === "pending") {
                 setTimeout(() => pollJob(jobId, cont), 1000);
             } else {

@@ -1148,3 +1148,60 @@ transform:translateY(-6px);
 .stage-note.ok{background:rgba(0,208,132,.12);color:#00d084;}
 .stage-note.warn{background:rgba(255,193,7,.12);color:#ffc107;}
 @media(max-width:900px){.dr-status-grid{grid-template-columns:1fr;}}
+
+/* =========================================================
+   HPE brand theme  (background + text + HPE-green boxes)
+   Cosmetic only. Loaded last so it overrides earlier rules.
+   HPE green = #01A982 ; dark on-green text for AA contrast.
+   ========================================================= */
+:root{
+  --hpe-green:#01A982;
+  --hpe-green-d:#017a5e;
+  --hpe-bg:#0b1519;
+  --hpe-panel:#111e24;
+  --hpe-text:#eef3f6;
+  --hpe-dim:#9fb1bd;
+  --on-green:#04241c;
+}
+body{background:var(--hpe-bg);color:var(--hpe-text);}
+.sidebar{background:var(--hpe-panel);}
+.logo h2{color:var(--hpe-green);}
+.hpe-box{border-color:var(--hpe-green);}
+.sidebar .active{background:var(--hpe-green);color:var(--on-green);font-weight:600;}
+.main .topbar h1{color:var(--hpe-text);}
+.section{background:var(--hpe-panel);}
+
+/* ---- Boxes: HPE green fill with dark, high-contrast text ---- */
+.card,.box,.infra-card,.storage-box,.performance-card,.network-card,.stat-card{
+  background:var(--hpe-green);
+  color:var(--on-green);
+  border:1px solid var(--hpe-green-d);
+}
+.card h1,.card h2,.card h3,.card p,
+.box h3,.box p,.box span,
+.infra-card h1,.infra-card h3,.infra-card p,.infra-card i,
+.storage-box h3,.storage-box p,
+.performance-card h3,.performance-card p,
+.network-card h1,.network-card h3,.network-card p,
+.stat-card .stat-site,.stat-card .stat-host,.stat-card .stat-line,.stat-card .stat-line b,
+.stat-card .stat-vols td{
+  color:var(--on-green);
+}
+/* progress bars sitting on green boxes */
+.storage-box .progress,.network-card .progress{background:rgba(0,0,0,.22);}
+.storage-box .progress-fill,.network-card .progress-fill{background:var(--on-green);}
+/* badges must stay legible on green: dark translucent pill + light text */
+.stat-card .role-badge,.stat-card .sync-badge{background:rgba(0,0,0,.3);}
+.stat-card .role-badge.green,.stat-card .sync-badge.green{color:#bff7e6;}
+.stat-card .role-badge.blue{color:#bfe9ff;}
+.stat-card .sync-badge.amber{color:#ffe08a;}
+.stat-card .role-badge.grey,.stat-card .sync-badge.grey{color:#dbe3ea;}
+.stat-card.source{box-shadow:0 0 22px rgba(1,169,130,.18);}
+
+/* ---- Accent elements to HPE green ---- */
+.actions button{background:var(--hpe-green);color:var(--on-green);}
+.actions button:hover{background:var(--hpe-green-d);}
+.dr-btn.primary{background:var(--hpe-green);color:var(--on-green);}
+.dr-btn.primary:hover:not(:disabled){background:var(--hpe-green-d);}
+.rep-banner.active{background:rgba(1,169,130,.14);color:var(--hpe-green);border-color:rgba(1,169,130,.35);}
+.dot{background:var(--hpe-green);box-shadow:0 0 12px var(--hpe-green);}

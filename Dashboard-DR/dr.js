@@ -22,6 +22,9 @@
     let jobRunning = false;
     let pendingOp = null;
     let statusTimer = null;
+    let monInterval = null;
+    let monSyncChart = null;
+    const monHistory = [];
 
     const CONT = {
         failover: { stages: "foStages", status: "foStatus", dry: "foDry" },
@@ -247,36 +250,185 @@
         else openModal(op);
     }
 
+    // ---- Monitoring --------------------------------------------------------
+    function syncedCount(g) {
+        return g && g.volumes ? g.volumes.filter((v) => String(v.sync_status).toLowerCase() === "synced").length : 0;
+    }
+    function primaryGroup(drst) {
+        const a = ((drst && drst.arrays) || []).find((x) => x.group && x.group.is_primary);
+        return a ? a.group : null;
+    }
+    async function loadMonitoring() {
+        let dash = null, drst = null, jobs = { jobs: [] };
+        try { drst = await window.api.get("/dr/status"); } catch (e) {}
+        try { dash = await window.api.get("/dashboard"); } catch (e) {}
+        try { jobs = await window.api.get("/dr/jobs?limit=6"); } catch (e) {}
+        renderMonTiles(dash, drst);
+        renderMonVolumes(drst);
+        updateSyncChart(drst);
+        renderMonStorage(dash);
+        renderMonEvents(jobs.jobs || []);
+    }
+    function renderMonTiles(dash, drst) {
+        const g = primaryGroup(drst);
+        const tot = g && g.volumes ? g.volumes.length : 0, syn = syncedCount(g);
+        const failedOver = ((drst && drst.arrays) || []).some((a) => a.group && a.group.is_primary && String(a.group.role || "").toLowerCase().endsWith("-rev"));
+        const readiness = dash && dash.readiness ? dash.readiness.percent + "%" : "-";
+        const storage = dash && dash.cards ? (dash.cards.find((c) => /storage/i.test(c.title)) || {}).value : "-";
+        const tiles = [
+            { label: "Replication", value: failedOver ? "Failed over" : (syn === tot && tot > 0 ? "In sync" : "Attention") },
+            { label: "Protected Volumes", value: `${syn}/${tot}` },
+            { label: "DR Readiness", value: readiness },
+            { label: "Storage Usage", value: storage || "-" },
+        ];
+        $("monTiles").innerHTML = tiles.map((t) => `<div class="mon-tile"><span class="mon-tile-label">${esc(t.label)}</span><span class="mon-tile-value">${esc(t.value)}</span></div>`).join("");
+    }
+    function renderMonVolumes(drst) {
+        const g = primaryGroup(drst);
+        if (!g || !g.volumes) { $("monVolumes").innerHTML = `<p class="dr-loading">No volume data.</p>`; return; }
+        $("monVolumes").innerHTML = `<table class="stat-vols"><tr><th>Local</th><th>Remote</th><th>Sync</th></tr>` +
+            g.volumes.map((v) => `<tr><td>${esc(v.local_vv)}</td><td>${esc(v.remote_vv)}</td><td>${syncBadge(v.sync_status)}</td></tr>`).join("") + `</table>`;
+    }
+    function renderMonStorage(dash) {
+        const items = (dash && dash.storage) || [];
+        if (!items.length) { $("monStorage").innerHTML = `<p class="dr-loading">No capacity data.</p>`; return; }
+        $("monStorage").innerHTML = items.map((s) => `<div class="mon-bar"><div class="mon-bar-top"><span>${esc(s.label)}</span><span>${esc(s.detail)}</span></div><div class="progress"><div class="progress-fill" style="width:${Number(s.percent)}%"></div></div></div>`).join("");
+    }
+    function renderMonEvents(jobs) {
+        if (!jobs.length) { $("monEvents").innerHTML = `<p class="dr-loading">No recent operations.</p>`; return; }
+        $("monEvents").innerHTML = jobs.map((j) => {
+            const t = j.created_at ? new Date(j.created_at).toLocaleString() : "";
+            return `<div class="mon-event"><span class="hist-time">${esc(t)}</span><span class="hist-kind ${esc(j.kind)}">${esc(j.kind)}</span><span class="hist-state ${esc(j.state)}">${esc(j.state)}</span></div>`;
+        }).join("");
+    }
+    function updateSyncChart(drst) {
+        const g = primaryGroup(drst);
+        const tot = g && g.volumes ? g.volumes.length : 0, syn = syncedCount(g);
+        const pct = tot ? Math.round((syn / tot) * 100) : 0;
+        monHistory.push({ label: new Date().toLocaleTimeString(), pct });
+        if (monHistory.length > 20) monHistory.shift();
+        const el = $("monSyncChart");
+        if (!el || typeof Chart === "undefined") return;
+        const labels = monHistory.map((p) => p.label), data = monHistory.map((p) => p.pct);
+        if (monSyncChart) { monSyncChart.data.labels = labels; monSyncChart.data.datasets[0].data = data; monSyncChart.update(); }
+        else {
+            monSyncChart = new Chart(el, {
+                type: "line",
+                data: { labels, datasets: [{ label: "% Synced", data, borderColor: "#01A982", backgroundColor: "rgba(1,169,130,.15)", fill: true, tension: 0.35 }] },
+                options: { scales: { y: { min: 0, max: 100, ticks: { color: "#5a6b7a" } }, x: { ticks: { color: "#5a6b7a" } } }, plugins: { legend: { labels: { color: "#33414f" } } } },
+            });
+        }
+    }
+
+    // ---- Reports -----------------------------------------------------------
+    let reportJobs = [];
+    function durationOf(j) {
+        if (!j.created_at || !j.finished_at) return "-";
+        const ms = new Date(j.finished_at) - new Date(j.created_at);
+        if (ms < 0) return "-";
+        const s = Math.round(ms / 1000);
+        return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+    }
+    async function loadReports() {
+        try { const d = await window.api.get("/dr/jobs?limit=50"); reportJobs = d.jobs || []; }
+        catch (e) { $("rptTable").innerHTML = `<p class="dr-error">${esc(e.message)}</p>`; return; }
+        const fo = reportJobs.filter((j) => j.kind === "failover").length;
+        const fb = reportJobs.filter((j) => j.kind === "failback").length;
+        const succ = reportJobs.filter((j) => j.state === "succeeded").length;
+        const rate = reportJobs.length ? Math.round((succ / reportJobs.length) * 100) : 0;
+        $("rptSummary").innerHTML = `<div class="mon-tiles">
+            <div class="mon-tile"><span class="mon-tile-label">Total operations</span><span class="mon-tile-value">${reportJobs.length}</span></div>
+            <div class="mon-tile"><span class="mon-tile-label">Failovers</span><span class="mon-tile-value">${fo}</span></div>
+            <div class="mon-tile"><span class="mon-tile-label">Failbacks</span><span class="mon-tile-value">${fb}</span></div>
+            <div class="mon-tile"><span class="mon-tile-label">Success rate</span><span class="mon-tile-value">${rate}%</span></div></div>`;
+        if (!reportJobs.length) { $("rptTable").innerHTML = `<p class="dr-loading">No operations recorded yet.</p>`; return; }
+        $("rptTable").innerHTML = `<table class="rpt-table"><tr><th>Time</th><th>Operation</th><th>Mode</th><th>Result</th><th>Duration (RTO)</th></tr>` +
+            reportJobs.map((j) => `<tr><td>${esc(j.created_at ? new Date(j.created_at).toLocaleString() : "")}</td>
+            <td><span class="hist-kind ${esc(j.kind)}">${esc(j.kind)}</span></td>
+            <td>${j.dry_run ? "dry-run" : "execute"}</td>
+            <td><span class="hist-state ${esc(j.state)}">${esc(j.state)}</span></td>
+            <td>${esc(durationOf(j))}</td></tr>`).join("") + `</table>`;
+    }
+    function exportCsv() {
+        if (!reportJobs.length) return;
+        const rows = [["Time", "Operation", "Mode", "Result", "DurationSeconds", "JobId"]];
+        reportJobs.forEach((j) => {
+            const dur = (j.created_at && j.finished_at) ? Math.max(0, Math.round((new Date(j.finished_at) - new Date(j.created_at)) / 1000)) : "";
+            rows.push([j.created_at || "", j.kind, j.dry_run ? "dry-run" : "execute", j.state, dur, j.id]);
+        });
+        const csv = rows.map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = `dr-report-${Date.now()}.csv`; a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    // ---- Settings ----------------------------------------------------------
+    async function loadSettings() {
+        let drst = null, health = null;
+        try { drst = await window.api.get("/dr/status"); } catch (e) {}
+        try { health = await window.api.get("/health"); } catch (e) {}
+        const arrays = (drst && drst.arrays) || [];
+        const grp = (drst && drst.group) || "Intern_Automation";
+        const rows = arrays.map((a) => `<div class="set-row"><span>${a.role_label === "primary" ? "Primary array" : "DR array"}</span><b>${esc(a.host)}</b></div>`).join("") || "<p class='dr-loading'>Unavailable.</p>";
+        $("setConn").innerHTML = rows +
+            `<div class="set-row"><span>Remote Copy group</span><b>${esc(grp)}</b></div>` +
+            `<div class="set-row"><span>Data provider</span><b>${esc(health ? health.provider : "-")}</b></div>` +
+            `<div class="set-row"><span>Service</span><b>${esc(health ? health.status : "-")}</b></div>`;
+        $("setAccount").innerHTML = `<div class="set-row"><span>Signed in as</span><b>${esc(localStorage.getItem("drUser") || "admin")}</b></div>`;
+        const dd = localStorage.getItem("drDryRunDefault");
+        $("setDryDefault").checked = dd === null ? true : dd === "true";
+        $("setTheme").value = localStorage.getItem("drTheme") || "light";
+    }
+    function applyTheme(t) { document.body.classList.toggle("dark", t === "dark"); }
+    function applyDryDefault() {
+        const dd = localStorage.getItem("drDryRunDefault");
+        const on = dd === null ? true : dd === "true";
+        if ($("foDry")) $("foDry").checked = on;
+        if ($("fbDry")) $("fbDry").checked = on;
+    }
+
     // ---- Tab navigation ----------------------------------------------------
     const VIEW_FOR = {
-        dashboard: "dashboard", replication: "replication",
-        failover: "failover", failback: "failback",
-        monitoring: "placeholder", reports: "placeholder", settings: "placeholder",
+        dashboard: "dashboard", replication: "replication", failover: "failover",
+        failback: "failback", monitoring: "monitoring", reports: "reports", settings: "settings",
     };
     function showView(name) {
         document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
         const el = $("view-" + name);
         if (el) el.classList.add("active");
+        clearInterval(monInterval); monInterval = null;
+        if (name === "monitoring") { loadMonitoring(); monInterval = setInterval(loadMonitoring, 10000); }
+        else if (name === "reports") { loadReports(); }
+        else if (name === "settings") { loadSettings(); }
+        else if (["replication", "failover", "failback"].includes(name)) { loadStatus(); }
     }
 
     function init() {
+        applyTheme(localStorage.getItem("drTheme") || "light");
+        applyDryDefault();
         const items = document.querySelectorAll(".sidebar li");
         items.forEach((li) => {
             const t = li.textContent.trim().toLowerCase();
             li.addEventListener("click", () => {
                 items.forEach((x) => x.classList.remove("active"));
                 li.classList.add("active");
-                const view = VIEW_FOR[t] || "dashboard";
-                if (view === "placeholder") $("phTitle").textContent = li.textContent.trim();
-                showView(view);
+                showView(VIEW_FOR[t] || "dashboard");
                 window.scrollTo({ top: 0, behavior: "smooth" });
-                if (["replication", "failover", "failback"].includes(view)) loadStatus();
             });
         });
 
         const bf = $("btnFailover"); if (bf) bf.addEventListener("click", () => onExec("failover", "foDry"));
         const bb = $("btnFailback"); if (bb) bb.addEventListener("click", () => onExec("failback", "fbDry"));
         const rr = $("repRefresh"); if (rr) rr.addEventListener("click", loadStatus);
+        const mr = $("monRefresh"); if (mr) mr.addEventListener("click", loadMonitoring);
+        const rpt = $("rptRefresh"); if (rpt) rpt.addEventListener("click", loadReports);
+        const rc = $("rptCsv"); if (rc) rc.addEventListener("click", exportCsv);
+        const rp = $("rptPrint"); if (rp) rp.addEventListener("click", () => window.print());
+        const sr = $("setRefresh"); if (sr) sr.addEventListener("click", loadSettings);
+        const sl = $("setLogout"); if (sl) sl.addEventListener("click", () => window.api.logout());
+        const sd = $("setDryDefault"); if (sd) sd.addEventListener("change", () => { localStorage.setItem("drDryRunDefault", sd.checked); applyDryDefault(); });
+        const sth = $("setTheme"); if (sth) sth.addEventListener("change", () => { localStorage.setItem("drTheme", sth.value); applyTheme(sth.value); });
 
         $("drCancel").addEventListener("click", closeModal);
         $("drConfirm").addEventListener("click", () => { const op = pendingOp; closeModal(); runOp(op, false); });

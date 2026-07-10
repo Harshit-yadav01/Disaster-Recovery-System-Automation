@@ -1171,7 +1171,7 @@ body{background:var(--pg-bg);color:var(--ink);}
 .logo p{color:var(--ink-dim);}
 .hpe-box{border-color:var(--hpe-green);}
 .sidebar li{color:var(--ink);}
-.sidebar li:hover{background:var(--surface-2);}
+.sidebar li:not(.active):hover{background:transparent;}
 .sidebar .active{background:var(--hpe-green);color:#ffffff;font-weight:600;}
 .sidebar i{color:inherit;}
 
@@ -1246,21 +1246,17 @@ body{background:var(--pg-bg);color:var(--ink);}
 /* ===== Dashboard: green boxes, black text, neutral seamless gaps ===== */
 #view-dashboard{padding-top:18px;}
 #view-dashboard .section{background:transparent;border:none;box-shadow:none;margin-bottom:32px;}
-/* Only the sub-information detail boxes are HPE green; everything else neutral */
-#view-dashboard .infra-card,#view-dashboard .storage-box,#view-dashboard .network-card{
+/* Only the top KPI tiles are HPE green; everything else neutral */
+#view-dashboard .card{
   background:var(--hpe-green);
   color:#0d221b;
   border:none;
   box-shadow:none;
   border-radius:14px;
 }
-#view-dashboard .infra-card h1,#view-dashboard .infra-card h3,#view-dashboard .infra-card p,#view-dashboard .infra-card i,
-#view-dashboard .storage-box h3,#view-dashboard .storage-box p,
-#view-dashboard .network-card h1,#view-dashboard .network-card h3,#view-dashboard .network-card p{
+#view-dashboard .card h1,#view-dashboard .card h2,#view-dashboard .card h3,#view-dashboard .card p{
   color:#0d221b;
 }
-#view-dashboard .storage-box .progress,#view-dashboard .network-card .progress{background:rgba(0,0,0,.16);}
-#view-dashboard .storage-box .progress-fill,#view-dashboard .network-card .progress-fill{background:#0d221b;}
 
 /* ===== Larger text in Replication / Failover / Failback tabs ===== */
 #view-replication .rep-banner{font-size:16px;}
@@ -1277,3 +1273,42 @@ body{background:var(--pg-bg);color:var(--ink);}
 #view-failover .stage-body p,#view-failback .stage-body p{font-size:14px;}
 #view-failover .dr-btn,#view-failback .dr-btn{font-size:15px;padding:13px 24px;}
 #view-failover .stage-num,#view-failback .stage-num{width:34px;height:34px;font-size:15px;}
+
+/* ===== Monitoring / Reports / Settings tabs ===== */
+.mon-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+.mon-tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 3px rgba(16,32,48,.05);}
+.mon-tile-label{font-size:12px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.5px;}
+.mon-tile-value{font-size:24px;font-weight:700;color:var(--hpe-green);}
+.mon-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.mon-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(16,32,48,.05);}
+.mon-card h3{color:var(--ink);font-size:15px;margin-bottom:14px;}
+.mon-bar{margin-bottom:14px;}
+.mon-bar-top{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-dim);margin-bottom:6px;}
+.mon-event{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
+.mon-event:last-child{border-bottom:none;}
+.rpt-actions{display:flex;gap:10px;align-items:center;}
+.rpt-summary{margin-bottom:20px;}
+.rpt-table{width:100%;border-collapse:collapse;}
+.rpt-table th{background:var(--surface-2);color:var(--ink);text-align:left;padding:12px;font-size:13px;}
+.rpt-table td{padding:12px;border-bottom:1px solid var(--line);color:var(--ink);font-size:13px;}
+.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}
+.set-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(16,32,48,.05);}
+.set-card h3{color:var(--ink);font-size:15px;margin-bottom:16px;}
+.set-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--ink-dim);}
+.set-row:last-of-type{border-bottom:none;}
+.set-row b{color:var(--ink);font-family:monospace;}
+.set-row select{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 10px;}
+.set-card .dr-btn{margin-top:14px;}
+
+/* Dark theme (Settings -> Theme). Flips the shared color variables. */
+body.dark{--pg-bg:#0b1519;--surface:#111e24;--surface-2:#16242b;--line:#25353f;--ink:#eef3f6;--ink-dim:#9fb1bd;}
+
+/* Print (Reports -> Print / PDF): show only the report */
+@media print{
+  .sidebar,.topbar,.rpt-actions,.dr-refresh{display:none!important;}
+  .main{margin-left:0!important;}
+  .view{display:none!important;}
+  #view-reports{display:block!important;}
+  .set-card,.mon-card,.rpt-table,.section{box-shadow:none;}
+}
+@media(max-width:900px){.mon-tiles{grid-template-columns:1fr 1fr;}.mon-grid{grid-template-columns:1fr;}}

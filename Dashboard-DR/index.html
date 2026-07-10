@@ -821,9 +821,48 @@ Quick Actions
 </div>
 </div>
 
-<!-- ============ Placeholder view ============ -->
-<div class="view" id="view-placeholder">
-<div class="section"><h2 id="phTitle">Coming soon</h2><p class="view-desc">This section is not part of the DR automation scope yet.</p></div>
+<!-- ============ Monitoring view ============ -->
+<div class="view" id="view-monitoring">
+<div class="section">
+<div class="section-header"><h2>Monitoring</h2><button class="dr-refresh" id="monRefresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button></div>
+<div class="mon-tiles" id="monTiles"></div>
+<div class="mon-grid">
+<div class="mon-card"><h3>Replication Sync (live)</h3><canvas id="monSyncChart" height="120"></canvas></div>
+<div class="mon-card"><h3>Storage Capacity</h3><div id="monStorage"></div></div>
+</div>
+<div class="mon-card"><h3>Volume Sync Status</h3><div id="monVolumes"></div></div>
+<div class="mon-card"><h3>Recent DR Events</h3><div id="monEvents"></div></div>
+</div>
+</div>
+
+<!-- ============ Reports view ============ -->
+<div class="view" id="view-reports">
+<div class="section">
+<div class="section-header"><h2>Reports</h2>
+<div class="rpt-actions">
+<button class="dr-btn ghost" id="rptCsv"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+<button class="dr-btn ghost" id="rptPrint"><i class="fa-solid fa-print"></i> Print / PDF</button>
+<button class="dr-refresh" id="rptRefresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button>
+</div>
+</div>
+<div class="rpt-summary" id="rptSummary"></div>
+<div id="rptTable"></div>
+</div>
+</div>
+
+<!-- ============ Settings view ============ -->
+<div class="view" id="view-settings">
+<div class="section">
+<div class="section-header"><h2>Settings</h2><button class="dr-refresh" id="setRefresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button></div>
+<div class="set-grid">
+<div class="set-card"><h3>Connection</h3><div id="setConn"><p class="dr-loading">Loading&hellip;</p></div></div>
+<div class="set-card"><h3>Preferences</h3>
+<label class="set-row"><span>Dry-run by default</span><input type="checkbox" id="setDryDefault"></label>
+<label class="set-row"><span>Theme</span><select id="setTheme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+</div>
+<div class="set-card"><h3>Account</h3><div id="setAccount"></div><button class="dr-btn ghost" id="setLogout"><i class="fa-solid fa-right-from-bracket"></i> Sign out</button></div>
+</div>
+</div>
 </div>
 
 </div>

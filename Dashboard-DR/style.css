@@ -1236,3 +1236,45 @@ body{background:var(--pg-bg);color:var(--ink);}
 
 /* Modal input */
 .dr-type input{background:#ffffff;border:1px solid var(--line);color:var(--ink);}
+
+/* ===== Logo: box | HPE | service name (per HPE format) ===== */
+.logo-brand{display:flex;align-items:center;gap:12px;}
+.brand-name{font-size:15px;color:var(--ink-dim);line-height:1.3;}
+.brand-name strong{color:var(--ink);font-weight:800;margin-right:5px;}
+
+/* ===== Dashboard: green boxes, black text, neutral seamless gaps ===== */
+#view-dashboard{padding-top:18px;}
+#view-dashboard .section{background:transparent;border:none;box-shadow:none;margin-bottom:32px;}
+#view-dashboard .card,#view-dashboard .box,#view-dashboard .infra-card,
+#view-dashboard .storage-box,#view-dashboard .network-card{
+  background:var(--hpe-green);
+  color:#0d221b;
+  border:none;
+  box-shadow:none;
+  border-radius:14px;
+}
+#view-dashboard .card h1,#view-dashboard .card h2,#view-dashboard .card h3,#view-dashboard .card p,
+#view-dashboard .box h3,#view-dashboard .box p,#view-dashboard .box span,
+#view-dashboard .infra-card h1,#view-dashboard .infra-card h3,#view-dashboard .infra-card p,#view-dashboard .infra-card i,
+#view-dashboard .storage-box h3,#view-dashboard .storage-box p,
+#view-dashboard .network-card h1,#view-dashboard .network-card h3,#view-dashboard .network-card p{
+  color:#0d221b;
+}
+#view-dashboard .progress,#view-dashboard .chart-bar{background:rgba(0,0,0,.16);}
+#view-dashboard .progress-fill{background:#0d221b;}
+
+/* ===== Larger text in Replication / Failover / Failback tabs ===== */
+#view-replication .rep-banner{font-size:16px;}
+#view-replication .stat-site,#view-failover .stat-site,#view-failback .stat-site,
+#view-replication .stat-host,#view-failover .stat-host,#view-failback .stat-host{font-size:14px;}
+#view-replication .stat-line,#view-failover .stat-line,#view-failback .stat-line,
+#view-replication .stat-line b,#view-failover .stat-line b,#view-failback .stat-line b{font-size:15px;}
+#view-replication .stat-vols td,#view-failover .stat-vols td,#view-failback .stat-vols td{font-size:14px;}
+#view-replication .role-badge,#view-failover .role-badge,#view-failback .role-badge,
+#view-replication .sync-badge,#view-failover .sync-badge,#view-failback .sync-badge{font-size:13px;}
+#view-failover .view-desc,#view-failback .view-desc{font-size:16px;line-height:1.65;}
+#view-failover .status-title,#view-failback .status-title{font-size:14px;}
+#view-failover .stage-body h4,#view-failback .stage-body h4{font-size:16px;}
+#view-failover .stage-body p,#view-failback .stage-body p{font-size:14px;}
+#view-failover .dr-btn,#view-failback .dr-btn{font-size:15px;padding:13px 24px;}
+#view-failover .stage-num,#view-failback .stage-num{width:34px;height:34px;font-size:15px;}

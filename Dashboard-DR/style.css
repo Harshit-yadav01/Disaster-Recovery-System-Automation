@@ -1156,22 +1156,22 @@ transform:translateY(-6px);
 :root{
   --hpe-green:#01A982;
   --hpe-green-d:#017a5e;
-  --pg-bg:#eef1f4;      /* page background */
-  --surface:#ffffff;    /* sidebar / panels / boxes */
-  --surface-2:#f4f6f8;  /* subtle fills */
-  --line:#e2e6ea;       /* borders */
-  --ink:#1c2733;        /* primary text */
-  --ink-dim:#5a6b7a;    /* secondary text */
-  /* HPE-branded page backdrop (used by the body gradient below) */
-  --pg-glow:rgba(1,169,130,.18);
-  --pg-grad-a:#f4f8f7;
-  --pg-grad-b:#eaf3f0;
-  --pg-grad-c:#e4f1ec;
+  --pg-bg:#0c1824;      /* page background (HPE dark navy) */
+  --surface:#16232f;    /* sidebar / panels / boxes */
+  --surface-2:#1c2b38;  /* subtle fills / table headers */
+  --line:#25333f;       /* borders */
+  --ink:#e8eef4;        /* primary text */
+  --ink-dim:#8fa1b3;    /* secondary text */
+  /* HPE-branded dark backdrop (used by the body gradient below) */
+  --pg-glow:rgba(1,169,130,.10);
+  --pg-grad-a:#0e1a27;
+  --pg-grad-b:#0c1621;
+  --pg-grad-c:#0a131d;
 }
 body{
   background:
-    radial-gradient(1200px 680px at 100% -12%, var(--pg-glow), transparent 56%),
-    radial-gradient(1000px 620px at -10% 112%, var(--pg-glow), transparent 55%),
+    radial-gradient(1200px 680px at 100% -12%, var(--pg-glow), transparent 58%),
+    radial-gradient(1000px 620px at -10% 112%, rgba(1,169,130,.06), transparent 55%),
     linear-gradient(157deg, var(--pg-grad-a) 0%, var(--pg-grad-b) 48%, var(--pg-grad-c) 100%);
   background-attachment:fixed;
   color:var(--ink);
@@ -1247,7 +1247,7 @@ body{
 .dot{background:var(--hpe-green);box-shadow:0 0 10px rgba(1,169,130,.4);}
 
 /* Modal input */
-.dr-type input{background:#ffffff;border:1px solid var(--line);color:var(--ink);}
+.dr-type input{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);}
 
 /* ===== Logo: box | HPE | service name (per HPE format) ===== */
 .logo-brand{display:flex;align-items:center;gap:10px;}
@@ -1258,22 +1258,28 @@ body{
 /* ===== Dashboard: green boxes, black text, neutral seamless gaps ===== */
 #view-dashboard{padding-top:18px;}
 #view-dashboard .section{background:transparent;border:none;box-shadow:none;margin-bottom:32px;}
-/* Only the top KPI tiles are HPE green; everything else neutral */
+/* Top KPI tiles: dark panels with a colored accent bar (per HPE reference) */
 #view-dashboard .card{
-  background:linear-gradient(150deg,#02c497 0%, var(--hpe-green) 55%, var(--hpe-green-d) 100%);
-  color:#052018;
-  border:none;
-  box-shadow:0 10px 26px rgba(1,169,130,.28);
+  background:var(--surface);
+  color:var(--ink);
+  border:1px solid var(--line);
+  border-bottom:3px solid var(--hpe-green);
+  box-shadow:0 6px 20px rgba(0,0,0,.28);
   border-radius:14px;
   transition:transform .3s ease, box-shadow .3s ease;
 }
 #view-dashboard .card:hover{
   transform:translateY(-6px);
-  box-shadow:0 16px 36px rgba(1,169,130,.36);
+  box-shadow:0 12px 30px rgba(0,0,0,.42);
 }
-#view-dashboard .card h1,#view-dashboard .card h2,#view-dashboard .card h3,#view-dashboard .card p{
-  color:#052018;
+#view-dashboard .card h1{color:#ffffff;}
+#view-dashboard .card h2,#view-dashboard .card h3,#view-dashboard .card p{
+  color:var(--ink-dim);
 }
+#view-dashboard .cards .card:nth-child(1){border-bottom-color:#7c5cff;}
+#view-dashboard .cards .card:nth-child(2){border-bottom-color:#3b82f6;}
+#view-dashboard .cards .card:nth-child(3){border-bottom-color:#01A982;}
+#view-dashboard .cards .card:nth-child(4){border-bottom-color:#f59e0b;}
 
 /* ===== Larger text in Replication / Failover / Failback tabs ===== */
 #view-replication .rep-banner{font-size:16px;}
@@ -1318,7 +1324,7 @@ body{
 .set-card .dr-btn{margin-top:14px;}
 
 /* Dark theme (Settings -> Theme). Flips the shared color variables. */
-body.dark{--pg-bg:#0b1519;--surface:#111e24;--surface-2:#16242b;--line:#25353f;--ink:#eef3f6;--ink-dim:#9fb1bd;--pg-glow:rgba(1,169,130,.14);--pg-grad-a:#0c1a1e;--pg-grad-b:#0a181a;--pg-grad-c:#081614;}
+body.dark{--pg-bg:#0a141f;--surface:#141f2b;--surface-2:#1a2733;--line:#232f3b;--ink:#e8eef4;--ink-dim:#8fa1b3;--pg-glow:rgba(1,169,130,.09);--pg-grad-a:#0c1723;--pg-grad-b:#0a141f;--pg-grad-c:#08111a;}
 
 /* Print (Reports -> Print / PDF): show only the report */
 @media print{

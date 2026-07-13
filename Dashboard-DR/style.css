@@ -1206,8 +1206,6 @@ transform:translateY(-6px);
 }
 body{
   background:
-    radial-gradient(1200px 680px at 100% -12%, var(--pg-glow), transparent 58%),
-    radial-gradient(1000px 620px at -10% 112%, var(--pg-glow), transparent 55%),
     linear-gradient(157deg, var(--pg-grad-a) 0%, var(--pg-grad-b) 48%, var(--pg-grad-c) 100%);
   background-attachment:fixed;
   color:var(--ink);

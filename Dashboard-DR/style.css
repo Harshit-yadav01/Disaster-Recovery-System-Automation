@@ -1293,7 +1293,13 @@ body{
 
 /* ===== Dashboard: same visual language / colours as the DR tabs ===== */
 #view-dashboard{padding-top:18px;}
-#view-dashboard .section{background:transparent;border:none;box-shadow:none;margin-bottom:32px;}
+#view-dashboard .section{
+  background:var(--surface-2);
+  border:1px solid var(--border-soft);
+  box-shadow:none;
+  border-radius:18px;
+  margin-bottom:32px;
+}
 /* Top KPI tiles: dark panels with a colored accent bar (per HPE reference) */
 #view-dashboard .card{
   background:var(--surface);
@@ -1466,4 +1472,26 @@ body.dark{--pg-bg:var(--hpe-base-color-grey-1300);--surface:var(--hpe-base-color
   padding:22px;
   border-radius:18px;
   border:1px solid var(--border-soft);
+}
+
+#view-dashboard .replication,
+#view-dashboard .infra-grid,
+#view-dashboard .storage,
+#view-dashboard .performance-grid,
+#view-dashboard .chart-container,
+#view-dashboard .network-grid,
+#view-dashboard .readiness,
+#view-dashboard .actions,
+#view-dashboard .timeline,
+#view-dashboard #alertsTable,
+#view-dashboard .vm-table{
+  background:var(--surface-2);
+  border-radius:16px;
+}
+
+#view-dashboard .section{
+  background:var(--surface-2);
+  border:1px solid var(--border-soft);
+  border-radius:18px;
+  box-shadow:none;
 }

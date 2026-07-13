@@ -1292,7 +1292,11 @@ body{
 .hpe-logo{height:15px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-5xsmall) var(--hpe-spacing-4xsmall);border-radius:var(--hpe-radius-xsmall);}
 
 /* ===== Dashboard: same visual language / colours as the DR tabs ===== */
-#view-dashboard{padding-top:18px;}
+#view-dashboard{
+  background:var(--panel-deep);
+  padding:18px;
+  border-radius:20px;
+}
 #view-dashboard .section{
   background:var(--surface-2);
   border:1px solid var(--border-soft);

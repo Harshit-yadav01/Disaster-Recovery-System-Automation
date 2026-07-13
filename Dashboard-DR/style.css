@@ -1293,8 +1293,26 @@ body{
 .brand-sub{color:var(--ink-dim);font-size:11px;white-space:nowrap;}
 .hpe-logo{height:15px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-5xsmall) var(--hpe-spacing-4xsmall);border-radius:var(--hpe-radius-xsmall);}
 
-/* ===== Dashboard: green boxes, black text, neutral seamless gaps ===== */
-#view-dashboard{padding-top:18px;}
+/* ===== Dashboard: fully neutral palette (no green / no colour accents) ===== */
+#view-dashboard{
+  padding-top:18px;
+  /* Neutralise every accent token within the dashboard tab only. */
+  --hpe-green:var(--ink-dim);
+  --hpe-green-d:var(--ink-dim);
+  --accent-green:var(--ink-dim);
+  --accent-blue:var(--ink-dim);
+  --accent-blue-2:var(--ink-dim);
+  --accent-purple:var(--ink-dim);
+  --accent-orange:var(--ink-dim);
+  --accent-amber:var(--ink-dim);
+  --accent-red:var(--ink-dim);
+  --accent-red-strong:var(--ink-dim);
+  --tint-green:var(--surface-2);
+  --tint-blue:var(--surface-2);
+  --tint-amber:var(--surface-2);
+  --tint-red:var(--surface-2);
+  --glow-green:var(--line);
+}
 #view-dashboard .section{background:transparent;border:none;box-shadow:none;margin-bottom:32px;}
 /* Top KPI tiles: dark panels with a colored accent bar (per HPE reference) */
 #view-dashboard .card{

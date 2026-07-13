@@ -152,7 +152,7 @@ justify-content:space-between;
 
 align-items:center;
 
-background:var(--hpe-green);
+background:linear-gradient(135deg, var(--hpe-base-color-green-900) 0%, var(--hpe-base-color-green-700) 60%, var(--hpe-base-color-green-600) 100%);
 
 margin:-30px -30px 40px -30px;
 

@@ -1,0 +1,58 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ * Copyright Hewlett Packard Enterprise Development LP.
+ */
+
+:root {
+  --hpe-breakpoint-large: 1440px;
+  --hpe-breakpoint-medium: 1080px;
+  --hpe-breakpoint-small: 768px; /** The breakpoint where spacing and typography sizes shift down to accommodate smaller screen sizes. */
+  --hpe-breakpoint-xsmall: 576px;
+  --hpe-focusIndicator-outlineOffset: 2px;
+  --hpe-fontStack-primary: 'HPE Graphik', Arial, sans-serif; /** The main font stack for an application. */
+  --hpe-fontWeight-black: 900; /** Black is rarely, if at all, used. */
+  --hpe-fontWeight-bold: 700; /** Bold is used sparingly because it has reduced readability especially at smaller font sizes. */
+  --hpe-fontWeight-light: 300;
+  --hpe-fontWeight-medium: 500; /** The font-weight generally used when increased emphasis is desired. */
+  --hpe-fontWeight-regular: 400; /** The default font-weight for most text. */
+  --hpe-fontWeight-semibold: 600;
+  --hpe-fontWeight-thin: 100; /** Thin is rarely, if at all, used. */
+  --hpe-focusIndicator-boxShadow: 0 0 0 var(--hpe-focusIndicator-outlineOffset) var(--hpe-color-focus-support) ;
+  --hpe-focusIndicator-outline: var(--hpe-base-dimension-50) solid var(--hpe-color-focus);
+}
+
+/* Keep template cards in a fixed 3-column layout on all viewport sizes. */
+.cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+/* Align provider logos with cloud names and keep them readable on all backgrounds. */
+.cloud-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--hpe-spacing-xsmall);
+  margin-bottom: var(--hpe-spacing-xxsmall);
+}
+
+.cloud-card__title h2 {
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+.cloud-card {
+  text-align: center;
+}
+
+.cloud-card__title .cloud-card__logo {
+  width: auto;
+  height: 1.8em;
+  max-height: none;
+  margin-bottom: 0;
+  display: block;
+  object-fit: contain;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 246, 248, 0.96));
+  border: var(--hpe-borderWidth-default) solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--hpe-radius-small);
+  padding: var(--hpe-spacing-6xsmall) var(--hpe-spacing-5xsmall);
+}

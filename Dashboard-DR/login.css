@@ -1,4 +1,14 @@
 /* ===================== BASE ===================== */
+
+@import url('./Styles/primitives.css');
+@import url('./Styles/global.css');
+@import url('./Styles/components.css');
+@import url('./Styles/color.light.css');
+@import url('./Styles/color.dark.css');
+@import url('./Styles/dimension.css');
+@import url('./Styles/dimension.small.css');
+
+
 * {
     margin: 0;
     padding: 0;
@@ -7,22 +17,32 @@
 }
 
 :root {
-    --bg: #0a0f16;
-    --bg-2: #0e141d;
-    --card: #111a24;
-    --border: #1e2a38;
-    --green: #01a982;
-    --green-bright: #2ad891;
-    --blue: #3b9dff;
-    --orange: #ff8a3d;
-    --text: #e6ecf3;
-    --muted: #8b98a8;
+    /* Dark left-panel palette (sourced from HPE design tokens) */
+    --bg: var(--hpe-base-color-grey-1300);
+    --bg-2: var(--hpe-base-color-grey-1300);
+    --card: var(--hpe-base-color-grey-1200);
+    --border: var(--hpe-base-color-grey-800);
+    --green: var(--hpe-base-color-green-600);
+    --green-bright: var(--hpe-base-color-green-400);
+    --blue: var(--hpe-base-color-blue-300);
+    --orange: var(--hpe-base-color-orange-500);
+    --text: var(--hpe-base-color-grey-200);
+    --muted: var(--hpe-base-color-grey-600);
     /* light panel */
-    --l-bg: #f4f7fb;
-    --l-card: #ffffff;
-    --l-border: #e2e8f0;
-    --l-text: #1e293b;
-    --l-muted: #64748b;
+    --l-bg: var(--hpe-base-color-grey-50);
+    --l-card: var(--hpe-base-color-white-100);
+    --l-border: var(--hpe-base-color-grey-200);
+    --l-text: var(--hpe-base-color-grey-1000);
+    --l-muted: var(--hpe-base-color-grey-650);
+    /* helper tints / effects (from token opacity primitives) */
+    --tint-green: var(--hpe-deprecated-base-color-green-400-Opacity12);
+    --glow-green: var(--hpe-deprecated-base-color-green-400-Opacity24);
+    --tint-red: var(--hpe-deprecated-base-color-red-500-Opacity12);
+    --tint-blue: var(--hpe-deprecated-base-color-blue-400-Opacity12);
+    --tint-orange: var(--hpe-deprecated-base-color-orange-400-Opacity24);
+    --overlay: var(--hpe-base-color-black-opacity50);
+    --field-fill: var(--hpe-base-color-white-opacity6);
+    --shadow-card: var(--hpe-shadow-small);
 }
 
 body {
@@ -67,6 +87,16 @@ a {
     flex-shrink: 0;
 }
 
+.hpe-logo {
+    height: 24px;
+    width: auto;
+    display: block;
+    flex-shrink: 0;
+    background: var(--hpe-base-color-white-100);
+    padding: var(--hpe-spacing-4xsmall) var(--hpe-spacing-3xsmall);
+    border-radius: var(--hpe-radius-xsmall);
+}
+
 /* ===================== LAYOUT ===================== */
 .login-wrap {
     display: flex;
@@ -78,7 +108,7 @@ a {
     width: 38%;
     max-width: 460px;
     min-width: 360px;
-    background: linear-gradient(180deg, #0a0f16 0%, #0c1420 60%, #0a1a18 100%);
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 60%, var(--bg) 100%);
     color: var(--text);
     padding: 34px 40px;
     display: flex;
@@ -91,7 +121,7 @@ a {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 20% 90%, rgba(1, 169, 130, 0.14), transparent 45%);
+        radial-gradient(circle at 20% 90%, var(--glow-green), transparent 45%);
     pointer-events: none;
 }
 
@@ -157,9 +187,9 @@ a {
 }
 
 .login-error {
-    background: rgba(220, 53, 69, 0.12);
-    border: 1px solid rgba(220, 53, 69, 0.45);
-    color: #ff6b7a;
+    background: var(--tint-red);
+    border: 1px solid var(--tint-red);
+    color: var(--hpe-base-color-red-400);
     font-size: 13px;
     font-weight: 500;
     padding: 10px 14px;
@@ -178,7 +208,7 @@ a {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--field-fill);
     border: 1px solid var(--border);
     border-radius: 9px;
     padding: 0 14px;
@@ -188,7 +218,7 @@ a {
 
 .field:focus-within {
     border-color: var(--green);
-    box-shadow: 0 0 0 3px rgba(1, 169, 130, 0.15);
+    box-shadow: 0 0 0 3px var(--tint-green);
 }
 
 .field > i {
@@ -208,7 +238,7 @@ a {
 }
 
 .field input::placeholder {
-    color: #566475;
+    color: var(--hpe-base-color-grey-700);
 }
 
 .field select {
@@ -276,7 +306,7 @@ a {
     padding: 14px;
     font-size: 15px;
     font-weight: 600;
-    color: #04120d;
+    color: var(--hpe-base-color-green-1000);
     cursor: pointer;
     background: linear-gradient(135deg, var(--green), var(--green-bright));
     transition: transform 0.15s, box-shadow 0.2s;
@@ -284,7 +314,7 @@ a {
 
 .btn-signin:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 22px rgba(1, 169, 130, 0.35);
+    box-shadow: 0 8px 22px var(--glow-green);
 }
 
 .divider {
@@ -333,7 +363,7 @@ a {
     align-items: center;
     gap: 10px;
     width: 100%;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--field-fill);
     border: 1px solid var(--border);
     border-radius: 9px;
     padding: 13px 14px;
@@ -350,12 +380,12 @@ a {
 }
 
 .select-trigger:hover {
-    border-color: rgba(1, 169, 130, 0.5);
+    border-color: var(--glow-green);
 }
 
 .select-env.open .select-trigger {
     border-color: var(--green);
-    box-shadow: 0 0 0 3px rgba(1, 169, 130, 0.15);
+    box-shadow: 0 0 0 3px var(--tint-green);
 }
 
 .select-value {
@@ -380,12 +410,12 @@ a {
     left: 0;
     right: 0;
     bottom: calc(100% + 8px);
-    background: #0f1720;
+    background: var(--hpe-base-color-grey-1300);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 6px;
     z-index: 30;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 16px 40px var(--overlay);
     opacity: 0;
     visibility: hidden;
     transform: translateY(8px) scaleY(0.96);
@@ -432,13 +462,13 @@ a {
 }
 
 .select-menu li:hover {
-    background: rgba(1, 169, 130, 0.12);
+    background: var(--tint-green);
     color: var(--text);
 }
 
 .select-menu li.selected {
     color: var(--green);
-    background: rgba(1, 169, 130, 0.08);
+    background: var(--tint-green);
 }
 
 .select-menu li.selected::after {
@@ -474,7 +504,7 @@ a {
     align-items: center;
     justify-content: space-between;
     font-size: 11.5px;
-    color: #566475;
+    color: var(--hpe-base-color-grey-700);
     border-top: 1px solid var(--border);
     margin-top: 16px;
     padding-top: 16px;
@@ -512,7 +542,7 @@ a {
 
 .welcome-shield {
     font-size: 46px;
-    color: #cdd9e5;
+    color: var(--hpe-base-color-grey-400);
 }
 
 /* Architecture card */
@@ -522,7 +552,7 @@ a {
     border-radius: 14px;
     padding: 24px;
     margin-top: 22px;
-    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    box-shadow: var(--shadow-card);
 }
 
 .arch-title {
@@ -543,7 +573,7 @@ a {
     border-radius: 12px;
     padding: 18px;
     text-align: center;
-    background: #fbfdff;
+    background: var(--l-card);
 }
 
 .site-badge {
@@ -552,7 +582,7 @@ a {
     border-radius: 20px;
     font-size: 12.5px;
     font-weight: 600;
-    color: #fff;
+    color: var(--hpe-base-color-white-100);
 }
 
 .site-badge.primary {
@@ -571,7 +601,7 @@ a {
 
 .site-icon {
     font-size: 42px;
-    color: #334155;
+    color: var(--hpe-base-color-grey-800);
     margin: 6px 0 14px;
 }
 
@@ -593,14 +623,14 @@ a {
 
 .green-tag {
     color: var(--green);
-    border-color: rgba(1, 169, 130, 0.4);
-    background: rgba(1, 169, 130, 0.08);
+    border-color: var(--glow-green);
+    background: var(--tint-green);
 }
 
 .blue-tag {
     color: var(--blue);
-    border-color: rgba(59, 157, 255, 0.4);
-    background: rgba(59, 157, 255, 0.08);
+    border-color: var(--tint-blue);
+    background: var(--tint-blue);
 }
 
 .repl-mid {
@@ -672,7 +702,7 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fff;
+    background: var(--hpe-base-color-white-100);
     border: 2px solid var(--l-border);
     color: var(--green);
     font-size: 15px;
@@ -682,7 +712,7 @@ a {
 
 .step-ico.orange {
     color: var(--orange);
-    border-color: rgba(255, 138, 61, 0.5);
+    border-color: var(--tint-orange);
 }
 
 /* Info cards */
@@ -698,7 +728,7 @@ a {
     border: 1px solid var(--l-border);
     border-radius: 14px;
     padding: 20px;
-    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    box-shadow: var(--shadow-card);
 }
 
 .info-card-head {
@@ -763,8 +793,8 @@ a {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #eaf1fb;
-    border: 1px solid #d5e3f7;
+    background: var(--hpe-base-color-blue-50);
+    border: 1px solid var(--l-border);
     border-radius: 12px;
     padding: 16px 20px;
     margin-top: 22px;

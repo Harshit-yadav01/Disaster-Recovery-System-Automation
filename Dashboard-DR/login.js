@@ -18,40 +18,6 @@ pwdToggle.addEventListener("keydown", (e) => {
     }
 });
 
-// Animated environment dropdown
-const selectEnv = document.getElementById("selectEnv");
-const envTrigger = document.getElementById("envTrigger");
-const envMenu = document.getElementById("envMenu");
-const envValue = document.getElementById("envValue");
-const envInput = document.getElementById("environment");
-
-function closeEnv() {
-    selectEnv.classList.remove("open");
-    envTrigger.setAttribute("aria-expanded", "false");
-}
-
-envTrigger.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const isOpen = selectEnv.classList.toggle("open");
-    envTrigger.setAttribute("aria-expanded", String(isOpen));
-});
-
-envMenu.querySelectorAll("li").forEach((option) => {
-    option.addEventListener("click", () => {
-        const value = option.dataset.value;
-        envValue.textContent = value;
-        envInput.value = value;
-        envMenu.querySelectorAll("li").forEach((li) => li.classList.remove("selected"));
-        option.classList.add("selected");
-        closeEnv();
-    });
-});
-
-// Close the dropdown when clicking outside
-document.addEventListener("click", (e) => {
-    if (!selectEnv.contains(e.target)) closeEnv();
-});
-
 // Sign in -> authenticate against the backend, store the JWT, then load the
 // dashboard (index.html). Shows an inline error if credentials are rejected.
 const form = document.getElementById("loginForm");
@@ -74,7 +40,6 @@ form.addEventListener("submit", async (e) => {
 
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
-    const environment = document.getElementById("environment").value;
 
     if (!username || !password) {
         showError("Please enter both username and password.");
@@ -86,8 +51,7 @@ form.addEventListener("submit", async (e) => {
     submitBtn.innerHTML = 'Signing in… <i class="fa-solid fa-spinner fa-spin"></i>';
 
     try {
-        await window.api.login(username, password, environment);
-        localStorage.setItem("drEnvironment", environment);
+        await window.api.login(username, password);
         window.location.href = "index.html";
     } catch (err) {
         showError(err.message || "Unable to sign in. Please try again.");

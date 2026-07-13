@@ -432,9 +432,9 @@ display:inline-block;
 
 margin-top:15px;
 
-background:var(--hpe-green);
+background:var(--tint-green);
 
-color:var(--pg-bg);
+color:var(--accent-green);
 
 padding:8px 20px;
 
@@ -611,9 +611,9 @@ font-weight:600;
 
 .green{
 
-background:var(--hpe-green);
+background:var(--tint-green);
 
-color:var(--pg-bg);
+color:var(--accent-green);
 
 }
 
@@ -1220,7 +1220,8 @@ body{
 .hpe-box{border-color:var(--hpe-green);}
 .sidebar li{color:var(--ink);}
 .sidebar li:not(.active):hover{background:transparent;}
-.sidebar .active{background:var(--hpe-green);color:var(--on-accent);font-weight:600;}
+.sidebar .active{background:var(--surface-2);color:var(--ink);font-weight:600;border-left:3px solid var(--hpe-green);}
+.sidebar .active i{color:var(--hpe-green);}
 .sidebar i{color:inherit;}
 
 /* Topbar / headers */
@@ -1286,11 +1287,11 @@ body{
 .dr-type input{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);}
 
 /* ===== Logo: box | HPE | service name (per HPE format) ===== */
-.logo-brand{display:flex;align-items:center;gap:10px;}
+.logo-brand{display:flex;flex-direction:column;align-items:flex-start;gap:8px;}
 .brand-name{display:flex;flex-direction:column;line-height:1.2;}
 .brand-name strong{color:var(--ink);font-weight:var(--hpe-fontWeight-bold);font-size:17px;}
 .brand-sub{color:var(--ink-dim);font-size:11px;white-space:nowrap;}
-.hpe-logo{height:22px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-4xsmall) var(--hpe-spacing-3xsmall);border-radius:var(--hpe-radius-xsmall);}
+.hpe-logo{height:15px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-5xsmall) var(--hpe-spacing-4xsmall);border-radius:var(--hpe-radius-xsmall);}
 
 /* ===== Dashboard: green boxes, black text, neutral seamless gaps ===== */
 #view-dashboard{padding-top:18px;}

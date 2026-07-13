@@ -1310,14 +1310,14 @@ body{
   transform:translateY(-6px);
   box-shadow:var(--shadow-raised);
 }
-#view-dashboard .card h1{color:var(--on-accent);}
+#view-dashboard .card h1{color:var(--hpe-green);}
 #view-dashboard .card h2,#view-dashboard .card h3,#view-dashboard .card p{
   color:var(--ink-dim);
 }
 #view-dashboard .cards .card:nth-child(1){border-bottom-color:var(--hpe-green);}
-#view-dashboard .cards .card:nth-child(2){border-bottom-color:var(--accent-blue);}
+#view-dashboard .cards .card:nth-child(2){border-bottom-color:var(--hpe-green);}
 #view-dashboard .cards .card:nth-child(3){border-bottom-color:var(--hpe-green);}
-#view-dashboard .cards .card:nth-child(4){border-bottom-color:var(--accent-blue);}
+#view-dashboard .cards .card:nth-child(4){border-bottom-color:var(--hpe-green);}
 
 /* ===== Larger text in Replication / Failover / Failback tabs ===== */
 #view-replication .rep-banner{font-size:16px;}

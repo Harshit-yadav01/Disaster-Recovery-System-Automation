@@ -1293,26 +1293,8 @@ body{
 .brand-sub{color:var(--ink-dim);font-size:11px;white-space:nowrap;}
 .hpe-logo{height:15px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-5xsmall) var(--hpe-spacing-4xsmall);border-radius:var(--hpe-radius-xsmall);}
 
-/* ===== Dashboard: fully neutral palette (no green / no colour accents) ===== */
-#view-dashboard{
-  padding-top:18px;
-  /* Neutralise every accent token within the dashboard tab only. */
-  --hpe-green:var(--ink-dim);
-  --hpe-green-d:var(--ink-dim);
-  --accent-green:var(--ink-dim);
-  --accent-blue:var(--ink-dim);
-  --accent-blue-2:var(--ink-dim);
-  --accent-purple:var(--ink-dim);
-  --accent-orange:var(--ink-dim);
-  --accent-amber:var(--ink-dim);
-  --accent-red:var(--ink-dim);
-  --accent-red-strong:var(--ink-dim);
-  --tint-green:var(--surface-2);
-  --tint-blue:var(--surface-2);
-  --tint-amber:var(--surface-2);
-  --tint-red:var(--surface-2);
-  --glow-green:var(--line);
-}
+/* ===== Dashboard: same visual language / colours as the DR tabs ===== */
+#view-dashboard{padding-top:18px;}
 #view-dashboard .section{background:transparent;border:none;box-shadow:none;margin-bottom:32px;}
 /* Top KPI tiles: dark panels with a colored accent bar (per HPE reference) */
 #view-dashboard .card{
@@ -1332,10 +1314,10 @@ body{
 #view-dashboard .card h2,#view-dashboard .card h3,#view-dashboard .card p{
   color:var(--ink-dim);
 }
-#view-dashboard .cards .card:nth-child(1){border-bottom-color:var(--accent-purple);}
-#view-dashboard .cards .card:nth-child(2){border-bottom-color:var(--accent-blue-2);}
+#view-dashboard .cards .card:nth-child(1){border-bottom-color:var(--hpe-green);}
+#view-dashboard .cards .card:nth-child(2){border-bottom-color:var(--accent-blue);}
 #view-dashboard .cards .card:nth-child(3){border-bottom-color:var(--hpe-green);}
-#view-dashboard .cards .card:nth-child(4){border-bottom-color:var(--accent-orange);}
+#view-dashboard .cards .card:nth-child(4){border-bottom-color:var(--accent-blue);}
 
 /* ===== Larger text in Replication / Failover / Failback tabs ===== */
 #view-replication .rep-banner{font-size:16px;}

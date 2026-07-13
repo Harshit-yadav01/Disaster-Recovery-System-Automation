@@ -18,11 +18,11 @@ verified, step-by-step workflow.
 
 ```
 Dashboard-DR (static frontend)        backend/app (FastAPI)
-  landing.html                          /api/auth/login   → JWT
-  login.html                            /api/dashboard    → live/simulated data
-  index.html  (Replication /            /api/dr/status    → showrcopy (read-only)
-   Failover / Failback tabs)            /api/dr/failover|failback|start|stop|sync
-  api.js / dr.js / script.js            /api/dr/jobs[/{id}] → live job progress
+  login.html   (entry point)            /api/auth/login   → JWT
+  index.html  (Replication /            /api/dashboard    → live/simulated data
+   Failover / Failback tabs)            /api/dr/status    → showrcopy (read-only)
+  api.js / dr.js / script.js            /api/dr/failover|failback|start|stop|sync
+                                        /api/dr/jobs[/{id}] → live job progress
         │                                        │
         └────────────── HTTP ────────────────────┤
                                                   ├─ StorageProvider (dashboard data)

@@ -119,7 +119,14 @@ Disaster Recovery Dashboard
 
 <span class="data-status" id="dataStatus" title="Live data source">Connecting…</span>
 
+<button class="bell-btn" id="bellBtn" title="Notifications" aria-label="Notifications">
 <i class="fa-solid fa-bell"></i>
+<span class="bell-badge" id="bellBadge" hidden></span>
+</button>
+<div class="notif-drop" id="notifDrop" hidden>
+<div class="notif-head"><span>Notifications</span><button class="notif-clear" id="notifClear">Clear all</button></div>
+<ul class="notif-list" id="notifList"><li class="notif-empty">No notifications</li></ul>
+</div>
 
 <div class="avatar" id="avatar" title="Click to change your photo">
 
@@ -170,7 +177,7 @@ Disaster Recovery Dashboard
 
 <div class="card">
 
-<h3>DR Readiness</h3>
+<h3>Disaster Recovery Readiness</h3>
 
 <h1>98%</h1>
 
@@ -473,7 +480,7 @@ Activity Timeline
 
 <div>
 
-<h4>DR Readiness Check</h4>
+<h4>Disaster Recovery Readiness Check</h4>
 
 <p>98% Ready</p>
 
@@ -711,8 +718,7 @@ Network & Storage
 </div>
 
 <!-- ===========================
-DR Readiness
-============================ -->
+Disaster Recovery Readiness============================ -->
 
 <div class="section">
 
@@ -768,7 +774,7 @@ Quick Actions
 
 <button>Validate Configuration</button>
 
-<button>Run DR Test</button>
+<button>Run Disaster Recovery Test</button>
 
 <button>Execute Failover</button>
 

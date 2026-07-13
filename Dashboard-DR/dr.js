@@ -47,20 +47,28 @@
     function statCard(c) {
         if (!c) return "";
         const nodeCls = c.is_primary ? "source" : c.is_secondary ? "target" : "";
+        const volCount = (c.volumes || []).length;
         const vols = (c.volumes || [])
             .map(
                 (v) =>
                     `<tr><td>${esc(v.local_vv)} &rarr; ${esc(v.remote_vv)}</td><td>${syncBadge(v.sync_status)}</td></tr>`
             )
             .join("");
+        const volSection = vols
+            ? `<div class="stat-vols-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.hidden=!this.nextElementSibling.hidden">
+                 <span><i class="fa-solid fa-layer-group"></i>&nbsp; Volumes (${volCount})</span>
+                 <i class="fa-solid fa-chevron-down"></i>
+               </div>
+               <div class="stat-vols-wrap" hidden><table class="stat-vols">${vols}</table></div>`
+            : "";
         return `<div class="stat-card ${nodeCls}">
             <div class="stat-head"><span class="stat-site">${esc(c.label)}</span><span class="stat-host">${esc(c.host)}</span></div>
             ${c.system_status ? `<div class="stat-line">System: <b>${esc(c.system_status)}</b></div>` : ""}
             <div class="stat-line">Group: <b>${esc(c.name || "-")}</b></div>
             <div class="stat-line">Role: <span class="role-badge ${roleClass(c)}">${esc(c.role || "-")}</span>
                 &nbsp; Status: <b>${esc(c.status || "-")}</b>${c.mode ? ` &nbsp; Mode: ${esc(c.mode)}` : ""}</div>
-            <div class="stat-line">All Synced: <b>${c.synced ? "yes" : "no"}</b>${c.volumes ? ` (${c.volumes.length} volume${c.volumes.length === 1 ? "" : "s"})` : ""}</div>
-            ${vols ? `<table class="stat-vols">${vols}</table>` : ""}
+            <div class="stat-line">All Synced: <b>${c.synced ? "yes" : "no"}</b>${c.volumes ? ` (${volCount} volume${volCount === 1 ? "" : "s"})` : ""}</div>
+            ${volSection}
         </div>`;
     }
 
@@ -194,6 +202,14 @@
                 setTimeout(() => pollJob(jobId, cont), 1000);
             } else {
                 jobRunning = false;
+                if (!job.dry_run && window._drPushNotif) {
+                    const ok = job.state === "succeeded";
+                    window._drPushNotif(
+                        `${job.kind.charAt(0).toUpperCase() + job.kind.slice(1)} ${ok ? "succeeded" : "failed"}`,
+                        ok ? `${job.kind} completed successfully.` : `${job.kind} did not complete — check the job log.`,
+                        ok ? "ok" : "error"
+                    );
+                }
                 setTimeout(loadStatus, 600);
             }
         } catch (err) {
@@ -437,6 +453,44 @@
 
         loadStatus();
         statusTimer = setInterval(() => { if (!jobRunning) loadStatus(); }, 30000);
+
+        // ---- Bell notifications -----------------------------------------
+        const NOTIF_KEY = "drNotifications";
+        function loadNotifs() { try { return JSON.parse(localStorage.getItem(NOTIF_KEY) || "[]"); } catch { return []; } }
+        function saveNotifs(n) { localStorage.setItem(NOTIF_KEY, JSON.stringify(n.slice(0, 50))); }
+        window._drPushNotif = function(title, body, type) {
+            const n = loadNotifs();
+            n.unshift({ id: Date.now(), title, body, type: type || "info", time: new Date().toISOString(), unread: true });
+            saveNotifs(n); renderNotifs();
+        };
+        function renderNotifs() {
+            const badge = $("bellBadge"), list = $("notifList");
+            if (!badge || !list) return;
+            const n = loadNotifs();
+            const unread = n.filter((x) => x.unread).length;
+            badge.hidden = unread === 0;
+            if (!n.length) { list.innerHTML = `<li class="notif-empty">No notifications</li>`; return; }
+            list.innerHTML = n.map((x) => {
+                const t = x.time ? new Date(x.time).toLocaleTimeString() : "";
+                return `<li class="notif-item ${x.type}${x.unread ? " unread" : ""}" data-id="${x.id}">`
+                    + `<div class="notif-item-title">${esc(x.title)}</div>`
+                    + `<div class="notif-item-body">${esc(x.body)}</div>`
+                    + `<div class="notif-item-time">${esc(t)}</div></li>`;
+            }).join("");
+            list.querySelectorAll(".notif-item").forEach((el) => el.addEventListener("click", () => {
+                saveNotifs(loadNotifs().map((x) => x.id === Number(el.dataset.id) ? {...x, unread: false} : x));
+                renderNotifs();
+            }));
+        }
+        const bellBtn = $("bellBtn"), drop = $("notifDrop"), clr = $("notifClear");
+        if (bellBtn) bellBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            drop.hidden = !drop.hidden;
+            if (!drop.hidden) { saveNotifs(loadNotifs().map((x) => ({...x, unread: false}))); renderNotifs(); }
+        });
+        if (clr) clr.addEventListener("click", (e) => { e.stopPropagation(); saveNotifs([]); renderNotifs(); });
+        document.addEventListener("click", (e) => { if (drop && !drop.hidden && !drop.contains(e.target) && e.target !== bellBtn) drop.hidden = true; });
+        renderNotifs();
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

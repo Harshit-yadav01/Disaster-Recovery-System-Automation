@@ -1371,3 +1371,90 @@ body.dark{--pg-bg:var(--hpe-base-color-grey-1300);--surface:var(--hpe-base-color
   .set-card,.mon-card,.rpt-table,.section{box-shadow:none;}
 }
 @media(max-width:900px){.mon-tiles{grid-template-columns:1fr 1fr;}.mon-grid{grid-template-columns:1fr;}}
+
+/* =========================================================
+   Aesthetic polish (dashboard only) — cosmetic, layered last.
+   ========================================================= */
+:root{
+  --elev-1:0 2px 10px rgba(0,0,0,.5);
+  --elev-2:0 14px 36px rgba(0,0,0,.6);
+  --border-soft:rgba(255,255,255,.07);
+  --surface-grad:linear-gradient(180deg,#17171d 0%, #101015 55%, #0d0d11 100%);
+  --surface-grad-2:linear-gradient(180deg,#1b1b23 0%, #141419 100%);
+  --green-glow:0 0 0 1px rgba(1,169,130,.35), 0 10px 34px rgba(1,169,130,.16);
+}
+
+/* Custom dark scrollbar */
+*{scrollbar-width:thin;scrollbar-color:#26262f transparent;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:#24242d;border-radius:8px;border:2px solid transparent;background-clip:content-box;}
+::-webkit-scrollbar-thumb:hover{background:#34343f;background-clip:content-box;}
+
+/* Elevated panels: subtle gradient, soft edge + glass top highlight */
+.section,.card,.box,.infra-card,.storage-box,.performance-card,.network-card,
+.chart-card,.stat-card,.stage,.hist-row,.dr-modal,.mon-tile,.mon-card,.set-card{
+  background:var(--surface-grad);
+  border:1px solid var(--border-soft);
+  border-radius:16px;
+  box-shadow:var(--elev-1), inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+/* Interactive lift */
+.card,.infra-card,.network-card,.storage-box,.performance-card,.stat-card,.hist-row{
+  transition:transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s, border-color .25s;
+}
+.card:hover,.infra-card:hover,.network-card:hover,.storage-box:hover,.performance-card:hover{
+  transform:translateY(-6px);
+  border-color:rgba(1,169,130,.4);
+  box-shadow:var(--elev-2), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* KPI tiles: richer surface + hover glow + glowing value */
+#view-dashboard .card{
+  background:var(--surface-grad-2);
+  border:1px solid var(--border-soft);
+  border-bottom:3px solid var(--hpe-green);
+  box-shadow:var(--elev-1), inset 0 1px 0 rgba(255,255,255,.05);
+}
+#view-dashboard .card:hover{
+  transform:translateY(-6px);
+  box-shadow:var(--green-glow), var(--elev-2);
+}
+#view-dashboard .card h1{letter-spacing:.4px;text-shadow:0 0 24px rgba(1,169,130,.28);}
+
+/* Section headings: green accent bar */
+.section h2,.section-header h2{position:relative;padding-left:16px;letter-spacing:.3px;}
+.section h2::before,.section-header h2::before{
+  content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:4px;height:20px;border-radius:4px;
+  background:linear-gradient(180deg,var(--accent-green),var(--hpe-green));
+  box-shadow:0 0 12px rgba(1,169,130,.5);
+}
+
+/* Sidebar: active gradient highlight + item polish */
+.sidebar{box-shadow:1px 0 0 var(--border-soft);}
+.sidebar li{letter-spacing:.2px;}
+.sidebar li:not(.active):hover{background:rgba(255,255,255,.04);}
+.sidebar .active{
+  background:linear-gradient(90deg,rgba(1,169,130,.18),rgba(1,169,130,.03));
+  border-left:3px solid var(--hpe-green);
+  box-shadow:inset 0 0 0 1px rgba(1,169,130,.12);
+}
+
+/* Topbar divider + title */
+.topbar{border-bottom:1px solid var(--border-soft);padding-bottom:22px;}
+.main .topbar h1{letter-spacing:.3px;}
+
+/* Live badge glow */
+.data-status.live{box-shadow:0 0 0 1px rgba(1,169,130,.28),0 0 18px rgba(1,169,130,.16);}
+
+/* Replication topology */
+.box{background:var(--surface-grad-2);}
+.arrow{filter:drop-shadow(0 0 10px rgba(1,169,130,.45));}
+
+/* Progress + primary chart fill: gradient */
+.progress-fill,.chart-fill.cpu{background:linear-gradient(90deg,var(--hpe-green),var(--accent-green));}
+
+/* Primary action buttons: soft green depth */
+.actions button{box-shadow:0 6px 18px rgba(1,169,130,.16);}
+.actions button:hover{box-shadow:0 10px 26px rgba(1,169,130,.26);}

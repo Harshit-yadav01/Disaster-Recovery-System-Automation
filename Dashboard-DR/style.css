@@ -1458,3 +1458,12 @@ body.dark{--pg-bg:var(--hpe-base-color-grey-1300);--surface:var(--hpe-base-color
 /* Primary action buttons: soft green depth */
 .actions button{box-shadow:0 6px 18px rgba(1,169,130,.16);}
 .actions button:hover{box-shadow:0 10px 26px rgba(1,169,130,.26);}
+
+/* KPI grid container: dark-neutral box so the space between/around the
+   KPI tiles is a dark grey contrasting with black (not green). */
+#view-dashboard .cards{
+  background:var(--surface-2);
+  padding:22px;
+  border-radius:18px;
+  border:1px solid var(--border-soft);
+}

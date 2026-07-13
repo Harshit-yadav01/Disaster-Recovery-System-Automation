@@ -1175,13 +1175,13 @@ transform:translateY(-6px);
   --accent-purple:var(--hpe-base-color-purple-400);
   --on-accent:var(--hpe-base-color-white-100);
 
-  /* Surfaces / borders / text (dark aesthetic from grey primitives) */
-  --pg-bg:var(--hpe-base-color-grey-1300);
-  --surface:var(--hpe-base-color-grey-1200);         /* sidebar / panels / boxes */
-  --surface-2:var(--hpe-base-color-grey-1000);       /* subtle fills / table headers */
-  --panel:var(--hpe-base-color-grey-1200);
-  --panel-deep:var(--hpe-base-color-grey-1300);      /* nested panels / console */
-  --line:var(--hpe-base-color-grey-800);             /* borders */
+  /* Surfaces / borders / text (BLACK aesthetic) */
+  --pg-bg:#000000;
+  --surface:#0e0e11;                                 /* sidebar / panels / boxes */
+  --surface-2:#17171b;                               /* subtle fills / table headers */
+  --panel:#0e0e11;
+  --panel-deep:#070709;                              /* nested panels / console */
+  --line:#26262c;                                    /* borders */
   --ink:var(--hpe-base-color-grey-200);              /* primary text */
   --ink-dim:var(--hpe-base-color-grey-500);          /* secondary text */
   --ink-muted:var(--hpe-base-color-grey-600);        /* tertiary / labels */
@@ -1198,11 +1198,11 @@ transform:translateY(-6px);
   --shadow-card:var(--hpe-shadow-small);
   --shadow-raised:var(--hpe-shadow-large);
 
-  /* HPE-branded dark backdrop (used by the body gradient below) */
+  /* Black backdrop (used by the body gradient below) */
   --pg-glow:var(--hpe-deprecated-base-color-green-400-Opacity12);
-  --pg-grad-a:var(--hpe-base-color-grey-1200);
-  --pg-grad-b:var(--hpe-base-color-grey-1300);
-  --pg-grad-c:var(--hpe-base-color-grey-1300);
+  --pg-grad-a:#0b0b0d;
+  --pg-grad-b:#000000;
+  --pg-grad-c:#000000;
 }
 body{
   background:

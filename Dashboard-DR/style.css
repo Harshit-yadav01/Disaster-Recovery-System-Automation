@@ -154,29 +154,7 @@ align-items:center;
 
 margin-bottom:40px;
 
-background:var(--hpe-green);
-
-margin-left:-30px;
-
-margin-right:-30px;
-
-margin-top:-30px;
-
-padding:18px 30px;
-
-border-radius:0;
-
 }
-
-.topbar h1{color:var(--hpe-base-color-white-100)!important;}
-.topbar .data-status{background:var(--hpe-base-color-green-700);border-color:transparent;color:var(--hpe-base-color-white-100);}
-.topbar .data-status.live{background:var(--hpe-base-color-green-800);border-color:transparent;color:var(--hpe-base-color-green-125);}
-.topbar .data-status.sim{background:var(--hpe-base-color-green-800);border-color:transparent;color:var(--hpe-base-color-green-125);}
-.topbar .data-status.error{background:var(--hpe-base-color-green-900);border-color:transparent;color:var(--hpe-base-color-green-400);}
-.topbar .bell-btn{background:var(--hpe-base-color-green-700);border-color:transparent;color:var(--hpe-base-color-white-100);}
-.topbar .bell-btn:hover{background:var(--hpe-base-color-green-800);}
-.topbar .logout-btn{background:var(--hpe-base-color-green-700);border-color:transparent;color:var(--hpe-base-color-white-100);}
-.topbar .logout-btn:hover{background:var(--hpe-base-color-green-800);border-color:transparent;color:var(--hpe-base-color-white-100);}
 
 .profile{
 
@@ -1177,13 +1155,6 @@ transform:translateY(-6px);
 .stage-note.info{background:var(--tint-blue);color:var(--accent-blue);}
 .stage-note.ok{background:var(--tint-green);color:var(--accent-green);}
 .stage-note.warn{background:var(--tint-amber);color:var(--accent-amber);}
-/* Collapsible volumes toggle inside stat-card */
-.stat-vols-toggle{display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-top:10px;cursor:pointer;font-size:12px;color:var(--ink-dim);user-select:none;border-top:1px solid var(--line);}
-.stat-vols-toggle:hover{color:var(--ink);}
-.stat-vols-toggle .fa-chevron-down{transition:transform .2s;}
-.stat-vols-toggle.open .fa-chevron-down{transform:rotate(180deg);}
-.stat-vols-wrap{margin-top:4px;}
-
 @media(max-width:900px){.dr-status-grid{grid-template-columns:1fr;}}
 
 /* =========================================================
@@ -1317,8 +1288,8 @@ body{
 .logo-brand{display:flex;flex-direction:column;align-items:flex-start;gap:8px;}
 .brand-name{display:flex;flex-direction:column;line-height:1.2;}
 .brand-name strong{color:var(--ink);font-weight:var(--hpe-fontWeight-bold);font-size:17px;}
-.brand-sub{color:var(--ink-dim);font-size:13px;white-space:nowrap;letter-spacing:.2px;}
-.hpe-logo{height:24px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-4xsmall) var(--hpe-spacing-xsmall);border-radius:var(--hpe-radius-xsmall);}
+.brand-sub{color:var(--ink-dim);font-size:11px;white-space:nowrap;}
+.hpe-logo{height:15px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-5xsmall) var(--hpe-spacing-4xsmall);border-radius:var(--hpe-radius-xsmall);}
 
 /* ===== Dashboard: same visual language / colours as the DR tabs ===== */
 #view-dashboard{
@@ -1397,30 +1368,6 @@ body{
 .set-row b{color:var(--ink);font-family:monospace;}
 .set-row select{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 10px;}
 .set-card .dr-btn{margin-top:14px;}
-
-/* ===== Notification bell ===== */
-.bell-btn{position:relative;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-dim);width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;transition:.2s;display:flex;align-items:center;justify-content:center;}
-.bell-btn:hover{color:var(--ink);background:var(--line);}
-.bell-badge{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--accent-red);border:2px solid var(--surface);}
-.notif-drop{position:absolute;top:calc(100% + 10px);right:0;width:320px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-raised);z-index:200;overflow:hidden;}
-.notif-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);}
-.notif-head span{font-size:13px;font-weight:600;color:var(--ink);}
-.notif-clear{background:none;border:none;color:var(--ink-muted);font-size:12px;cursor:pointer;}
-.notif-clear:hover{color:var(--accent-red);}
-.notif-list{list-style:none;max-height:300px;overflow-y:auto;}
-.notif-empty{padding:20px 16px;text-align:center;color:var(--ink-muted);font-size:13px;}
-.notif-item{padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:.15s;}
-.notif-item:last-child{border-bottom:none;}
-.notif-item:hover{background:var(--surface-2);}
-.notif-item.unread{border-left:3px solid var(--hpe-green);}
-.notif-item-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px;}
-.notif-item-body{font-size:12px;color:var(--ink-dim);}
-.notif-item-time{font-size:11px;color:var(--ink-muted);margin-top:4px;}
-.notif-item.ok .notif-item-title{color:var(--accent-green);}
-.notif-item.warn .notif-item-title{color:var(--accent-amber);}
-.notif-item.error .notif-item-title{color:var(--accent-red);}
-/* position relative anchor on the profile container */
-.profile{position:relative;}
 
 /* Dark theme (Settings -> Theme). Flips the shared color variables to the darkest token tier. */
 body.dark{--pg-bg:var(--hpe-base-color-grey-1300);--surface:var(--hpe-base-color-grey-1300);--surface-2:var(--hpe-base-color-grey-1200);--panel:var(--hpe-base-color-grey-1300);--panel-deep:var(--hpe-base-color-grey-1300);--line:var(--hpe-base-color-grey-1000);--ink:var(--hpe-base-color-grey-200);--ink-dim:var(--hpe-base-color-grey-500);--pg-grad-a:var(--hpe-base-color-grey-1300);--pg-grad-b:var(--hpe-base-color-grey-1300);--pg-grad-c:var(--hpe-base-color-black-opacity100);}

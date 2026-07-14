@@ -1,10 +1,13 @@
 // ===========================================================================
 // Disaster Recovery controller (tab views)
 //
-// Tabs: Dashboard | Replication | Failover | Failback
-//   - Replication : shows replication is active + live per-array status
-//   - Failover    : Execute Failover button, staged process, live array status
-//   - Failback    : Execute Failback button, staged process, live array status
+// Tabs: Dashboard | Replication | DR Operations | Monitoring | Reports | Settings
+//   - Replication   : shows replication is active + live per-array status
+//   - DR Operations : one state-driven flow panel. From the live /dr/status the
+//                     valid next action is enabled (Failover -> Reverse Sync ->
+//                     Restore); a plain-English banner says where you are.
+//                     Each action runs as a background job with staged progress
+//                     and a live topology snapshot. Dry-run + typed confirm.
 //
 // The per-array status mirrors `dr_ctl.py status` (system, group, role, status,
 // mode, sync per volume) so promotion is visible. No CLI console.
@@ -26,10 +29,12 @@
     let monSyncChart = null;
     const monHistory = [];
 
-    const CONT = {
-        failover: { stages: "foStages", status: "foStatus", dry: "foDry" },
-        failback: { stages: "fbStages", status: "fbStatus", dry: "fbDry" },
-    };
+    // Single container for the unified DR Operations panel. The backend allows
+    // only one DR job at a time, so all three actions share one stages/status area.
+    const DROP = { stages: "dropStages", status: "dropStatus" };
+
+    // Friendly display names for the internal op keys used by the API/backend.
+    const OP_LABEL = { failover: "Failover", recover: "Reverse Sync", restore: "Restore", failback: "Failback" };
 
     // ---- Badges ------------------------------------------------------------
     function roleClass(c) {
@@ -128,16 +133,83 @@
         }
     }
 
+    // ---- DR Operations: live state machine + banner + button gating --------
+    function drState(status) {
+        const arrays = (status && status.arrays) || [];
+        const p = arrays.find((a) => a.role_label === "primary") || null;
+        const d = arrays.find((a) => a.role_label === "recovery") || null;
+        const pg = (p && p.group) || null;
+        const dg = (d && d.group) || null;
+        let name = "unknown";
+        if (dg && dg.is_primary) {
+            // DR has taken over. Once the reverse replication is back in sync and
+            // the original primary is Secondary again, Restore becomes valid.
+            name = dg.all_synced && pg && pg.is_secondary ? "reverse-synced" : "failed-over";
+        } else if (pg && pg.is_primary && (!dg || dg.is_secondary)) {
+            name = "normal";
+        }
+        return { name, p, d, pg, dg };
+    }
+
+    function setDropButtons(canF, canR, canS) {
+        const running = jobRunning;
+        const map = { failover: canF, recover: canR, restore: canS };
+        [["btnFailover", canF], ["btnRecover", canR], ["btnRestore", canS]].forEach(([id, on]) => {
+            const b = $(id); if (b) b.disabled = !on || running;
+        });
+        document.querySelectorAll("#dropFlow .flow-step").forEach((el) => {
+            el.classList.toggle("ready", !!map[el.dataset.op] && !running);
+        });
+    }
+
+    function updateDrOps(status) {
+        const banner = $("dropBanner");
+        if (!banner) return;
+        const s = drState(status);
+        const pHost = s.p ? esc(s.p.host) : "primary";
+        const dHost = s.d ? esc(s.d.host) : "DR";
+        let cls = "info", icon = "fa-circle-info", msg = "", canF = false, canR = false, canS = false;
+        switch (s.name) {
+            case "normal": {
+                const synced = s.pg && s.pg.all_synced;
+                cls = "active"; icon = "fa-circle-check";
+                msg = `Replication is active &mdash; Primary <b>${pHost}</b> &rarr; DR <b>${dHost}</b>, ${synced ? "in sync" : "syncing"}. You can start a <b>Failover</b> (step 1).`;
+                canF = true; break;
+            }
+            case "failed-over": {
+                cls = "warn"; icon = "fa-triangle-exclamation";
+                msg = `Failed over &mdash; DR <b>${dHost}</b> is now Primary (R/W). Run <b>Reverse Sync</b> (step 2) to copy DR changes back to <b>${pHost}</b>.`;
+                canR = true; break;
+            }
+            case "reverse-synced": {
+                cls = "active"; icon = "fa-circle-check";
+                msg = `Reverse sync complete &mdash; DR <b>${dHost}</b> changes are synced back to <b>${pHost}</b>. Run <b>Restore</b> (step 3) to return to normal.`;
+                canR = true; canS = true; break;
+            }
+            default: {
+                cls = "down"; icon = "fa-plug-circle-xmark";
+                msg = `Array state unavailable or replication not active. Open the Replication tab, then refresh.`;
+            }
+        }
+        banner.className = "dr-banner " + cls;
+        banner.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
+        setDropButtons(canF, canR, canS);
+    }
+
     async function loadStatus() {
         try {
             latestStatus = await window.api.get("/dr/status");
             const cards = cardsFromStatus(latestStatus);
             renderBanner(cards);
-            ["repStatus", "foStatus", "fbStatus"].forEach((id) => renderStatusInto(id, cards));
+            ["repStatus", "dropStatus"].forEach((id) => renderStatusInto(id, cards));
+            updateDrOps(latestStatus);
         } catch (err) {
             const b = $("repBanner");
             if (b) { b.className = "rep-banner down"; b.innerHTML = `<i class="fa-solid fa-plug-circle-xmark"></i> Status unavailable: ${esc(err.message)}`; }
-            ["repStatus", "foStatus", "fbStatus"].forEach((id) => {
+            const db = $("dropBanner");
+            if (db) { db.className = "dr-banner down"; db.innerHTML = `<i class="fa-solid fa-plug-circle-xmark"></i> Array state unavailable: ${esc(err.message)}`; }
+            setDropButtons(false, false, false);
+            ["repStatus", "dropStatus"].forEach((id) => {
                 const el = $(id); if (el) el.innerHTML = `<p class="dr-error">Status unavailable: ${esc(err.message)}</p>`;
             });
         }
@@ -148,6 +220,13 @@
         failover: [
             { action: "stop primary", verify: "verify stop", label: "Stop replication on Primary", desc: "Quiesce the primary group before promotion" },
             { action: "failover DR", verify: "verify failover", label: "Promote DR to Primary (R/W)", desc: "Fail over the DR group and verify the role change" },
+        ],
+        recover: [
+            { action: "recover", verify: "verify recover", label: "Reverse replication", desc: "DR becomes source; original Primary becomes target" },
+            { action: "sync", verify: "verify sync", label: "Synchronize DR \u2192 Primary", desc: "Copy DR changes back to the original Primary" },
+        ],
+        restore: [
+            { action: "restore", verify: "verify restore", label: "Restore original direction", desc: "Primary back to R/W, DR back to Read-Only" },
         ],
         failback: [
             { action: "recover", verify: "verify recover", label: "Reverse replication", desc: "DR becomes source; original Primary becomes target" },
@@ -186,7 +265,7 @@
         if (pre) notes += `<div class="stage-note warn"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(pre.detail)}</div>`;
         if (!job.dry_run && (job.state === "succeeded" || job.state === "failed")) {
             const ok = job.state === "succeeded";
-            notes += `<div class="stage-note ${ok ? "ok" : "warn"}"><i class="fa-solid ${ok ? "fa-circle-check" : "fa-triangle-exclamation"}"></i> ${esc(job.kind)} ${ok ? "completed successfully." : "did not complete."}</div>`;
+            notes += `<div class="stage-note ${ok ? "ok" : "warn"}"><i class="fa-solid ${ok ? "fa-circle-check" : "fa-triangle-exclamation"}"></i> ${esc(OP_LABEL[job.kind] || job.kind)} ${ok ? "completed successfully." : "did not complete."}</div>`;
         }
         $(containerId).innerHTML = notes + rows;
     }
@@ -204,9 +283,10 @@
                 jobRunning = false;
                 if (!job.dry_run && window._drPushNotif) {
                     const ok = job.state === "succeeded";
+                    const label = OP_LABEL[job.kind] || job.kind;
                     window._drPushNotif(
-                        `${job.kind.charAt(0).toUpperCase() + job.kind.slice(1)} ${ok ? "succeeded" : "failed"}`,
-                        ok ? `${job.kind} completed successfully.` : `${job.kind} did not complete — check the job log.`,
+                        `${label} ${ok ? "succeeded" : "failed"}`,
+                        ok ? `${label} completed successfully.` : `${label} did not complete — check the steps.`,
                         ok ? "ok" : "error"
                     );
                 }
@@ -218,19 +298,22 @@
     }
 
     async function runOp(op, dryRun) {
-        const cont = CONT[op];
+        const cont = DROP;
+        const label = OP_LABEL[op] || op;
         try {
             jobRunning = true;
+            setDropButtons(false, false, false);
             $(cont.stages).innerHTML =
                 `<div class="stage active"><div class="stage-num"><i class="fa-solid fa-spinner fa-spin"></i></div>
-                 <div class="stage-body"><h4>Starting ${esc(op)}${dryRun ? " (preview)" : ""}&hellip;</h4></div></div>`;
+                 <div class="stage-body"><h4>Starting ${esc(label)}${dryRun ? " (preview)" : ""}&hellip;</h4></div></div>`;
             const res = await window.api.post(`/dr/${op}`, { dry_run: dryRun });
             pollJob(res.job_id, cont);
         } catch (err) {
             jobRunning = false;
             $(cont.stages).innerHTML =
                 `<div class="stage failed"><div class="stage-num"><i class="fa-solid fa-xmark"></i></div>
-                 <div class="stage-body"><h4>Could not start ${esc(op)}</h4><p>${esc(err.message)}</p></div></div>`;
+                 <div class="stage-body"><h4>Could not start ${esc(label)}</h4><p>${esc(err.message)}</p></div></div>`;
+            loadStatus();
         }
     }
 
@@ -238,14 +321,16 @@
     function modalBody(op) {
         if (op === "failover")
             return "Stops the primary group, then promotes the DR array to Read/Write. No health check is performed on the primary.";
-        if (op === "failback")
-            return "Runs recover \u2192 sync \u2192 restore on the DR array, returning to the original direction (Primary R/W, DR Read-Only).";
+        if (op === "recover")
+            return "Reverses replication (recover \u2192 sync): the DR array becomes the source and copies its changes back to the original Primary, waiting until fully synced.";
+        if (op === "restore")
+            return "Returns the group to its natural direction (Primary R/W, DR Read-Only). Run only after Reverse Sync has completed.";
         return `Runs ${op} and verifies the result.`;
     }
     function openModal(op) {
         pendingOp = op;
         const isFailover = op === "failover";
-        $("drModalTitle").textContent = `Confirm ${op.toUpperCase()}`;
+        $("drModalTitle").textContent = `Confirm ${(OP_LABEL[op] || op).toUpperCase()}`;
         $("drModalBody").textContent = modalBody(op);
         $("drAckWrap").hidden = !isFailover;
         $("drAck").checked = false;
@@ -400,14 +485,14 @@
     function applyDryDefault() {
         const dd = localStorage.getItem("drDryRunDefault");
         const on = dd === null ? true : dd === "true";
-        if ($("foDry")) $("foDry").checked = on;
-        if ($("fbDry")) $("fbDry").checked = on;
+        if ($("dropDry")) $("dropDry").checked = on;
     }
 
     // ---- Tab navigation ----------------------------------------------------
     const VIEW_FOR = {
-        dashboard: "dashboard", replication: "replication", failover: "failover",
-        failback: "failback", monitoring: "monitoring", reports: "reports", settings: "settings",
+        dashboard: "dashboard", replication: "replication",
+        "dr operations": "droperations",
+        monitoring: "monitoring", reports: "reports", settings: "settings",
     };
     function showView(name) {
         document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
@@ -417,7 +502,7 @@
         if (name === "monitoring") { loadMonitoring(); monInterval = setInterval(loadMonitoring, 10000); }
         else if (name === "reports") { loadReports(); }
         else if (name === "settings") { loadSettings(); }
-        else if (["replication", "failover", "failback"].includes(name)) { loadStatus(); }
+        else if (["replication", "droperations"].includes(name)) { loadStatus(); }
     }
 
     function init() {
@@ -434,9 +519,11 @@
             });
         });
 
-        const bf = $("btnFailover"); if (bf) bf.addEventListener("click", () => onExec("failover", "foDry"));
-        const bb = $("btnFailback"); if (bb) bb.addEventListener("click", () => onExec("failback", "fbDry"));
+        const bf = $("btnFailover"); if (bf) bf.addEventListener("click", () => onExec("failover", "dropDry"));
+        const brc = $("btnRecover"); if (brc) brc.addEventListener("click", () => onExec("recover", "dropDry"));
+        const brs = $("btnRestore"); if (brs) brs.addEventListener("click", () => onExec("restore", "dropDry"));
         const rr = $("repRefresh"); if (rr) rr.addEventListener("click", loadStatus);
+        const dor = $("dropRefresh"); if (dor) dor.addEventListener("click", loadStatus);
         const mr = $("monRefresh"); if (mr) mr.addEventListener("click", loadMonitoring);
         const rpt = $("rptRefresh"); if (rpt) rpt.addEventListener("click", loadReports);
         const rc = $("rptCsv"); if (rc) rc.addEventListener("click", exportCsv);

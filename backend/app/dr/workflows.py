@@ -603,3 +603,204 @@ def failback(
     results.append(StepResult("verify restore", "showrcopy", ok, detail,
                               snapshot=_snapshot(settings, groups)))
     return results
+
+
+# --------------------------------------------------------------------------- #
+# Failback split into two operator-driven steps for the unified DR Operations
+# panel. ``failback`` above still runs the whole recover -> sync -> restore
+# sequence in one go (unchanged). ``recover`` and ``restore`` below let the
+# operator drive the same phases individually:
+#
+#   recover : setrcopygroup recover -f -t <t> <dr_group>  (reverse replication)
+#             syncrcopy <dr_group>  (wait until Synced)      -> "Reverse Sync"
+#   restore : setrcopygroup restore -f -t <t> <dr_group>   (natural direction)
+#
+# ``restore`` may only run after ``recover`` has left the DR group Primary and
+# fully Synced; the precondition below enforces that.
+# --------------------------------------------------------------------------- #
+def recover(
+    settings: Settings,
+    base_group: str = DEFAULT_GROUP,
+    *,
+    dry_run: bool = True,
+    timeout: int = 300,
+    poll_interval: int = 5,
+    sink: list[StepResult] | None = None,
+) -> list[StepResult]:
+    """Reverse Sync (failback step 1): recover -> sync, until the DR is Synced.
+
+    Reverses replication so the DR array that took over becomes the source and
+    copies its changes back to the original Primary, then waits until every
+    volume is Synced. Leaves the group reversed + synced, ready for ``restore``.
+    All commands run on the DR array. ``sink`` lets a background job observe
+    steps live as they are appended.
+    """
+    results: list[StepResult] = sink if sink is not None else []
+    p_host = _primary_host(settings)
+    d_host = _recovery_host(settings)
+    if not p_host or not d_host:
+        raise DrError("Both primary and recovery arrays must be configured for recover.")
+
+    clean_p = SSHConfig.clean_host(p_host)
+    clean_d = SSHConfig.clean_host(d_host)
+
+    groups = _gather_groups(settings, base_group)
+    d = groups.get(clean_d)
+    if not d:
+        raise DrError(f"Group '{base_group}' not found on the DR array {clean_d}.")
+    precond_ok = d.is_primary
+    precond_msg = (
+        None if precond_ok
+        else f"DR array is not holding the group as primary (role={d.role}); run a failover first"
+    )
+
+    recover_cmd = f"setrcopygroup recover -f -t {d.target} {d.name}"
+    sync_cmd = f"syncrcopy {d.name}"
+
+    results.append(
+        StepResult(
+            name="plan",
+            command="",
+            ok=True,
+            detail=(
+                f"on DR {clean_d} '{d.name}' (-t {d.target}): recover -> sync; "
+                f"reverse replication and copy DR changes back to {clean_p}"
+            ),
+            snapshot=_snapshot(settings, groups),
+        )
+    )
+
+    if dry_run:
+        if precond_msg:
+            results.append(StepResult(
+                "precondition", "", False,
+                f"execution would be BLOCKED: {precond_msg}"))
+        results.append(StepResult("recover", recover_cmd, True, "DRY-RUN: not executed"))
+        results.append(StepResult("sync", sync_cmd, True, "DRY-RUN: not executed"))
+        return results
+
+    if not precond_ok:
+        raise DrError(
+            "Recover precondition not met: " + precond_msg + ". Aborting."
+        )
+
+    # 1) Recover: reverse replication (original primary becomes secondary).
+    if not _run_critical(settings, d_host, "recover", recover_cmd, results):
+        return results
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: (
+            bool(gs.get(clean_p)) and gs[clean_p].is_secondary
+            and bool(gs.get(clean_d)) and gs[clean_d].is_started
+        ),
+        timeout, poll_interval,
+    )
+    results.append(StepResult(
+        "verify recover", "showrcopy", ok,
+        f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}",
+        snapshot=_snapshot(settings, groups)))
+    if not ok:
+        return results
+
+    # 2) Sync DR -> original primary and wait until Synced. A command warning is
+    # non-fatal; the verify gate below is authoritative.
+    ok, out = _exec_on(settings, d_host, sync_cmd)
+    if not ok:
+        results.append(StepResult("sync", sync_cmd, False, f"SSH error: {out}"))
+        return results
+    cmd_warn = _looks_like_error(out)
+    results.append(StepResult(
+        "sync", sync_cmd, not cmd_warn,
+        (f"non-fatal warning (verify is authoritative): {out}" if cmd_warn else (out or "sync issued"))))
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: bool(gs.get(clean_d)) and gs[clean_d].all_synced(),
+        timeout, poll_interval,
+    )
+    results.append(StepResult("verify sync", "showrcopy", ok, _g_detail(groups, d_host),
+                              snapshot=_snapshot(settings, groups)))
+    return results
+
+
+def restore(
+    settings: Settings,
+    base_group: str = DEFAULT_GROUP,
+    *,
+    dry_run: bool = True,
+    timeout: int = 300,
+    poll_interval: int = 5,
+    sink: list[StepResult] | None = None,
+) -> list[StepResult]:
+    """Restore (failback step 2): return the group to its natural direction.
+
+    Precondition: the reverse sync (``recover``) has completed, so the DR array
+    holds the group as Primary and is fully Synced. Runs ``setrcopygroup
+    restore`` on the DR array and waits until the original Primary is Primary
+    again (R/W) and the DR array is back to Secondary (Read-Only). ``sink`` lets
+    a background job observe steps live as they are appended.
+    """
+    results: list[StepResult] = sink if sink is not None else []
+    p_host = _primary_host(settings)
+    d_host = _recovery_host(settings)
+    if not p_host or not d_host:
+        raise DrError("Both primary and recovery arrays must be configured for restore.")
+
+    clean_p = SSHConfig.clean_host(p_host)
+    clean_d = SSHConfig.clean_host(d_host)
+
+    groups = _gather_groups(settings, base_group)
+    d = groups.get(clean_d)
+    if not d:
+        raise DrError(f"Group '{base_group}' not found on the DR array {clean_d}.")
+    precond_ok = d.is_primary and d.all_synced()
+    precond_msg = (
+        None if precond_ok
+        else (
+            f"reverse sync not complete (DR role={d.role}, "
+            f"synced={d.all_synced()}); run Reverse Sync first"
+        )
+    )
+
+    restore_cmd = f"setrcopygroup restore -f -t {d.target} {d.name}"
+
+    results.append(
+        StepResult(
+            name="plan",
+            command="",
+            ok=True,
+            detail=(
+                f"on DR {clean_d} '{d.name}' (-t {d.target}): restore; "
+                f"return to natural direction (Primary {clean_p} R/W, DR Read-Only)"
+            ),
+            snapshot=_snapshot(settings, groups),
+        )
+    )
+
+    if dry_run:
+        if precond_msg:
+            results.append(StepResult(
+                "precondition", "", False,
+                f"execution would be BLOCKED: {precond_msg}"))
+        results.append(StepResult("restore", restore_cmd, True, "DRY-RUN: not executed"))
+        return results
+
+    if not precond_ok:
+        raise DrError(
+            "Restore precondition not met: " + precond_msg + ". Aborting."
+        )
+
+    # Restore: return to natural direction (primary R/W, DR read-only).
+    if not _run_critical(settings, d_host, "restore", restore_cmd, results):
+        return results
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: (
+            bool(gs.get(clean_p)) and gs[clean_p].is_primary
+            and bool(gs.get(clean_d)) and gs[clean_d].is_secondary
+        ),
+        timeout, poll_interval,
+    )
+    detail = f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}"
+    results.append(StepResult("verify restore", "showrcopy", ok, detail,
+                              snapshot=_snapshot(settings, groups)))
+    return results

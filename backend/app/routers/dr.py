@@ -109,6 +109,26 @@ def dr_failback(
     return _start("failback", payload, settings)
 
 
+@router.post("/recover")
+def dr_recover(
+    payload: OpRequest,
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """Reverse Sync: recover + sync on the DR array, wait until Synced."""
+    return _start("recover", payload, settings)
+
+
+@router.post("/restore")
+def dr_restore(
+    payload: OpRequest,
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """Restore: return the group to its natural direction, wait for Primary."""
+    return _start("restore", payload, settings)
+
+
 @router.post("/start")
 def dr_start(
     payload: OpRequest,

@@ -7,7 +7,7 @@
 
 <title>HPE DR Automation</title>
 
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,17 +59,9 @@ Replication
 
 <li>
 
-<i class="fa-solid fa-rotate"></i>
+<i class="fa-solid fa-shuffle"></i>
 
-Failover
-
-</li>
-
-<li>
-
-<i class="fa-solid fa-clock-rotate-left"></i>
-
-Failback
+DR Operations
 
 </li>
 
@@ -797,33 +789,55 @@ Quick Actions
 </div>
 </div>
 
-<!-- ============ Failover view ============ -->
-<div class="view" id="view-failover">
+<!-- ============ DR Operations view ============ -->
+<div class="view" id="view-droperations">
 <div class="section">
-<div class="section-header"><h2>Failover</h2></div>
-<p class="view-desc">Promote the Secondary (DR) array to Primary (Read/Write). This stops replication on the Primary group, then fails over the DR group. No health check is performed on the Primary &mdash; ensure the Primary is failed or inaccessible before executing.</p>
-<div class="view-controls">
-<label class="dr-dryrun"><input type="checkbox" id="foDry" checked> <span>Dry-run (preview only)</span></label>
-<button class="dr-btn danger" id="btnFailover"><i class="fa-solid fa-power-off"></i> Execute Failover</button>
-</div>
-<div class="dr-stages" id="foStages"></div>
-<div class="status-title">Array status (live)</div>
-<div class="dr-status-grid" id="foStatus"></div>
+<div class="section-header"><h2>DR Operations</h2><button class="dr-refresh" id="dropRefresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button></div>
+<p class="view-desc">Guided disaster-recovery lifecycle for the <b>Intern_Automation</b> group. Each action unlocks only when the live array state makes it valid, so the right next step is always the one you can click. Keep <b>Dry-run</b> on to preview the exact commands without changing anything.</p>
+
+<div class="dr-banner" id="dropBanner"><i class="fa-solid fa-circle-notch fa-spin"></i> Checking array state&hellip;</div>
+
+<label class="dr-dryrun drop-dry"><input type="checkbox" id="dropDry" checked> <span>Dry-run (preview only)</span></label>
+
+<!-- Flow: state-driven actions in sequence -->
+<div class="dr-flow" id="dropFlow">
+
+<div class="flow-step" data-op="failover">
+<div class="flow-num">1</div>
+<div class="flow-body">
+<h4>Failover</h4>
+<p>Stop replication on the Primary group, then promote the DR array to Primary (Read/Write). No health check is performed on the Primary &mdash; ensure it is failed or inaccessible before executing.</p>
+<button class="dr-btn danger" id="btnFailover" disabled><i class="fa-solid fa-power-off"></i> Execute Failover</button>
 </div>
 </div>
 
-<!-- ============ Failback view ============ -->
-<div class="view" id="view-failback">
-<div class="section">
-<div class="section-header"><h2>Failback</h2></div>
-<p class="view-desc">Return replication to its original direction: recover &rarr; sync &rarr; restore on the DR array, making the Primary Read/Write (source) again and the DR Read-Only (target).</p>
-<div class="view-controls">
-<label class="dr-dryrun"><input type="checkbox" id="fbDry" checked> <span>Dry-run (preview only)</span></label>
-<button class="dr-btn primary" id="btnFailback"><i class="fa-solid fa-arrow-rotate-left"></i> Execute Failback</button>
+<div class="flow-connector"></div>
+
+<div class="flow-step" data-op="recover">
+<div class="flow-num">2</div>
+<div class="flow-body">
+<h4>Reverse Sync</h4>
+<p>Reverse replication and copy the DR array's changes back to the original Primary (<code>recover</code> &rarr; <code>sync</code>), waiting until every volume is synchronized.</p>
+<button class="dr-btn primary" id="btnRecover" disabled><i class="fa-solid fa-right-left"></i> Execute Reverse Sync</button>
 </div>
-<div class="dr-stages" id="fbStages"></div>
+</div>
+
+<div class="flow-connector"></div>
+
+<div class="flow-step" data-op="restore">
+<div class="flow-num">3</div>
+<div class="flow-body">
+<h4>Restore</h4>
+<p>Once the reverse sync is verified, hand control back: return to the natural direction with the Primary Read/Write (source) again and the DR array Read-Only (target).</p>
+<button class="dr-btn primary" id="btnRestore" disabled><i class="fa-solid fa-arrow-rotate-left"></i> Execute Restore</button>
+</div>
+</div>
+
+</div>
+
+<div class="dr-stages" id="dropStages"></div>
 <div class="status-title">Array status (live)</div>
-<div class="dr-status-grid" id="fbStatus"></div>
+<div class="dr-status-grid" id="dropStatus"></div>
 </div>
 </div>
 

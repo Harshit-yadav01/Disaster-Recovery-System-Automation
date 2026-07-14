@@ -34,7 +34,7 @@
     const DROP = { stages: "dropStages", status: "dropStatus" };
 
     // Friendly display names for the internal op keys used by the API/backend.
-    const OP_LABEL = { failover: "Failover", recover: "Reverse Sync", restore: "Restore", failback: "Failback" };
+    const OP_LABEL = { failover: "Failover", revert: "Revert Failover", recover: "Reverse Sync", restore: "Restore", failback: "Failback" };
 
     // ---- Badges ------------------------------------------------------------
     function roleClass(c) {
@@ -151,10 +151,10 @@
         return { name, p, d, pg, dg };
     }
 
-    function setDropButtons(canF, canR, canS) {
+    function setDropButtons(canF, canRevert, canR, canS) {
         const running = jobRunning;
-        const map = { failover: canF, recover: canR, restore: canS };
-        [["btnFailover", canF], ["btnRecover", canR], ["btnRestore", canS]].forEach(([id, on]) => {
+        const map = { failover: canF, revert: canRevert, recover: canR, restore: canS };
+        [["btnFailover", canF], ["btnRevert", canRevert], ["btnRecover", canR], ["btnRestore", canS]].forEach(([id, on]) => {
             const b = $(id); if (b) b.disabled = !on || running;
         });
         document.querySelectorAll("#dropFlow .flow-step").forEach((el) => {
@@ -168,7 +168,8 @@
         const s = drState(status);
         const pHost = s.p ? esc(s.p.host) : "primary";
         const dHost = s.d ? esc(s.d.host) : "DR";
-        let cls = "info", icon = "fa-circle-info", msg = "", canF = false, canR = false, canS = false;
+        let cls = "info", icon = "fa-circle-info", msg = "";
+        let canF = false, canRevert = false, canR = false, canS = false;
         switch (s.name) {
             case "normal": {
                 const synced = s.pg && s.pg.all_synced;
@@ -178,8 +179,8 @@
             }
             case "failed-over": {
                 cls = "warn"; icon = "fa-triangle-exclamation";
-                msg = `Failed over &mdash; DR <b>${dHost}</b> is now Primary (R/W). Run <b>Reverse Sync</b> (step 2) to copy DR changes back to <b>${pHost}</b>.`;
-                canR = true; break;
+                msg = `Failed over &mdash; DR <b>${dHost}</b> is now Primary (R/W). Choose a path: <b>Revert Failover</b> (2a) to discard DR changes and undo, or <b>Reverse Sync</b> (2b) to keep them and copy back to <b>${pHost}</b>.`;
+                canRevert = true; canR = true; break;
             }
             case "reverse-synced": {
                 cls = "active"; icon = "fa-circle-check";
@@ -193,7 +194,7 @@
         }
         banner.className = "dr-banner " + cls;
         banner.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
-        setDropButtons(canF, canR, canS);
+        setDropButtons(canF, canRevert, canR, canS);
     }
 
     async function loadStatus() {
@@ -208,7 +209,7 @@
             if (b) { b.className = "rep-banner down"; b.innerHTML = `<i class="fa-solid fa-plug-circle-xmark"></i> Status unavailable: ${esc(err.message)}`; }
             const db = $("dropBanner");
             if (db) { db.className = "dr-banner down"; db.innerHTML = `<i class="fa-solid fa-plug-circle-xmark"></i> Array state unavailable: ${esc(err.message)}`; }
-            setDropButtons(false, false, false);
+            setDropButtons(false, false, false, false);
             ["repStatus", "dropStatus"].forEach((id) => {
                 const el = $(id); if (el) el.innerHTML = `<p class="dr-error">Status unavailable: ${esc(err.message)}</p>`;
             });
@@ -220,6 +221,9 @@
         failover: [
             { action: "stop primary", verify: "verify stop", label: "Stop replication on Primary", desc: "Quiesce the primary group before promotion" },
             { action: "failover DR", verify: "verify failover", label: "Promote DR to Primary (R/W)", desc: "Fail over the DR group and verify the role change" },
+        ],
+        revert: [
+            { action: "reverse", verify: "verify revert", label: "Reverse & discard DR writes", desc: "Revert the failover; DR volumes' writes since failover are discarded" },
         ],
         recover: [
             { action: "recover", verify: "verify recover", label: "Reverse replication", desc: "DR becomes source; original Primary becomes target" },
@@ -302,7 +306,7 @@
         const label = OP_LABEL[op] || op;
         try {
             jobRunning = true;
-            setDropButtons(false, false, false);
+            setDropButtons(false, false, false, false);
             $(cont.stages).innerHTML =
                 `<div class="stage active"><div class="stage-num"><i class="fa-solid fa-spinner fa-spin"></i></div>
                  <div class="stage-body"><h4>Starting ${esc(label)}${dryRun ? " (preview)" : ""}&hellip;</h4></div></div>`;
@@ -321,6 +325,8 @@
     function modalBody(op) {
         if (op === "failover")
             return "Stops the primary group, then promotes the DR array to Read/Write. No health check is performed on the primary.";
+        if (op === "revert")
+            return "Reverts the failover on the DR array (setrcopygroup reverse -local -current). This DISCARDS any data written to the DR volumes since the failover and returns to the original Primary. This cannot be undone.";
         if (op === "recover")
             return "Reverses replication (recover \u2192 sync): the DR array becomes the source and copies its changes back to the original Primary, waiting until fully synced.";
         if (op === "restore")
@@ -329,10 +335,15 @@
     }
     function openModal(op) {
         pendingOp = op;
-        const isFailover = op === "failover";
+        const needsAck = op === "failover" || op === "revert";
         $("drModalTitle").textContent = `Confirm ${(OP_LABEL[op] || op).toUpperCase()}`;
         $("drModalBody").textContent = modalBody(op);
-        $("drAckWrap").hidden = !isFailover;
+        $("drAckWrap").hidden = !needsAck;
+        if (needsAck && $("drAckText")) {
+            $("drAckText").textContent = op === "revert"
+                ? "I understand DR changes since the failover will be permanently discarded."
+                : "I confirm the Primary site is failed / inaccessible.";
+        }
         $("drAck").checked = false;
         $("drTypeWord").textContent = op;
         $("drTypeInput").value = "";
@@ -520,6 +531,7 @@
         });
 
         const bf = $("btnFailover"); if (bf) bf.addEventListener("click", () => onExec("failover", "dropDry"));
+        const brv = $("btnRevert"); if (brv) brv.addEventListener("click", () => onExec("revert", "dropDry"));
         const brc = $("btnRecover"); if (brc) brc.addEventListener("click", () => onExec("recover", "dropDry"));
         const brs = $("btnRestore"); if (brs) brs.addEventListener("click", () => onExec("restore", "dropDry"));
         const rr = $("repRefresh"); if (rr) rr.addEventListener("click", loadStatus);

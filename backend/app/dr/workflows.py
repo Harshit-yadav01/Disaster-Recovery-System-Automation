@@ -804,3 +804,105 @@ def restore(
     results.append(StepResult("verify restore", "showrcopy", ok, detail,
                               snapshot=_snapshot(settings, groups)))
     return results
+
+
+# --------------------------------------------------------------------------- #
+# Revert failover (discard DR writes) — the ALTERNATIVE to failback/recover.
+#
+# After a failover the DR array is Primary (R/W). If the DR site's changes are
+# NOT to be kept, this reverses the group's direction back to the original
+# Primary and DISCARDS any data written to the promoted (DR) volumes since the
+# group was stopped at failover:
+#
+#   setrcopygroup reverse -f -local -current <dr_group>   (on the DR array)
+#
+#   -local   : act on the DR array without requiring the (possibly down) primary
+#   -current : governs which side's data is kept; here discards the DR writes
+#   -f       : skip the interactive "y/n" confirmation prompt
+#
+# This is mutually exclusive with recover/restore (which PRESERVE DR changes).
+# --------------------------------------------------------------------------- #
+def revert_failover(
+    settings: Settings,
+    base_group: str = DEFAULT_GROUP,
+    *,
+    dry_run: bool = True,
+    timeout: int = 300,
+    poll_interval: int = 5,
+    sink: list[StepResult] | None = None,
+) -> list[StepResult]:
+    """Revert a failover, DISCARDING DR writes (``setrcopygroup reverse``).
+
+    Runs ``setrcopygroup reverse -f -local -current <dr_group>`` on the DR array
+    that took over, reversing the group's direction so the original Primary is
+    the source again and discarding any data written to the promoted (DR)
+    volumes since the group was stopped. Use this as the ALTERNATIVE to failback
+    when the DR site's changes are not to be kept. ``sink`` lets a background job
+    observe steps live as they are appended.
+    """
+    results: list[StepResult] = sink if sink is not None else []
+    p_host = _primary_host(settings)
+    d_host = _recovery_host(settings)
+    if not d_host:
+        raise DrError("Recovery (DR) array must be configured for revert failover.")
+
+    clean_p = SSHConfig.clean_host(p_host) if p_host else "primary"
+    clean_d = SSHConfig.clean_host(d_host)
+
+    groups = _gather_groups(settings, base_group)
+    d = groups.get(clean_d)
+    if not d:
+        raise DrError(f"Group '{base_group}' not found on the DR array {clean_d}.")
+    precond_ok = d.is_primary
+    precond_msg = (
+        None if precond_ok
+        else (
+            f"DR array is not holding the group as primary (role={d.role}); "
+            "a failover must be active to revert"
+        )
+    )
+
+    reverse_cmd = f"setrcopygroup reverse -f -local -current {d.name}"
+
+    results.append(
+        StepResult(
+            name="plan",
+            command="",
+            ok=True,
+            detail=(
+                f"on DR {clean_d} '{d.name}': reverse -local -current; revert the "
+                f"failover and DISCARD DR writes made since the group was stopped "
+                f"(original primary {clean_p} becomes source again)"
+            ),
+            snapshot=_snapshot(settings, groups),
+        )
+    )
+
+    if dry_run:
+        if precond_msg:
+            results.append(StepResult(
+                "precondition", "", False,
+                f"execution would be BLOCKED: {precond_msg}"))
+        results.append(StepResult("reverse", reverse_cmd, True, "DRY-RUN: not executed"))
+        return results
+
+    if not precond_ok:
+        raise DrError(
+            "Revert precondition not met: " + precond_msg + ". Aborting."
+        )
+
+    # Reverse locally on the DR array. This starts an array task and reverts the
+    # group's direction, discarding the promoted (DR) volumes' post-stop writes.
+    if not _run_critical(settings, d_host, "reverse", reverse_cmd, results):
+        return results
+
+    # The DR array relinquishes the Primary role as the reversal completes.
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: bool(gs.get(clean_d)) and not gs[clean_d].is_primary,
+        timeout, poll_interval,
+    )
+    results.append(StepResult(
+        "verify revert", "showrcopy", ok, _g_detail(groups, d_host),
+        snapshot=_snapshot(settings, groups)))
+    return results

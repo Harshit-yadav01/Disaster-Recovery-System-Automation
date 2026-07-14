@@ -26,6 +26,7 @@ from .workflows import (
     failover,
     recover,
     restore,
+    revert_failover,
     run_link_op,
 )
 
@@ -42,6 +43,7 @@ _WORKFLOWS = {
     "failback": lambda s, g, dry, sink: failback(s, g, dry_run=dry, sink=sink),
     "recover": lambda s, g, dry, sink: recover(s, g, dry_run=dry, sink=sink),
     "restore": lambda s, g, dry, sink: restore(s, g, dry_run=dry, sink=sink),
+    "revert": lambda s, g, dry, sink: revert_failover(s, g, dry_run=dry, sink=sink),
     "start": lambda s, g, dry, sink: run_link_op(s, "start", g, dry_run=dry, sink=sink),
     "stop": lambda s, g, dry, sink: run_link_op(s, "stop", g, dry_run=dry, sink=sink),
     "sync": lambda s, g, dry, sink: run_link_op(s, "sync", g, dry_run=dry, sink=sink),

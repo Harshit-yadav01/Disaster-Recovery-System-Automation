@@ -7,7 +7,7 @@
 
 <title>HPE DR Automation</title>
 
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -813,13 +813,30 @@ Quick Actions
 
 <div class="flow-connector"></div>
 
-<div class="flow-step" data-op="recover">
-<div class="flow-num">2</div>
+<div class="flow-fork">After a failover, choose one path</div>
+
+<div class="flow-branch">
+
+<div class="flow-step branch-opt" data-op="revert">
+<div class="flow-num">2a</div>
+<div class="flow-body">
+<h4>Revert Failover</h4>
+<p><b>Discards</b> the DR site's changes and returns to the original Primary in one step (<code>setrcopygroup reverse -local -current</code>). Use when the DR writes made during the outage are <b>not</b> to be kept. This cannot be undone.</p>
+<button class="dr-btn danger" id="btnRevert" disabled><i class="fa-solid fa-rotate-left"></i> Revert Failover</button>
+</div>
+</div>
+
+<div class="flow-branch-or"><span>OR</span></div>
+
+<div class="flow-step branch-opt" data-op="recover">
+<div class="flow-num">2b</div>
 <div class="flow-body">
 <h4>Reverse Sync</h4>
-<p>Reverse replication and copy the DR array's changes back to the original Primary (<code>recover</code> &rarr; <code>sync</code>), waiting until every volume is synchronized.</p>
+<p><b>Keeps</b> the DR site's changes: reverse replication and copy them back to the original Primary (<code>recover</code> &rarr; <code>sync</code>), waiting until every volume is synchronized. Then continue to Restore.</p>
 <button class="dr-btn primary" id="btnRecover" disabled><i class="fa-solid fa-right-left"></i> Execute Reverse Sync</button>
 </div>
+</div>
+
 </div>
 
 <div class="flow-connector"></div>
@@ -828,7 +845,7 @@ Quick Actions
 <div class="flow-num">3</div>
 <div class="flow-body">
 <h4>Restore</h4>
-<p>Once the reverse sync is verified, hand control back: return to the natural direction with the Primary Read/Write (source) again and the DR array Read-Only (target).</p>
+<p>Only after a Reverse Sync (2b). Hand control back: return to the natural direction with the Primary Read/Write (source) again and the DR array Read-Only (target).</p>
 <button class="dr-btn primary" id="btnRestore" disabled><i class="fa-solid fa-arrow-rotate-left"></i> Execute Restore</button>
 </div>
 </div>
@@ -894,7 +911,7 @@ Quick Actions
         <h3 id="drModalTitle">Confirm</h3>
         <p id="drModalBody"></p>
         <div class="dr-ack" id="drAckWrap" hidden>
-            <label><input type="checkbox" id="drAck"> I confirm the Primary site is failed / inaccessible.</label>
+            <label><input type="checkbox" id="drAck"> <span id="drAckText">I confirm the Primary site is failed / inaccessible.</span></label>
         </div>
         <label class="dr-type">Type <b id="drTypeWord">failover</b> to proceed:
             <input type="text" id="drTypeInput" autocomplete="off" spellcheck="false">

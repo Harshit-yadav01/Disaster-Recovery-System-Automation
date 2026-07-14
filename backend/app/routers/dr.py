@@ -129,6 +129,16 @@ def dr_restore(
     return _start("restore", payload, settings)
 
 
+@router.post("/revert")
+def dr_revert(
+    payload: OpRequest,
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """Revert Failover: reverse -local -current on the DR array, discarding DR writes."""
+    return _start("revert", payload, settings)
+
+
 @router.post("/start")
 def dr_start(
     payload: OpRequest,

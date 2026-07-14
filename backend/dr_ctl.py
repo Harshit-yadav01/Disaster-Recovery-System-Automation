@@ -36,6 +36,7 @@ from app.dr.workflows import (  # noqa: E402
     failover,
     gather_status,
     resolve_primary,
+    revert_failover,
     run_link_op,
 )
 
@@ -101,6 +102,11 @@ def _confirm_workflow(op: str, assume_yes: bool) -> bool:
         print("  Sequence: stop primary group -> promote DR group (R/W).")
         print("  NO health check is performed on the primary - ensure the primary")
         print("  site is failed/inaccessible (or accept the stop for a planned test).")
+    elif op == "revert":
+        print("  ABOUT TO REVERT the failover of 'Intern_Automation' on the DR array.")
+        print("  Command: setrcopygroup reverse -f -local -current <dr_group>.")
+        print("  This DISCARDS any data written to the DR volumes since the failover")
+        print("  and returns to the original Primary. This CANNOT be undone.")
     else:
         print("  ABOUT TO FAIL BACK 'Intern_Automation' to its original direction.")
         print("  Sequence: recover -> sync -> restore (on the DR array).")
@@ -149,6 +155,14 @@ def main() -> int:
     p_fb.add_argument("--timeout", type=int, default=300,
                       help="Seconds to wait per verify step (default 300)")
 
+    p_rev = sub.add_parser("revert", help="Revert failover (DISCARD DR writes): reverse -local -current")
+    p_rev.add_argument("--group", default=DEFAULT_GROUP, help="Group base name")
+    p_rev.add_argument("--execute", action="store_true",
+                       help="Actually run it (omit for a dry-run preview)")
+    p_rev.add_argument("--yes", action="store_true", help="Skip confirmation prompt")
+    p_rev.add_argument("--timeout", type=int, default=300,
+                       help="Seconds to wait for the DR array to relinquish primary (default 300)")
+
     args = parser.parse_args()
 
     settings = get_settings()
@@ -162,14 +176,16 @@ def main() -> int:
     op = args.command
     dry_run = not args.execute
 
-    # Failover / failback are multi-step workflows with their own confirmation.
-    if op in ("failover", "failback"):
+    # Failover / failback / revert are multi-step workflows with their own confirmation.
+    if op in ("failover", "failback", "revert"):
         if not dry_run and not _confirm_workflow(op, args.yes):
             print("Aborted - no changes made.")
             return 1
         try:
             if op == "failover":
                 results = failover(settings, args.group, dry_run=dry_run, timeout=args.timeout)
+            elif op == "revert":
+                results = revert_failover(settings, args.group, dry_run=dry_run, timeout=args.timeout)
             else:
                 results = failback(settings, args.group, dry_run=dry_run, timeout=args.timeout)
         except DrError as exc:

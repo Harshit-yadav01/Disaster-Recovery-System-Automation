@@ -275,6 +275,17 @@
         if (job.dry_run) notes += `<div class="stage-note info"><i class="fa-solid fa-eye"></i> Preview only &mdash; no changes applied.</div>`;
         const pre = (job.steps || []).find((s) => s.name === "precondition" && !s.ok);
         if (pre) notes += `<div class="stage-note warn"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(pre.detail)}</div>`;
+        // Surface the real reason a job failed: the "error" step captured by the
+        // job runner, plus the detail of any failed named step (createvlun errors,
+        // verify diagnostics). Without this the stage just shows "Pending" and the
+        // actual cause stays hidden.
+        const errStep = (job.steps || []).find((s) => s.name === "error" && !s.ok);
+        if (errStep && errStep.detail) notes += `<div class="stage-note warn"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(errStep.detail)}</div>`;
+        (job.steps || []).forEach((s) => {
+            if (!s.ok && s.name !== "error" && s.name !== "precondition" && s.detail) {
+                notes += `<div class="stage-note warn"><i class="fa-solid fa-circle-info"></i> <b>${esc(s.name)}:</b> ${esc(s.detail)}</div>`;
+            }
+        });
         if (!job.dry_run && (job.state === "succeeded" || job.state === "failed")) {
             const ok = job.state === "succeeded";
             notes += `<div class="stage-note ${ok ? "ok" : "warn"}"><i class="fa-solid ${ok ? "fa-circle-check" : "fa-triangle-exclamation"}"></i> ${esc(OP_LABEL[job.kind] || job.kind)} ${ok ? "completed successfully." : "did not complete."}</div>`;

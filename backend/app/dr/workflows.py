@@ -147,17 +147,22 @@ def list_hosts(settings: Settings, which: str = "recovery") -> list[Host]:
 
 
 def list_exports(
-    settings: Settings, which: str = "recovery", vv_pattern: str | None = None
+    settings: Settings, which: str = "recovery", vv_pattern: str | None = None,
+    active_only: bool = True,
 ) -> list[Vlun]:
     """Return current VLUN exports on the primary or recovery array (read-only).
 
     ``vv_pattern`` optionally scopes to specific volumes (glob), e.g. the DR
-    group's volumes, so we never list unrelated exports.
+    group's volumes, so we never list unrelated exports. With ``active_only``
+    False, VLUN *templates* are included too (a freshly created createvlun is a
+    template that only becomes an "active" VLUN once the host initiator logs in;
+    verification must therefore look at templates, not just active VLUNs).
     """
     host = _recovery_host(settings) if which == "recovery" else _primary_host(settings)
     if not host:
         raise DrError(f"No {which} array configured.")
-    cmd = "showvlun -a" + (f" -v {vv_pattern}" if vv_pattern else "")
+    base = "showvlun -a" if active_only else "showvlun"
+    cmd = base + (f" -v {vv_pattern}" if vv_pattern else "")
     with ArraySSH(_ssh_cfg(settings, host, which)) as arr:
         text = arr.run(cmd)
     return parse_showvlun(text)
@@ -1039,9 +1044,10 @@ def present_to_host(
         cmd = f"createvlun -f {vv} {lun} {target}"
         _run_critical(settings, d_host, f"export {vv}", cmd, results)
 
-    # Verify: every group volume now appears exported on the DR array.
+    # Verify: every group volume now appears exported on the DR array. A fresh
+    # createvlun is a TEMPLATE until the host logs in, so include templates.
     try:
-        exported = {v.vv_name for v in list_exports(settings, "recovery")}
+        exported = {v.vv_name for v in list_exports(settings, "recovery", active_only=False)}
     except SSHError as exc:
         results.append(StepResult("verify present", "showvlun", False, f"SSH error: {exc}"))
         return results
@@ -1049,7 +1055,7 @@ def present_to_host(
     ok = not missing
     results.append(StepResult(
         "verify present", "showvlun", ok,
-        "all group volumes exported" if ok else f"not exported yet: {missing}"))
+        "all group volumes exported (VLUN created)" if ok else f"not exported yet: {missing}"))
     return results
 
 
@@ -1084,9 +1090,10 @@ def unpresent_from_host(
         raise DrError(f"Group '{base_group}' not found on the DR array {clean_d}.")
     dr_vols = {vol.local_vv for vol in d.volumes}
 
-    # Find the CURRENT exports of the group's volumes on the DR array.
+    # Find the CURRENT exports of the group's volumes on the DR array. Include
+    # templates (active_only=False) so template-only exports are also removed.
     try:
-        exports = [v for v in list_exports(settings, "recovery")
+        exports = [v for v in list_exports(settings, "recovery", active_only=False)
                    if v.vv_name in dr_vols and v.lun is not None]
     except SSHError as exc:
         raise DrError(f"showvlun failed on DR array: {exc}")
@@ -1119,9 +1126,10 @@ def unpresent_from_host(
         cmd = f"removevlun -f {v.vv_name} {v.lun} {tgt}"
         _run_critical(settings, d_host, f"unexport {v.vv_name}", cmd, results)
 
-    # Verify: none of the group's volumes remain exported.
+    # Verify: none of the group's volumes remain exported (active or template).
     try:
-        still = [v.vv_name for v in list_exports(settings, "recovery") if v.vv_name in dr_vols]
+        still = [v.vv_name for v in list_exports(settings, "recovery", active_only=False)
+                 if v.vv_name in dr_vols]
     except SSHError as exc:
         results.append(StepResult("verify unpresent", "showvlun", False, f"SSH error: {exc}"))
         return results

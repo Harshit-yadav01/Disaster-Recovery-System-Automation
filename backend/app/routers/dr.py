@@ -36,6 +36,12 @@ class OpRequest(BaseModel):
     group: str = DEFAULT_GROUP
 
 
+class PresentRequest(OpRequest):
+    # Optional per-run host override (host name or 'set:<hostset>'); falls back
+    # to DR_HOST_TARGET in .env when omitted.
+    host: str | None = None
+
+
 def _serialize_status(views) -> list[dict]:
     out: list[dict] = []
     for v in views:
@@ -146,6 +152,37 @@ def dr_revert(
 ) -> dict:
     """Revert Failover: reverse -local -current on the DR array, discarding DR writes."""
     return _start("revert", payload, settings)
+
+
+def _start_with_params(kind: str, payload: "PresentRequest", settings: Settings) -> dict:
+    try:
+        job = jobs.start_job(settings, kind, payload.group, payload.dry_run,
+                             {"host": payload.host})
+    except jobs.JobBusyError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except DrError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return {"job_id": job.id, "state": job.state, "kind": job.kind, "dry_run": job.dry_run}
+
+
+@router.post("/present")
+def dr_present(
+    payload: PresentRequest,
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """Present-to-host: export the failed-over group's DR volumes to the DR host."""
+    return _start_with_params("present", payload, settings)
+
+
+@router.post("/unpresent")
+def dr_unpresent(
+    payload: PresentRequest,
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """Remove the DR exports of the group's volumes (reverse of present)."""
+    return _start_with_params("unpresent", payload, settings)
 
 
 @router.post("/start")

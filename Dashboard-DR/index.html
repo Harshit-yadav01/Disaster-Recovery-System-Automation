@@ -813,6 +813,23 @@ Quick Actions
 
 <div class="flow-connector"></div>
 
+<div class="flow-step" data-op="present">
+<div class="flow-num">1b</div>
+<div class="flow-body">
+<h4>Present to Host</h4>
+<p>Export the failed-over group's volumes to a DR ESXi host so the recovery VMs can be powered on. Only this group's own volumes are exported. Pick the host below (defaults to the configured target).</p>
+<div class="present-controls">
+<label class="present-host">Host:
+<select id="presentHost"><option value="">Loading hosts&hellip;</option></select>
+</label>
+<button class="dr-btn primary" id="btnPresent" disabled><i class="fa-solid fa-plug"></i> Present to Host</button>
+<button class="dr-btn ghost" id="btnUnpresent" disabled><i class="fa-solid fa-plug-circle-xmark"></i> Unpresent</button>
+</div>
+</div>
+</div>
+
+<div class="flow-connector"></div>
+
 <div class="flow-fork">After a failover, choose one path</div>
 
 <div class="flow-branch">

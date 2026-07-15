@@ -37,27 +37,31 @@ class JobBusyError(RuntimeError):
     """Raised when a DR job is requested while another is still running."""
 
 
-# kind -> callable(settings, group, dry_run, sink) -> None
+# kind -> callable(settings, group, dry_run, sink, params) -> None
+# ``params`` is an optional dict of per-run extras (e.g. {"host": ...}).
 _WORKFLOWS = {
-    "failover": lambda s, g, dry, sink: failover(s, g, dry_run=dry, sink=sink),
-    "failback": lambda s, g, dry, sink: failback(s, g, dry_run=dry, sink=sink),
-    "recover": lambda s, g, dry, sink: recover(s, g, dry_run=dry, sink=sink),
-    "restore": lambda s, g, dry, sink: restore(s, g, dry_run=dry, sink=sink),
-    "revert": lambda s, g, dry, sink: revert_failover(s, g, dry_run=dry, sink=sink),
-    "start": lambda s, g, dry, sink: run_link_op(s, "start", g, dry_run=dry, sink=sink),
-    "stop": lambda s, g, dry, sink: run_link_op(s, "stop", g, dry_run=dry, sink=sink),
-    "sync": lambda s, g, dry, sink: run_link_op(s, "sync", g, dry_run=dry, sink=sink),
+    "failover": lambda s, g, dry, sink, p: failover(s, g, dry_run=dry, sink=sink),
+    "failback": lambda s, g, dry, sink, p: failback(s, g, dry_run=dry, sink=sink),
+    "recover": lambda s, g, dry, sink, p: recover(s, g, dry_run=dry, sink=sink),
+    "restore": lambda s, g, dry, sink, p: restore(s, g, dry_run=dry, sink=sink),
+    "revert": lambda s, g, dry, sink, p: revert_failover(s, g, dry_run=dry, sink=sink),
+    "present": lambda s, g, dry, sink, p: present_to_host(s, g, host_target=(p or {}).get("host"), dry_run=dry, sink=sink),
+    "unpresent": lambda s, g, dry, sink, p: unpresent_from_host(s, g, host_target=(p or {}).get("host"), dry_run=dry, sink=sink),
+    "start": lambda s, g, dry, sink, p: run_link_op(s, "start", g, dry_run=dry, sink=sink),
+    "stop": lambda s, g, dry, sink, p: run_link_op(s, "stop", g, dry_run=dry, sink=sink),
+    "sync": lambda s, g, dry, sink, p: run_link_op(s, "sync", g, dry_run=dry, sink=sink),
 }
 
 JOB_KINDS = tuple(_WORKFLOWS.keys())
 
 
 class Job:
-    def __init__(self, kind: str, group: str, dry_run: bool) -> None:
+    def __init__(self, kind: str, group: str, dry_run: bool, params: dict | None = None) -> None:
         self.id = uuid.uuid4().hex[:12]
         self.kind = kind
         self.group = group
         self.dry_run = dry_run
+        self.params = params or {}
         self.state = "pending"  # pending | running | succeeded | failed
         self.steps: list[StepResult] = []
         self.error: str | None = None
@@ -98,7 +102,8 @@ def active_job() -> Job | None:
     return _jobs.get(_active_id)
 
 
-def start_job(settings: Settings, kind: str, group: str, dry_run: bool) -> Job:
+def start_job(settings: Settings, kind: str, group: str, dry_run: bool,
+              params: dict | None = None) -> Job:
     """Create and start a DR job in a background thread. Single-flight."""
     global _active_id
     if kind not in _WORKFLOWS:
@@ -110,7 +115,7 @@ def start_job(settings: Settings, kind: str, group: str, dry_run: bool) -> Job:
                 f"A DR operation ({active.kind}) is already running. "
                 "Wait for it to finish."
             )
-        job = Job(kind, group, dry_run)
+        job = Job(kind, group, dry_run, params)
         _jobs[job.id] = job
         _active_id = job.id
 
@@ -124,7 +129,7 @@ def _run(settings: Settings, job: Job) -> None:
     job.state = "running"
     logger.info("DR job %s (%s, dry_run=%s) started", job.id, job.kind, job.dry_run)
     try:
-        _WORKFLOWS[job.kind](settings, job.group, job.dry_run, job.steps)
+        _WORKFLOWS[job.kind](settings, job.group, job.dry_run, job.steps, job.params)
         if job.dry_run:
             job.state = "succeeded"  # a preview always "succeeds"
         else:

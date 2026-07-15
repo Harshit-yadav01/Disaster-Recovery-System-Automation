@@ -34,7 +34,7 @@
     const DROP = { stages: "dropStages", status: "dropStatus" };
 
     // Friendly display names for the internal op keys used by the API/backend.
-    const OP_LABEL = { failover: "Failover", revert: "Revert Failover", recover: "Reverse Sync", restore: "Restore", failback: "Failback" };
+    const OP_LABEL = { failover: "Failover", revert: "Revert Failover", recover: "Reverse Sync", restore: "Restore", failback: "Failback", present: "Present to Host", unpresent: "Unpresent" };
 
     // ---- Badges ------------------------------------------------------------
     function roleClass(c) {
@@ -151,10 +151,11 @@
         return { name, p, d, pg, dg };
     }
 
-    function setDropButtons(canF, canRevert, canR, canS) {
+    function setDropButtons(canF, canRevert, canR, canS, canPresent, canUnpresent) {
         const running = jobRunning;
-        const map = { failover: canF, revert: canRevert, recover: canR, restore: canS };
-        [["btnFailover", canF], ["btnRevert", canRevert], ["btnRecover", canR], ["btnRestore", canS]].forEach(([id, on]) => {
+        const map = { failover: canF, revert: canRevert, recover: canR, restore: canS, present: canPresent };
+        [["btnFailover", canF], ["btnRevert", canRevert], ["btnRecover", canR], ["btnRestore", canS],
+         ["btnPresent", canPresent], ["btnUnpresent", canUnpresent]].forEach(([id, on]) => {
             const b = $(id); if (b) b.disabled = !on || running;
         });
         document.querySelectorAll("#dropFlow .flow-step").forEach((el) => {
@@ -170,6 +171,7 @@
         const dHost = s.d ? esc(s.d.host) : "DR";
         let cls = "info", icon = "fa-circle-info", msg = "";
         let canF = false, canRevert = false, canR = false, canS = false;
+        let canPresent = false, canUnpresent = false;
         switch (s.name) {
             case "normal": {
                 const synced = s.pg && s.pg.all_synced;
@@ -179,13 +181,13 @@
             }
             case "failed-over": {
                 cls = "warn"; icon = "fa-triangle-exclamation";
-                msg = `Failed over &mdash; DR <b>${dHost}</b> is now Primary (R/W). Choose a path: <b>Revert Failover</b> (2a) to discard DR changes and undo, or <b>Reverse Sync</b> (2b) to keep them and copy back to <b>${pHost}</b>.`;
-                canRevert = true; canR = true; break;
+                msg = `Failed over &mdash; DR <b>${dHost}</b> is now Primary (R/W). <b>Present to Host</b> (1b) to expose the volumes to a DR ESXi host, then choose <b>Revert</b> (2a) to discard DR changes or <b>Reverse Sync</b> (2b) to keep them.`;
+                canRevert = true; canR = true; canPresent = true; canUnpresent = true; break;
             }
             case "reverse-synced": {
                 cls = "active"; icon = "fa-circle-check";
                 msg = `Reverse sync complete &mdash; DR <b>${dHost}</b> changes are synced back to <b>${pHost}</b>. Run <b>Restore</b> (step 3) to return to normal.`;
-                canR = true; canS = true; break;
+                canR = true; canS = true; canUnpresent = true; break;
             }
             default: {
                 cls = "down"; icon = "fa-plug-circle-xmark";
@@ -194,7 +196,7 @@
         }
         banner.className = "dr-banner " + cls;
         banner.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
-        setDropButtons(canF, canRevert, canR, canS);
+        setDropButtons(canF, canRevert, canR, canS, canPresent, canUnpresent);
     }
 
     async function loadStatus() {
@@ -209,7 +211,7 @@
             if (b) { b.className = "rep-banner down"; b.innerHTML = `<i class="fa-solid fa-plug-circle-xmark"></i> Status unavailable: ${esc(err.message)}`; }
             const db = $("dropBanner");
             if (db) { db.className = "dr-banner down"; db.innerHTML = `<i class="fa-solid fa-plug-circle-xmark"></i> Array state unavailable: ${esc(err.message)}`; }
-            setDropButtons(false, false, false, false);
+            setDropButtons(false, false, false, false, false, false);
             ["repStatus", "dropStatus"].forEach((id) => {
                 const el = $(id); if (el) el.innerHTML = `<p class="dr-error">Status unavailable: ${esc(err.message)}</p>`;
             });
@@ -231,6 +233,12 @@
         ],
         restore: [
             { action: "restore", verify: "verify restore", label: "Restore original direction", desc: "Primary back to R/W, DR back to Read-Only" },
+        ],
+        present: [
+            { action: "plan", verify: "verify present", label: "Present volumes to DR host", desc: "Export the group's volumes so the DR ESXi host can see them" },
+        ],
+        unpresent: [
+            { action: "plan", verify: "verify unpresent", label: "Remove host exports", desc: "Unexport the group's volumes from the DR host" },
         ],
         failback: [
             { action: "recover", verify: "verify recover", label: "Reverse replication", desc: "DR becomes source; original Primary becomes target" },
@@ -306,11 +314,16 @@
         const label = OP_LABEL[op] || op;
         try {
             jobRunning = true;
-            setDropButtons(false, false, false, false);
+            setDropButtons(false, false, false, false, false, false);
             $(cont.stages).innerHTML =
                 `<div class="stage active"><div class="stage-num"><i class="fa-solid fa-spinner fa-spin"></i></div>
                  <div class="stage-body"><h4>Starting ${esc(label)}${dryRun ? " (preview)" : ""}&hellip;</h4></div></div>`;
-            const res = await window.api.post(`/dr/${op}`, { dry_run: dryRun });
+            const body = { dry_run: dryRun };
+            if (op === "present" || op === "unpresent") {
+                const hostSel = $("presentHost");
+                body.host = hostSel ? hostSel.value : "";
+            }
+            const res = await window.api.post(`/dr/${op}`, body);
             pollJob(res.job_id, cont);
         } catch (err) {
             jobRunning = false;
@@ -331,6 +344,10 @@
             return "Reverses replication (recover \u2192 sync): the DR array becomes the source and copies its changes back to the original Primary, waiting until fully synced.";
         if (op === "restore")
             return "Returns the group to its natural direction (Primary R/W, DR Read-Only). Run only after Reverse Sync has completed.";
+        if (op === "present")
+            return "Exports this group's volumes to the selected DR host (createvlun) so the recovery VMs can see them. Only the group's own volumes are exported.";
+        if (op === "unpresent")
+            return "Removes this group's volume exports from the DR host (removevlun). The volumes are no longer visible to the host.";
         return `Runs ${op} and verifies the result.`;
     }
     function openModal(op) {
@@ -499,6 +516,33 @@
         if ($("dropDry")) $("dropDry").checked = on;
     }
 
+    // ---- Present-to-host: host dropdown ------------------------------------
+    let hostsLoaded = false;
+    async function loadHosts(force) {
+        const sel = $("presentHost");
+        if (!sel || (hostsLoaded && !force)) return;
+        try {
+            const data = await window.api.get("/dr/hosts");
+            const hosts = (data && data.hosts) || [];
+            const vmware = hosts.filter((h) => (h.persona || "").toLowerCase().includes("vmware"));
+            const list = vmware.length ? vmware : hosts;
+            const target = (data && data.configured_target) || "";
+            if (!list.length) {
+                sel.innerHTML = `<option value="">No hosts found</option>`;
+            } else {
+                sel.innerHTML = list.map((h) =>
+                    `<option value="${esc(h.name)}"${h.name === target ? " selected" : ""}>${esc(h.name)}${h.persona ? " (" + esc(h.persona) + ")" : ""}</option>`
+                ).join("");
+                if (target && !list.some((h) => h.name === target)) {
+                    sel.insertAdjacentHTML("afterbegin", `<option value="${esc(target)}" selected>${esc(target)} (configured)</option>`);
+                }
+            }
+            hostsLoaded = true;
+        } catch (err) {
+            sel.innerHTML = `<option value="">Could not load hosts</option>`;
+        }
+    }
+
     // ---- Tab navigation ----------------------------------------------------
     const VIEW_FOR = {
         dashboard: "dashboard", replication: "replication",
@@ -513,7 +557,8 @@
         if (name === "monitoring") { loadMonitoring(); monInterval = setInterval(loadMonitoring, 10000); }
         else if (name === "reports") { loadReports(); }
         else if (name === "settings") { loadSettings(); }
-        else if (["replication", "droperations"].includes(name)) { loadStatus(); }
+        else if (name === "droperations") { loadStatus(); loadHosts(); }
+        else if (name === "replication") { loadStatus(); }
     }
 
     function init() {
@@ -534,6 +579,8 @@
         const brv = $("btnRevert"); if (brv) brv.addEventListener("click", () => onExec("revert", "dropDry"));
         const brc = $("btnRecover"); if (brc) brc.addEventListener("click", () => onExec("recover", "dropDry"));
         const brs = $("btnRestore"); if (brs) brs.addEventListener("click", () => onExec("restore", "dropDry"));
+        const bp = $("btnPresent"); if (bp) bp.addEventListener("click", () => onExec("present", "dropDry"));
+        const bu = $("btnUnpresent"); if (bu) bu.addEventListener("click", () => onExec("unpresent", "dropDry"));
         const rr = $("repRefresh"); if (rr) rr.addEventListener("click", loadStatus);
         const dor = $("dropRefresh"); if (dor) dor.addEventListener("click", loadStatus);
         const mr = $("monRefresh"); if (mr) mr.addEventListener("click", loadMonitoring);

@@ -1567,6 +1567,11 @@ body.dark{--pg-bg:var(--hpe-base-color-grey-1300);--surface:var(--hpe-base-color
 .flow-body code{font-family:monospace;font-size:13px;background:var(--surface-2);padding:1px 6px;border-radius:5px;color:var(--accent-green);}
 .flow-connector{width:2px;height:18px;background:var(--line);margin-left:33px;}
 
+/* Present-to-host controls (host dropdown + present/unpresent buttons) */
+.present-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.present-host{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-dim);}
+.present-host select{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:14px;min-width:200px;}
+
 /* Fork: two mutually-exclusive paths after a failover (Revert OR Reverse Sync) */
 .flow-fork{font-size:12px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin:2px 0 12px;}
 .flow-branch{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:14px;}

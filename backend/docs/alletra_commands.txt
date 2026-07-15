@@ -1706,3 +1706,1191 @@ EXAMPLES
          syncrcopy  -pat testgroup*
 
 
+AlletraMP cli% showvlun -h
+showvlun - Show information about VLUNs in the system.
+
+SYNTAX
+    showvlun [options <arg>]
+    showvlun -listcols
+
+DESCRIPTION
+    The showvlun command displays information about Virtual Logical Unit
+    Numbers (VLUNs) in the system, such as all active and template VLUNs.
+    The display is divided into two sections: the upper provides information
+    about active VLUNs and the lower provides information about VLUN
+    templates.
+
+AUTHORITY
+    Any role in the system
+
+OPTIONS
+    -listcols
+        List the columns available to be shown in the -showcols option
+        described below (see 'clihelp -col showvlun' for help on each column).
+
+    The [options] are generally of two kinds: those that select the type of
+    information that is displayed, and those that filter the list of VLUNs that
+    are displayed.
+
+    By default (if none of the information selection options below are
+    specified) the following columns are shown:
+    Lun VVName HostName Host_WWN Port Type
+
+    Options that select the type of information shown include the following:
+
+    -showcols <column>[,<column>...]
+        Explicitly select the columns to be shown using a comma-separated list
+        of column names.  For this option the full column names are shown in
+        the header.
+        Run 'showvlun -listcols' to list the available columns.
+        Run 'clihelp -col showvlun' for a description of each column.
+
+    -lvw
+        Shows the WWN of the virtual volume associated with the VLUN.
+
+    -pathsum
+        Shows path summary information for active VLUNs
+
+    -hostsum
+        Shows mount point, Bytes per cluster, capacity information from Host Explorer
+        and user reserved space, VV size from showvv.
+
+    Options that filter the VLUNs that are displayed include the following
+
+    -a
+        Shows only active VLUNs.
+
+    -t
+        Shows only VLUN templates.
+
+    -nvme
+        Shows active VLUNS and VLUN templates for NVMe Hosts only.
+
+    -host {<hostname>|<pattern>|<hostset>}...
+        Displays only VLUNs exported to hosts that match <hostname> or
+        glob-style patterns, or to the host sets that match <hostset> or
+        glob-style patterns(see help on sub,globpat). The host set name must
+        start with "set:". Multiple host names, host sets or patterns can
+        be repeated using a comma-separated list.
+
+    -v {<VV_name>|<pattern>}...
+        Displays only VLUNs of virtual volumes that match <VV_name> or
+        glob-style patterns (see help on sub,globpat). Multiple volume names
+        or patterns can be repeated using a comma-separated list (for example
+        -v <VV_name>,<VV_name>...).
+
+    -l {<LUN|pattern>}...
+        Specifies that only exports to the specified LUN are displayed. This
+        specifier can be repeated to display information for multiple LUNs.
+
+    -nodes <nodelist>
+        Requests that only VLUNs for specific nodes are displayed. The node list
+        is specified as a series of integers separated by commas (for example
+        0,1,2). The list can also consist of a single integer (for example 1).
+
+    -slots <slotlist>
+        Requests that only VLUNs for specific slots are displayed. The slot list
+        is specified as a series of integers separated by commas (for example
+        0,1,2). The list can also consist of a single integer (for example 1).
+
+    -ports <portlist>
+        Requests that only VLUNs for specific ports are displayed. The port list
+        is specified as a series of integers separated by commas ((for example
+        1,2). The list can also consist of a single integer (for example 1).
+
+    -domain {<domain_name|pattern>}...
+        Shows only the VLUNs whose virtual volumes are in domains with names
+        that match one or more of the <domainname_or_pattern> options. This
+        option does not allow listing objects within a domain of which the user
+        is not a member. Multiple domain names or patterns can be repeated using
+        a comma-separated list.
+
+    -sortcol <col>[,<dir>][:<col>[,<dir>]...]
+        Sorts command output based on column number (<col>). Columns are
+        numbered from left to right, beginning with 0. At least one column must
+        be specified. In addition, the direction of sorting (<dir>) can be
+        specified as follows:
+          inc
+              Sort in increasing order (default).
+          dec
+              Sort in decreasing order.
+
+        Multiple columns can be specified and separated by a colon (:). Rows
+        with the same information in them as earlier columns will be sorted
+        by values in later columns.
+
+SPECIFIERS
+    None.
+
+NOTES
+    The use of host sets for the -host option affects the listing of VLUNs
+    related to these sets, rather than each individual member. As a result
+    only VLUN templates will be shown; active VLUNs always show each host.
+
+    A Domain column may be included by using the setclienv command to
+    set listdom to 1.  The listdom option is also set to 1 if the CLI was
+    started with the -listdom option, or if the CLI was started with the
+    TPDLISTDOM environment variable set. Please run "cli -h"  and
+    "setclienv -h" for details of the environment variables.
+
+    Long names can cause the display to be very wide. Use -shortnames
+    to display shortened 31 character names for objects. Use the setclienv
+    command to set shortnames to 1. The -shortnames option is also set to 1
+    if the CLI was started with the -shortnames option, or if the CLI was
+    started with the TPDSHORTNAMES environment variable set. Run "cli -h"
+    and "setclienv -h" for details of the environment variables.
+
+EXAMPLES
+    The following example displays all active and template VLUNs using
+    glob-style patterns:
+
+        cli% showvlun -v *.2,*.3
+
+    The following will show all VLUNs exported to host set host_set1:
+
+       cli% showvlun -host set:host_set1
+
+    Use the following to get a description of each column in the above
+    examples:
+    clihelp -col showvlun
+
+
+AlletraMP cli% createvlun -h
+createvlun - Export a virtual volume as a SCSI LUN.
+
+SYNTAX
+    The syntax for the createvlun command can be one of the following:
+     Port presents:
+        createvlun [options] <VV_name | VV_set> <LUN> <node:slot:port>
+     Host set:
+        createvlun [options] <VV_name | VV_set> <LUN> <host_set>
+     Host sees:
+        createvlun [options] <VV_name | VV_set> <LUN> <host_name>
+     Matched set:
+        createvlun [options] <VV_name | VV_set> <LUN> <node:slot:port>
+                    <host_name>
+        createvlun [options] <VV_name | VV_set> <LUN> <host_name>
+                    <node:slot:port>
+
+DESCRIPTION
+    The createvlun command creates a VLUN template that enables export of a
+    Virtual Volume as a SCSI VLUN to a host or hosts. A SCSI VLUN is created when the
+    current system state matches the rule established by the VLUN template.
+
+    There are four types of VLUN templates:
+        Port presents - created when only the node:slot:port are specified. The
+        VLUN is visible to any initiator on the specified port.
+
+        Host set - created when a host set is specified. The VLUN is visible to
+        the initiators of any host that is a member of the set.
+
+        Host sees - created when the hostname is specified. The VLUN is visible
+        to the initiators with any of the host's WWNs.
+
+        Matched set - created when both hostname and node:slot:port are
+        specified. The VLUN is visible to initiators with the host's WWNs only
+        on the specified port.
+
+    Conflicts between overlapping VLUN templates are resolved using
+    prioritization, with port presents templates having the lowest priority and
+    matched set templates having the highest.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the vlun_create right
+
+OPTIONS
+    -f
+        Specifies that the operation is forced and that the VLUN is created even
+        if the specified Virtual Volume has existing VLUNs. Unless the -f option is
+        specified, the command asks for confirmation if a virtual volume is
+        already exported in a VLUN template.
+
+    -cnt <number>
+        Specifies that a sequence of VLUNs, as specified by the num argument,
+        are exported to the same system port and host that is created. The num
+        argument can be specified as any integer. For each VLUN created, the
+        .int suffix of the VV_name specifier and LUN are incremented by one.
+        This option does not work with shortened names.
+
+    -novcn
+        Specifies that a VLUN Change Notification (VCN) not be issued after
+        export. For direct connect or loop configurations, a VCN consists of a
+        Fibre Channel Loop Initialization Primitive (LIP). For fabric
+        configurations, a VCN consists of a Registered State Change
+        Notification (RSCN) that is sent to the fabric controller.
+
+    -ovrd
+        Specifies that existing lower priority VLUNs will be overridden, if
+        necessary. Can only be used when exporting to a specific host.
+
+SPECIFIERS
+    <VV_name | VV_set>
+        Specifies the virtual volume or virtual volume set name, using up to 255
+        characters in length. The volume name is provided in the syntax of
+        basename.int.  The VV set name must start with "set:".
+
+    <LUN>
+        Specifies the LUN as an integer from 0 through 16383.
+        Alternatively n+ can be used to indicate a LUN should be auto assigned, but be
+        a minimum of n, or m-n to indicate that a LUN should be chosen in the
+        range m to n. In addition the keyword auto may be used and is treated
+        as 0+ (1+ for NVMe hosts). Please note LUN range supported is
+        1-256 for NVMe-FC and 1-128 for NVMe-TCP hosts.
+
+    <host_name>
+        Specifies the host where the LUN is exported, using up to 31 characters.
+
+    <host_set>
+        Specifies the host set where the LUN is exported, using up to 31
+        characters in length. The set name must start with "set:".
+
+    <node:slot:port>
+        Specifies the system port of the virtual LUN export.
+            node
+                Specifies the system node, where the node is a number from 0
+                through 7.
+            slot
+                Specifies the PCI bus slot in the node, where the slot is a
+                number from 0 through 5.
+            port
+                Specifies the port number on the FC card, where the port number
+                is 1 through 4.
+
+NOTES
+    If a Volume is already exported as a VLUN, you will be prompted for
+    confirmation if a new export of the same Volume is attempted.
+
+    The host and port can both be supplied when issuing this command (matched
+    set). This is the most restrictive access as both the host name and port
+    must match before access to the VLUN is granted.
+
+    Verify the creation of VLUNs by issuing the showvlun command.
+
+    Conflicts between overlapping VLUN templates are resolved by a priority
+    order among templates with matched set being the highest and port presents
+    the lowest.
+
+EXAMPLES
+    The following example exports virtual volume test on LUN 2:
+
+        cli% createvlun test 2 testhost
+
+     The following will export a VV test to a host set:
+        cli% createvlun test 1 set:host_set
+
+     The following will export each VV in VV set test_set to a host:
+        cli% createvlun set:test_set 1 host
+
+     The following will export each VV in VV set test_set to a host set:
+        cli% createvlun set:test_set 1 set:host_set
+
+
+AlletraMP cli% removevlun -h
+removevlun - Remove a virtual volume's SCSI LUN export definition.
+
+SYNTAX
+    removevlun [options] <VV> <LUN> <n:s:p>
+    removevlun [options] <VV> <LUN> <host|hostset>
+    removevlun [options] <VV> <LUN> <host|hostset> <n:s:p>
+    removevlun [options] <VV> <LUN> <n:s:p> <host|hostset>
+
+DESCRIPTION
+    The removevlun command removes a virtual volume's SCSI LUN export definition
+    from the system.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the vlun_remove right
+
+OPTIONS
+    -novcn
+        Specifies that a VLUN Change Notification (VCN) not be issued after
+        removal of the VLUN.
+
+          For direct connect or loop configurations, a VCN consists of a Fibre
+          Channel Loop Initialization Primitive (LIP).
+
+          For fabric configurations, a VCN consists of a Registered State Change
+          Notification (RSCN) that is sent to the fabric controller.
+
+    -pat
+        Specifies that the <VV_name>, <LUN>, <node:slot:port>, and <host_name>
+        specifiers are treated as glob-style patterns and that all VLUNs
+        matching the specified pattern are removed. By default, confirmation is
+        required to proceed with the command unless the -f option is specified.
+
+    -dr
+        Specifies that the operation is a dry run and no VLUNs are removed.
+
+    -f
+        Specifies that the command is forced. If this option is not used, the
+        command requires confirmation before proceeding with its operation.
+
+SPECIFIERS
+    <VV>
+        Specifies the volume name, using up to 255 characters in length.
+
+    <LUN>
+        Specifies the LUN id to remove.
+
+    <n:s:p>
+        Specifies that exports to the specified port are removed. If this
+        specifier is not used, the <host|hostset> specifier must be used.
+          n
+            Specifies the system node.
+          s
+            Specifies the PCI bus slot in the node.
+          p
+            Specifies the FCS port number of the card in PCI bus slot.
+
+    <host|hostset>
+        Specifier requests that exports to the specified host or host set, named
+        using up to 31 characters, be removed. The host set name must start
+        with "set:". If this specifier is not used, the node:slot:port
+        specifier must be used.
+
+NOTES
+    To remove a specific VLUN, you must supply the same specifiers and options
+    that you used when that VLUN was created. Use the showvlun -t command to
+    view all created VLUN specifiers and options.
+
+    If the VLUN to be removed is a matched-set, both the port specifier and the
+    hostname should be specified.
+
+    Issuing the removevlun command with the -pat option specified returns a
+    request for confirmation to remove VLUNs, unless the -f option is specified.
+
+    Verify the removal of VLUNs by issuing the showvlun command.
+
+EXAMPLES
+    The following example deletes VLUNs for volume vv0, LUN 0, host host1:
+
+        cli% removevlun -f vv0 0 host1
+
+     The following will remove exported VLUNs for vv0, LUN 1, host set host_set:
+
+        cli% removevlun -f vv0 1 set:host_set
+
+
+AlletraMP cli% showhostset -h
+showhostset - show host set information
+
+SYNTAX
+    showhostset [options] [<setname_or_pattern>...]
+    showhostset -host [options] [<hostname_or_pattern>...]
+
+DESCRIPTION
+    The showhostset command lists the host sets defined on the storage system
+    and their members.
+
+AUTHORITY
+    Any role in the system
+
+OPTIONS
+    -d
+        Show a more detailed listing of each set.
+    -host
+        Show host sets that contain the supplied hostnames or patterns.
+    -summary
+        Shows host sets with summarized output with host set names and number of
+        hosts in those sets.
+    -allnames
+        Shows both the shortened and full host set names
+
+SPECIFIERS
+    <setname_or_pattern>...
+        An optional list of setnames or patterns.  If no setnames or patterns
+        are specified all sets are displayed, otherwise only sets with names
+        matching one or more of the setnames or patterns are displayed.
+        The patterns are glob-style patterns (see help on sub,globpat).
+
+    <hostname_or_pattern>...
+        Specifies that the sets containing hosts with the specified names or
+        matching the glob-style patterns should be displayed.
+
+NOTES
+    A Domain column may be included by using the setclienv command to
+    set listdom to 1.  The listdom option is also set to 1 if the CLI was
+    started with the -listdom option, or if the CLI was started with the
+    TPDLISTDOM environment variable set. Please run "cli -h"  and
+    "setclienv -h" for details of the environment variables.
+    Total line in the output specifies the total number of unique objects.
+
+    Long names can cause the display to be very wide. Use -shortnames
+    to display shortened 31 character names for objects. Use the setclienv
+    command to set shortnames to 1. The -shortnames option is also set to 1
+    if the CLI was started with the -shortnames option, or if the CLI was
+    started with the TPDSHORTNAMES environment variable set. Run "cli -h"
+    and "setclienv -h" for details of the environment variables.
+
+EXAMPLES
+    Show all host sets defined to the system:
+    cli% showhostset
+    Id Name       Members
+    22 myset      -
+    18 seta       -
+     3 sunv40z-09 sunv40z-09-0
+                  sunv40z-09-1
+                  sunv40z-09-2
+                  sunv40z-09-3
+   ----------------------------
+     3 total 4
+
+    Show the details of myset only:
+    cli% showhostset -d myset
+    Id Name  Members Comment
+    22 myset -       This is an empty set
+    -------------------------------------
+     1 total 0
+
+    Show the host sets containing host sun40z-09-0:
+    cli% showhostset -host sun40z-09-0
+    Id Name       Members
+     3 sunv40z-09 sunv40z-09-0
+                  sunv40z-09-1
+                  sunv40z-09-2
+                  sunv40z-09-3
+    ----------------------------
+     1 total 4
+
+    Show RC host sets
+    If the Active/Active group proximities are set then RC_host column will
+    reflect that. For example:
+
+    cli% showhostset -summary
+      Id Name             HOST_Cnt VVOLSC Flashcache QoS RC_host
+     552 RH2_Group0_1            1 NO     NO         NO  All
+     555 RH0_Group0_0            1 NO     NO         NO  Pri
+     556 RH1_Group0_2            1 NO     NO         NO  Sec
+
+
+AlletraMP cli% createhostset -h
+createhostset - create a host set or add hosts to an existing set
+
+SYNTAX
+    createhostset [options] <setname> [<host | pattern>...]
+
+DESCRIPTION
+    The createhostset command defines a new set of hosts and provides
+    the option of assigning one or more existing hosts to that set. The
+    command also allows the addition of hosts to an existing set by use
+    of the -add option.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the hostset_create right can create a host set
+    Any role granted the hostset_set right can add hosts to a host set
+
+OPTIONS
+    -add
+        Specifies that the hosts listed should be added to an existing set.
+        At least one host must be specified.
+
+    -comment <comment>
+        Specifies any comment or additional information for the set. The
+        comment can be up to 255 characters long. Unprintable characters are
+        not allowed.
+
+    -domain <domain>
+        Create the host set in the specified domain. For an empty set the
+        default is to create it in the current domain, or no domain if the
+        current domain is not set. A host set must be in the same domain as
+        its members; if hosts are specified as part of the creation then
+        the set will be created in their domain. The -domain option should
+        still be used to specify which domain to use for the set when the
+        hosts are members of domain sets. A domain cannot be specified
+        when adding a host to an existing set with the -add option.
+
+SPECIFIERS
+    <setname>
+        Specifies the name of the host set to create/add to, using up to 251
+        characters in length. Valid characters include alphanumeric characters,
+        periods, dashes, and underscores.
+
+    <host | pattern>...
+        Optional list of hosts or glob-style patterns matching hosts that are
+        to be included in the host set. If no <host> is specified a host set
+        with no hosts is created.
+
+NOTES
+    NVMe hosts cannot be mixed with FC or iSCSI hosts to form a hostset.
+
+EXAMPLES
+    To create an empty hostset:
+    cli% createhostset hostset
+
+    To add a host to the set:
+    cli% createhostset -add hostset hosta
+
+    To create a host set with hosts in it:
+    cli% createhostset hostset host1 host2
+
+    or
+
+    cli% createhostset set:hostset host1 host2
+
+    To create a host set with a comment and a host in it:
+    cli% createhostset -comment "A host set" oraset ora1
+
+
+AlletraMP cli% removehostset -h
+removehostset - remove a host set or remove hosts from an existing set
+
+SYNTAX
+    removehostset [options] <setname|pattern> [<host|pattern>...]
+
+DESCRIPTION
+    The removehostset command removes a host set or removes hosts from
+    an existing set.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the hostset_set right can remove a host set or hosts from a host set
+
+OPTIONS
+    -f
+        Specifies that the command is forced. If this option is not used, the
+        command requires confirmation before proceeding with its operation.
+
+    -pat
+        Specifies that both the set name and hosts will be treated as
+        glob-style patterns.
+
+SPECIFIERS
+    <setname|pattern>
+        Name of the host set to remove. If the -pat option is specified the
+        setname will be treated as a glob-style pattern, and multiple host sets
+        will be considered.
+
+    <host|pattern>
+        Optional list of host names that are members of the set.
+        If no <host>s are specified, the host set is removed, otherwise
+        the specified <host>s are removed from the host set. If the -pat option
+        is specified the host will be treated as a glob-style pattern,
+        and multiple hosts will be considered.
+
+NOTES
+    The patterns are glob-style (shell-style) patterns (see help on sub,globpat).
+
+EXAMPLES
+    To remove a host set:
+    cli% removehostset hostset
+
+    To remove a single host from a set:
+    cli% removehostset hostset host1
+
+    The following example removes the host sets that start with test:
+    cli% removehostset -f -pat test*
+
+    The following example removes any hosts that start with test or
+    sample from all host sets:
+    cli% removehostset -f -pat * test* sample*
+
+
+AlletraMP_D22U27 cli% showvv -h
+showvv - Show information about virtual volumes (VVs) in the system.
+
+SYNTAX
+    showvv [options] [<VV_name|pattern|VV_set> ...]
+    showvv -listcols
+
+DESCRIPTION
+    The showvv command displays information about all Virtual Volumes (VVs) or
+     a specific VV in a system.
+
+AUTHORITY
+    Any role in the system
+
+OPTIONS
+    -listcols
+        List the columns available to be shown in the -showcols option
+        described below (see 'clihelp -col showvv' for help on each column).
+
+    The [options] are generally of two kinds: those that select the type of
+    information that is displayed, and those that filter the list of VVs that
+    are displayed.
+
+    By default (if none of the information selection options below are
+    specified) the following columns are shown:
+    Id Name Prov Compr Deduplication Type CopyOf BsId Rd State Data_Rsvd_MB
+    VSize_MB
+
+    Options that select the type of information shown include the following:
+
+    -showcols <column>[,<column>...]
+        Explicitly select the columns to be shown using a comma-separated list
+        of column names.  For this option the full column names are shown in
+        the header.
+        Run 'showvv -listcols' to list the available columns.
+        Run 'clihelp -col showvv' for a description of each column.
+
+    -d
+        Displays detailed information about the VVs.  The following columns
+        are shown:
+        Id Name Rd Mstr Prnt Roch Rwch PPrnt SPrnt_Id PBlkRemain VV_WWN
+        CreationTime Udid
+
+    -nvme
+        Displays NGUID and EUI for all the VVs regardless of whether they are
+        exported to an NVMe host. This is useful for a user to identify a VV
+        from the NVMe host. The following columns are shown:
+        Id Name NGUID EUI64
+
+    -pol
+        Displays policy information about the VVs. The following columns
+        are shown: Id Name Policies
+
+    -space (-s)
+        Displays Logical Disk (LD) space use by the VVs.  The following columns
+        are shown:
+        Id Name Prov Compr Deduplication Type Data_Used_MB Data_Rsvd_MB
+        Host_Wrt_MB VSize_MB Used_Data_Perc Warn_Data_Perc Limit_Data_Perc
+        Branch_VSize_MB Branch_Used_MB Branch_Used_Perc Thin Compression Total
+
+        Note:
+        The Used_MB and the corresponding _Perc columns have a "*"
+        before the number if further space accounting is in-progress for
+        this volume. This occurs after snapshot deletions.
+
+        The Used (MiB), Host Wr (MiB), and Used (% VSize) columns may show
+        values greater than VSize (MiB) or over 100% Used. This will occur
+        with Base volumes that have snapshot shared space, which is tracked
+        in the Base volume's counters for these fields.
+
+        The "Branch" columns show space accounting stats on a branch level.
+        A branch is a RW volume, either a base or snapshot, with all
+        of its RO snapshots. This applies to three fields:
+        Branch_VSize_MB, Branch_Used_MB, and Branch_Used_Perc. Unlike the
+        per-VV values, the branch Used (MiB) and Used (% VSize) will not
+        exceed the values shown in the branch VSize (MiB) column or 100% Used.
+
+    -r
+        Displays raw space use by the VVs.  The following columns are shown:
+        Id Name Prov Compr Deduplication Type Data_RawRsvd_MB Data_Rsvd_MB
+        VSize_MB
+
+    -zone
+        Displays mapping zone information for VVs.
+        The following columns are shown:
+        Id Name Prov Compr Deduplication Type VSize_MB Adm_Zn Adm_Free_Zn
+        Data_Zn Data_Free_Zn
+
+    -g
+        Displays the SCSI geometry settings for the VVs.  The following
+        columns are shown: Id Name SPT HPC SctSz
+
+    -alert
+        Indicates whether alerts are posted on behalf of the VVs.
+        The following columns are shown:
+        Id Name Prov Compr Deduplication Type VSize_MB Used_Data_Perc
+        Warn_Data_Perc Limit_Data_Perc Alert_Adm_Fail_Y Alert_Data_Fail_Y
+        Alert_Data_Wrn_Y Alert_Data_Lim_Y
+
+    -alerttime
+        Shows times when alerts were posted (when applicable).
+        The following columns are shown:
+        Id Name Alert_Adm_Fail Alert_Data_Fail Alert_Data_Wrn
+        Alert_Data_Lim
+
+    -cpprog
+        Shows the physical copy and promote progress.
+        The following columns are shown:
+        Id Name Prov Compr Deduplication Type CopyOf VSize_MB Copied_MB
+        Copied_Perc
+
+    -cpgalloc
+        Shows CPGs associated with each VV.  The following columns are
+        shown:
+        Id Name Prov Compr Deduplication Type CPG AllocGrpId
+
+    -state
+        Shows the detailed state information for the VVs.  The following
+        columns are shown:
+        Id Name Prov Compr Deduplication Type State Detailed_State
+
+    -allnames
+        Shows both the shortened and full name for the VVs.  The following
+        columns are shown:
+        Id ShortName Name
+
+    -hist
+        Shows the history information of the VVs.
+        The following columns are shown:
+        Id Name Prov Compr Deduplication Type CreationTime RetentionEndTime
+        ExpirationTime SpaceCalcTime EfficiencyUpdateTime UnrefSpaceFreedTime
+        Comment
+
+    -rcopy
+        This option appends two columns, RcopyStatus and RcopyGroup, to
+        any of the display options above.
+
+    -notree
+        Do not display VV names in tree format.
+        Unless either the -notree or the -sortcol option described below
+        are specified, the VVs are ordered and the names are indented in
+        tree format to indicate the virtual copy snapshot hierarchy.
+
+    -grow
+        Shows the actual size of the VV along with the presented size in MiB.
+        The following columns are shown:
+        Id Name VSize_MB ASize_MB
+
+    -sortcol <col>[,<dir>][:<col>[,<dir>]...]
+        Sorts command output based on column number (<col>). Columns are
+        numbered from left to right, beginning with 0. At least one column must
+        be specified. In addition, the direction of sorting (<dir>) can be
+        specified as follows:
+          inc
+              Sort in increasing order (default).
+          dec
+              Sort in decreasing order.
+
+        Multiple columns can be specified and separated by a colon (:). Rows
+        with the same information in them as earlier columns will be sorted
+        by values in later columns.
+
+    A Domain column may be included by using the setclienv command to
+    set listdom to 1.  The listdom option is also set to 1 if the CLI was
+    started with the -listdom option, or if the CLI was started with the
+    TPDLISTDOM environment variable set. Please run "cli -h"  and
+    "setclienv -h" for details of the environment variables.
+
+    The VV filtering option include:
+
+    -p <pattern>
+        Pattern for matching VVs to show (see below for description
+        of <pattern>) If the -p option is specified multiple times, each
+        instance of <pattern> adds additional candidate VVs that match that
+        pattern.
+
+        A <pattern> is one or more of the following:
+
+        -cpg {<cpgname>|<pattern>}[,{<cpgname>|<pattern>}...]
+            Show only VVs whose CPG matches the one or more of the
+            cpgname_or_patterns.
+        -prov {<prov>|<pattern>}[,{<prov>|<pattern>}...]
+            Show only VVs with Prov (provisioning) values that match the
+            prov_or_pattern.
+        -type {<type>|<pattern>}[,{<type>|<pattern>}...]
+            Show only VVs of types that match the type_or_pattern.
+        -host {<hostname>|<pattern>}[,{<hostname>|<pattern>}...]
+            Show only VVs that are exported as VLUNs to hosts with names that
+            match one or more of the hostname_or_patterns.
+        -baseid {<baseid>|<pattern>}[,{<baseid>|<pattern>}...]
+            Show only VVs whose BsId column matches one more of the
+            baseid_or_patterns.
+        -copyof {<vvname>|<pattern>}[,{<vvname>|<pattern>}...]
+            Show only VVs whose CopyOf column matches one more of the
+            vvname_or_patterns.
+        -rcopygroup {<groupname>|<pattern>}[,{<groupname>|<pattern>}...]
+            Show only VVs that are in Remote Copy groups that match
+            one or more of the groupname_or_patterns.
+        -policy {<policy>|<pattern>}[,{<policy>|<pattern>}...]
+            Show only VVs whose policy matches the one or more of the
+            policy_or_pattern.
+        -vmname {<vmname>|<pattern>}[,{<vmname>|<pattern>}...]
+            Show only VVs whose vmname matches one or more of the
+            vvname_or_patterns.
+        -vmid {<vmid>|<pattern>}[,{<vmid>|<pattern>}...]
+            Show only VVs whose vmid matches one or more of the
+            vmids.
+        -vmhost {<vmhost>|<pattern>}[,{<vmhost>|<pattern>}...]
+            Show only VVs whose vmhost matches one or more of the
+            vmhost_or_patterns.
+        -vvolstate {<bound|unbound>}
+            Show only VVs whose vvolstate matches the specified
+            state - bound or unbound.
+        -vvolsc {<scname>|<pattern>}[,{<scname>|<pattern>}...]
+            Show only VVs whose storage container name matches one
+            or more of the scname_or_patterns.
+
+    -domain <domain_name|pattern>[,<domain_name|pattern>...]
+        Shows only VVs that are in domains with names matching one or more of
+        the specified domain_name or patterns. This option does not allow
+        listing objects within a domain of which the user is not a member.
+        Multiple domain names or patterns can be repeated using a
+        comma-separated list (for example -domain <domain_name>,
+        <domain_name>...).
+
+    -expired
+        Show only VVs that have expired.
+
+    -exp <time>{d|D|h|H|m|M}
+        Specifies the relative time from the current time that volume will
+        expire. <time> is a positive integer value and in the range of
+        1 minute - 1825 days. Time can be specified in days, hours, or
+        minutes.  Use "d" or "D" for days, "h" or "H" for hours, or "m" or "M"
+        for minutes following the entered time value.
+
+    -retained
+        Shows only VVs that have a retention time.
+
+    -failed
+        Shows only failed VVs.
+
+    The following VV filtering options are deprecated and will be removed in
+    a future release.  Instead, use the appropriate -p <pattern> option
+    described above.
+
+    -cpg {<cpgname>|<pattern>}[,{<cpgname>|<pattern>}...]
+        Show only VVs whose CPG matches the one or more of the
+        cpgname_or_patterns.  This option is deprecated without the
+        preceding -p. Use -p -cpg option described above instead.
+    -tpvv
+        Show only thin provisioned VVs (TPVVs).  This option is deprecated.
+        Use the -p -prov tp* option described above instead.
+    -host {<hostname>|<pattern>}[,{<hostname>|<pattern>}...]
+        Show only VVs that are exported as VLUNs to hosts with names that
+        match one or more of the hostname_or_patterns.
+        This option is deprecated without the preceding -p.
+        Use -p -host option described above instead.
+    -rcopygroup {<groupname>|<pattern>}[,{<groupname>|<pattern>}...]
+        Show only VVs that are in Remote Copy groups that match one or
+        more of the groupname_or_patterns.
+        This option is deprecated without the preceding -p.
+        Use -p -rcopygroup option described above instead.
+
+SPECIFIERS
+    <VV_name|pattern|VV_set>...
+        Specifies the VVs with the specified name (up to 255 characters in
+        length), matching the glob-style pattern or that are members of the
+        supplied VV set will have their information displayed. The VV set name
+        must start with "set:". This specifier can be repeated to display
+        configuration information about multiple VVs. This specifier is not
+        required. If not specified, configuration information for all VVs in
+        the system is displayed.
+
+NOTES
+    For all the <name_or_pattern> fields, the patterns are glob-style
+    (shell-style) patterns (see help on sub,globpat).
+
+    If the -showcols option is used, the full column names are shown in the
+    header; otherwise, the header contains abbreviated column names.
+
+    Note:
+    Compression column is under Efficiency column which displays the
+    compression ratio. Compr column denotes the current Compression state of the
+    thinly compressed volume.
+    The Compr column holds one of the following values:
+        v1  - Compression version 1 is enabled on this VV.
+        v2  - Compression version 2 is enabled on this VV.
+        No  - Compression is currently disabled.
+        NA  - Compression is not applicable. (In case of non-compressed volumes)
+
+    The Dedup column indicates whether it is a thinly deduplicated volume or not.
+        Yes - Deduplicated volume.
+        No  - Not a Deduplicated volume.
+
+
+    A Domain column may be included by using the setclienv command to
+    set listdom to 1.  The listdom option is also set to 1 if the CLI was
+    started with the -listdom option, or if the CLI was started with the
+    TPDLISTDOM environment variable set. Please run "cli -h"  and
+    "setclienv -h" for details of the environment variables.
+
+    Long names can cause the display to be very wide. Use -shortnames
+    to display shortened 31 character names for objects. Use the setclienv
+    command to set shortnames to 1. The -shortnames option is also set to 1
+    if the CLI was started with the -shortnames option, or if the CLI was
+    started with the TPDSHORTNAMES environment variable set. Run "cli -h"
+    and "setclienv -h" for details of the environment variables.
+
+    If there are greater than 8192 VVs and snapshots on the system, then
+    there may be issues displaying the Shared volume and TDVV tree. Some
+    TDVVs may not appear under the Shared volume and instead appear later
+    in the list.
+
+    For this command, 1 MB = 1048576 bytes.
+
+EXAMPLES
+    The following example displays space usage information for thin provisioned
+     VVs that are exported to host hname:
+
+        cli% showvv -s -p -prov tp* -host hname
+
+     Note that the 'tp*' matches tpvv as well as tpsd.
+
+     The following example displays raw space usage information for thin
+     provisioned VVs exported to host hname and all VVs in the tree with the
+     base VV of Id 50.
+
+         cli% showvv -r -p -prov tp* -host hname -p -baseid 50
+
+     The following example lists the Id, Name and VSize_MB columns only for thin
+     provisioned VVs exported to host hname:
+
+        cli% showvv -showcols Id,Name,VSize_MB -p -prov tp* -host hname
+
+     The following will show all VVs in VV set vv_set:
+
+        cli% showvv set:vv_set
+
+
+AlletraMP cli% createvv -h
+createvv - Create a virtual volume from a common provisioning group.
+
+SYNTAX
+    createvv {-tpvv|-reduce} [options] <usr_cpg> <vvname>[.<index>]
+    <size>[g|G|t|T]
+
+DESCRIPTION
+    The createvv command creates volumes that are provisioned from one or more
+    common provisioning groups.  Volumes can be thinly provisioned from a CPG.
+    Users can optionally specify a CPG for snapshot space. Users must specify
+    either -tpvv or -reduce to create a thin provisioned volume or a thin
+    provisioned volume with compression and dedup technologies.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the vv_create right
+
+OPTIONS
+    -i <ID>
+        Specifies the ID of the volume. By default, the next available ID is
+        chosen.
+
+    -cnt <count>
+        Specifies the number of identical VVs to create.  This must be an
+        integer from 1 through 999. If <id> is specified with -i option, it is
+        used as the id of the first VV and incremented by 1 for each
+        subsequent volume.
+
+    -exp <time>{d|D|h|H|m|M}
+        Specifies the relative time from the current time that volume will
+        expire. <time> is a positive integer value and in the range of
+        1 minute - 1825 days. Time can be specified in days, hours, or minutes.
+        Use "d" or "D" for days, "h" or "H" for hours, or "m" or "M" for minutes
+        following the entered time value.
+
+    -comment <comment>
+        Specifies any additional information up to 511 characters for the
+        volume.
+
+    -f
+        Do not ask for confirmation before creating a volume with retention time
+        (-retain).
+
+    -retain <time>{d|D|h|H|m|M}
+        Specifies the amount of time, relative to the current time, that the
+        volume will be retained. <time> is a positive integer value and in the
+        range of 1 minute - 1825 days. Time can be specified in days, hours, or
+        minutes.  Use "d" or "D" for days, "h" or "H" for hours, or "m" or "M"
+        for minutes following the entered time value.
+
+        Note: If the volume is not in any domain, then its retention time
+        cannot exceed the value of the system's VVRetentionTimeMax. The default
+        value for the system's VVRetentionTimeMax is 14 days. If the volume
+        belongs to a domain, then its retention time cannot exceed the value of
+        the domain's VVRetentionTimeMax, if set. The retention time cannot be
+        removed or reduced once it is set. If the volume has its retention time
+        set, it cannot be removed within its retention time. If both expiration
+        time and retention time are specified, then the retention time cannot
+        be longer than the expiration time.
+
+    -spt <sectors_per_track>
+        Defines the virtual volume geometry sectors per track value that is
+        reported to the hosts through the SCSI mode pages. The valid range is
+        between 4 to 8192 and the default value is 304.
+
+    -hpc <heads_per_cylinder>
+        Allows you to define the virtual volume geometry heads per cylinder
+        value that is reported to the hosts though the SCSI mode pages. The
+        valid range is between 1 to 255 and the default value is 8.
+
+    -pol <pol>[,<pol>...]
+
+        Specifies the following policies that the created virtual volume follows.
+
+        one_host
+            This constrains the export of a volume to one host or one host
+            cluster (when cluster names may be used as a host name).
+        no_one_host
+            This policy should only be used when exporting a virtual
+            volume to multiple hosts for use by a cluster-aware application,
+            or when "port presents" VLUNs are used. This is the default policy
+            setting.
+        rware
+            The virtual volume will enable ransomware detection.
+        no_rware
+            The virtual volume will disable ransomware detection (default).
+
+
+    The following options can be used when creating thinly provisioned volumes:
+
+    -tpvv
+        Specifies that the volume should be a thinly provisioned volume.
+
+    -reduce
+        Specifies that the volume should be a thinly deduplicated and compressed
+        volume. This option is automatically applied by default.
+
+    -minalloc <size>
+        This option specifies the default allocation size (in MB) to be set.
+        Allocation size specified should be at least (number-of-nodes * 256) and
+        less than the CPG grow size.
+
+    -usr_aw <percent>
+        This option enables user space allocation warning. Generates a warning
+        alert when the allocated data space of the TPVV exceeds the specified
+        percentage of the virtual volume size. Space allocated for snapshots
+        related to this VV do count against the warning. Therefore, the
+        percentage can be greater than 100.
+
+    -usr_al <percent>
+        Indicates the user space allocation limit. Generates a limit alert when
+        the allocated data space of the TPVV exceeds the specified percentage of
+        the virtual volume size. Space allocated for snapshots related to this
+        VV do count against the warning. Therefore, the percentage can be
+        greater than 100.
+
+SPECIFIERS
+    <usr_cpg>
+        Specifies the name of the CPG from which the volume user space will be
+        allocated. If the -tpvv option is specified, the volume is thinly provisioned.
+        If the -reduce option is specified, the volume is thinly provisioned with
+        compression and dedup technologies.
+
+    <vvname>[.<index>]
+        Specifies a VV name up to 255 characters in length. Valid characters
+        include alphanumeric characters, periods, dashes, and underscores. If
+        the -cnt option is used, the optional decimal number <index> specifies
+        the name of the first VV(<vvname>.<index>). The <index> is incremented
+        by 1 for each subsequent VV. The <index> must be an integer from 0 to
+        999999. All VV names have the same length constraint.
+
+    <size>[g|G|t|T]
+        Specifies the size for the volume in MB. The volume size is rounded up
+        to the next multiple of 256 MB. The size should be an integer. An
+        optional suffix (with no whitespace before the suffix) will modify the
+        units to GB (g or G suffix) or TB (t or T suffix).  If the size is to
+        be taken from a template, this field should be "-".
+
+NOTES
+    Access to all domains is required to run this command with logical disks
+    specified.
+
+    -minalloc can be used only with -tpvv.
+
+    Verify the creation of virtual volumes by issuing the showvv command.
+
+    Maximum size of reduced Volumes is 64 TiB.
+
+    Maximum size of Thin Provisioned Volumes is 64 TiB.
+
+    For this command MB = 1048576 bytes, GB = 1024MB, and TB = 1024GB.
+
+EXAMPLES
+    The following example creates a 10G TPVV named tpvv1 whose user space is
+    allocated from the common provisioning group cpg1. The user space allocation
+    warning is set to 50 and the user space allocation limit is set to 200:
+
+        cli% createvv -tpvv -usr_aw 50 -usr_al 200 cpg1 tpvv1 10G
+
+    The following example creates 3 TPVVs vv1.2, vv1.3, vv1.4:
+
+        cli% createvv -cnt 3 -tpvv cpg1 vv1.2 1g
+
+    The following example creates a TPVV with default allocation size of 2GB:
+
+        cli% createvv -tpvv -minalloc 2048 cpg2 tpvv1 1g
+
+    The following example creates a thinly deduplicated and compressed volume
+    of size 16GB:
+
+       cli% createvv -reduce cpg2 vv1 16g
+
+
+AlletraMP cli% removevv -h
+removevv - Remove virtual volumes (including snapshot volumes).
+
+SYNTAX
+    removevv [options] <VV_name>|<pattern>...
+    removevv -expired [options] [<VV_name>|<pattern>...]
+
+DESCRIPTION
+    The removevv command removes Virtual Volumes (VVs) from the system.
+
+AUTHORITY
+    Super, Edit
+    Any role granted the vv_remove right can remove base volumes
+    Any role granted the vvcopy_remove right can remove physical volumes
+    Any role granted the sv_remove right can remove virtual copies
+
+OPTIONS
+    -pat
+        Specifies that specified patterns are treated as glob-style patterns and
+        that all VVs matching the specified pattern are removed. By
+        default, confirmation is required to proceed with the command unless the
+        -f option is specified. This option must be used if the pattern
+        specifier is used.
+
+    -f
+        Specifies that the command is forced. If this option is not used, the
+        command requires confirmation before proceeding with its operation.
+
+    -dr
+        Specifies that the operation is a dry run and no VVs are removed.
+
+    -stale
+        Specifies that all stale VVs can be removed.
+        This option cannot be used together with -expired.
+
+    -expired
+        Remove specified expired volumes.
+        This option cannot be used together with -stale.
+
+    -snaponly
+        Remove the snapshot copies only.
+
+    -cascade
+        Remove specified volumes and their descendent volumes as long as none
+        has an active VLUN. It will remove any VLUN templates as long as there
+        were no active VLUNs. It will remove the volumes from all the volume
+        sets.
+        If -expired is specified, all expired volumes and their descendent
+        volumes will be removed regardless if they are expired or not.
+        If -stale is specified, all stale volumes and their descendent
+        volumes will be removed regardless if they are stale or not.
+
+SPECIFIERS
+    <VV_name>
+        Specifies the virtual volume name, using up to 255 characters. This
+        specifier can be repeated to remove multiple VVs. If this
+        specifier is not used, the pattern specifier must be used.
+
+    <pattern>
+        Specifies a glob-style pattern(see help on sub,globpat). This specifier
+        can be repeated to remove multiple VVs. If this specifier is not used,
+        the <VV_name> specifier must be used.
+
+NOTES
+    Issuing the removevv command with invalid virtual volume names causes the
+    command to exit without removing any virtual volumes.
+
+    Any virtual volumes exported as VLUNs are not removed and the command stops
+    at that virtual volume.
+
+    Any virtual volume that contains snapshots cannot be removed.
+
+    Verify the removal of VVs by issuing the showvv command.
+
+EXAMPLES
+    The following example removes virtual volume vv0:
+
+        cli% removevv -f vv0
+
+     The following example removes all the expired volumes:
+
+        cli% removevv -f -expired
+
+     The following example removes the volumes that start with test and are
+     snapshot copies:
+
+        cli% removevv -f -snaponly -pat test*
+
+     The following example removes vv1_snap if it is a snapshot and all its
+     descendents:
+
+        cli% removevv -f -snaponly -cascade vv1_snap
+

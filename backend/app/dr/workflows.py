@@ -951,3 +951,182 @@ def revert_failover(
         "verify revert", "showrcopy", ok, _g_detail(groups, d_host),
         snapshot=_snapshot(settings, groups)))
     return results
+
+
+# --------------------------------------------------------------------------- #
+# Present-to-host  (after failover: export DR volumes to the DR ESXi host)
+#
+#   createvlun -f <dr_vv> <LUN|auto> <host_target>     ← per group volume, on DR
+#
+# LUN: with strategy "match", reuse each volume's primary-side LUN (read from the
+# primary array); if that volume isn't exported on the primary (unknown LUN) or
+# strategy is "auto", the array auto-assigns. Scoped STRICTLY to the group's own
+# volumes - never touches other volumes/exports.
+# --------------------------------------------------------------------------- #
+def present_to_host(
+    settings: Settings,
+    base_group: str = DEFAULT_GROUP,
+    *,
+    host_target: str | None = None,
+    dry_run: bool = True,
+    timeout: int = 120,
+    poll_interval: int = 5,
+    sink: list[StepResult] | None = None,
+) -> list[StepResult]:
+    """Export the failed-over group's DR volumes to the DR host (present-to-host)."""
+    results: list[StepResult] = sink if sink is not None else []
+    d_host = _recovery_host(settings)
+    if not d_host:
+        raise DrError("Recovery (DR) array must be configured for present-to-host.")
+    clean_d = SSHConfig.clean_host(d_host)
+
+    target = (host_target or settings.dr_host_target or "").strip()
+    if not target:
+        raise DrError(
+            "No host target set. Configure DR_HOST_TARGET in .env (e.g. a host "
+            "name or 'set:<hostset>') or pass one explicitly."
+        )
+
+    groups = _gather_groups(settings, base_group)
+    d = groups.get(clean_d)
+    if not d:
+        raise DrError(f"Group '{base_group}' not found on the DR array {clean_d}.")
+
+    precond_ok = d.is_primary
+    precond_msg = (
+        None if precond_ok
+        else f"DR array is not holding the group as Primary (role={d.role}); run a failover first"
+    )
+
+    # Build per-volume LUN plan.
+    strategy = (settings.dr_present_lun or "match").strip().lower()
+    lun_map: dict[str, int] = {}
+    if strategy == "match":
+        try:
+            lun_map = primary_lun_map(settings, base_group)
+        except Exception as exc:  # noqa: BLE001 - primary may be down; fall back to auto
+            logger.warning("present: primary LUN map unavailable (%s); using auto", exc)
+
+    plan: list[tuple[str, str]] = []
+    for vol in d.volumes:
+        lun = lun_map.get(vol.remote_vv)  # primary-side counterpart's LUN
+        plan.append((vol.local_vv, str(lun) if lun is not None else "auto"))
+
+    results.append(StepResult(
+        name="plan",
+        command="",
+        ok=True,
+        detail=(
+            f"present {len(plan)} volume(s) of '{d.name}' to '{target}' on DR "
+            f"{clean_d} (LUN strategy: {strategy})"
+        ),
+    ))
+
+    if dry_run:
+        if precond_msg:
+            results.append(StepResult("precondition", "", False,
+                                      f"execution would be BLOCKED: {precond_msg}"))
+        for vv, lun in plan:
+            results.append(StepResult(
+                f"export {vv}", f"createvlun -f {vv} {lun} {target}", True,
+                "DRY-RUN: not executed"))
+        return results
+
+    if not precond_ok:
+        raise DrError("Present precondition not met: " + precond_msg + ". Aborting.")
+
+    for vv, lun in plan:
+        cmd = f"createvlun -f {vv} {lun} {target}"
+        _run_critical(settings, d_host, f"export {vv}", cmd, results)
+
+    # Verify: every group volume now appears exported on the DR array.
+    try:
+        exported = {v.vv_name for v in list_exports(settings, "recovery")}
+    except SSHError as exc:
+        results.append(StepResult("verify present", "showvlun", False, f"SSH error: {exc}"))
+        return results
+    missing = [vv for vv, _ in plan if vv not in exported]
+    ok = not missing
+    results.append(StepResult(
+        "verify present", "showvlun", ok,
+        "all group volumes exported" if ok else f"not exported yet: {missing}"))
+    return results
+
+
+# --------------------------------------------------------------------------- #
+# Unpresent-from-host  (reverse of present: remove the DR exports)
+#
+#   removevlun -f <dr_vv> <LUN> <host_target>          ← per current export, on DR
+#   removevlun -dr ...                                 ← native dry-run preview
+# --------------------------------------------------------------------------- #
+def unpresent_from_host(
+    settings: Settings,
+    base_group: str = DEFAULT_GROUP,
+    *,
+    host_target: str | None = None,
+    dry_run: bool = True,
+    timeout: int = 120,
+    poll_interval: int = 5,
+    sink: list[StepResult] | None = None,
+) -> list[StepResult]:
+    """Remove the DR exports of the group's volumes (reverse of present-to-host)."""
+    results: list[StepResult] = sink if sink is not None else []
+    d_host = _recovery_host(settings)
+    if not d_host:
+        raise DrError("Recovery (DR) array must be configured.")
+    clean_d = SSHConfig.clean_host(d_host)
+
+    target = (host_target or settings.dr_host_target or "").strip()
+
+    groups = _gather_groups(settings, base_group)
+    d = groups.get(clean_d)
+    if not d:
+        raise DrError(f"Group '{base_group}' not found on the DR array {clean_d}.")
+    dr_vols = {vol.local_vv for vol in d.volumes}
+
+    # Find the CURRENT exports of the group's volumes on the DR array.
+    try:
+        exports = [v for v in list_exports(settings, "recovery")
+                   if v.vv_name in dr_vols and v.lun is not None]
+    except SSHError as exc:
+        raise DrError(f"showvlun failed on DR array: {exc}")
+
+    results.append(StepResult(
+        name="plan",
+        command="",
+        ok=True,
+        detail=(
+            f"remove {len(exports)} export(s) of '{d.name}' volumes on DR {clean_d}"
+            + (f" for target '{target}'" if target else "")
+        ),
+    ))
+
+    if not exports:
+        results.append(StepResult("unpresent", "", True,
+                                   "no group exports present - nothing to remove"))
+        return results
+
+    if dry_run:
+        for v in exports:
+            tgt = target or v.host_name
+            results.append(StepResult(
+                f"unexport {v.vv_name}", f"removevlun -dr -f {v.vv_name} {v.lun} {tgt}",
+                True, "DRY-RUN: not executed (removevlun -dr also previews natively)"))
+        return results
+
+    for v in exports:
+        tgt = target or v.host_name
+        cmd = f"removevlun -f {v.vv_name} {v.lun} {tgt}"
+        _run_critical(settings, d_host, f"unexport {v.vv_name}", cmd, results)
+
+    # Verify: none of the group's volumes remain exported.
+    try:
+        still = [v.vv_name for v in list_exports(settings, "recovery") if v.vv_name in dr_vols]
+    except SSHError as exc:
+        results.append(StepResult("verify unpresent", "showvlun", False, f"SSH error: {exc}"))
+        return results
+    ok = not still
+    results.append(StepResult(
+        "verify unpresent", "showvlun", ok,
+        "all group exports removed" if ok else f"still exported: {still}"))
+    return results

@@ -24,10 +24,12 @@ from .workflows import (
     StepResult,
     failback,
     failover,
+    present_to_host,
     recover,
     restore,
     revert_failover,
     run_link_op,
+    unpresent_from_host,
 )
 
 logger = logging.getLogger("dr.jobs")

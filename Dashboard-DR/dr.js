@@ -314,6 +314,11 @@
                     );
                 }
                 setTimeout(loadStatus, 600);
+                // After a real present/unpresent, refresh the presented-volumes
+                // table so the operator sees the resulting exports immediately.
+                if (job.kind === "present" || job.kind === "unpresent") {
+                    setTimeout(loadPresentedVolumes, 700);
+                }
             }
         } catch (err) {
             jobRunning = false;
@@ -554,6 +559,40 @@
         }
     }
 
+    // Show which of the group's volumes are currently presented (VLUN templates)
+    // to the selected DR host — the dashboard equivalent of
+    // `showvlun -t -host <host>` on the array.
+    async function loadPresentedVolumes() {
+        const box = $("presentedVolumes");
+        if (!box) return;
+        const sel = $("presentHost");
+        const host = sel ? sel.value : "";
+        if (!host) { box.innerHTML = ""; return; }
+        box.innerHTML = `<div class="pv-loading"><i class="fa-solid fa-spinner fa-spin"></i> Checking exports on <b>${esc(host)}</b>&hellip;</div>`;
+        try {
+            const data = await window.api.get(
+                `/dr/exports?which=recovery&templates=true&host=${encodeURIComponent(host)}`);
+            const rows = (data && data.exports) || [];
+            if (!rows.length) {
+                box.innerHTML = `<div class="pv-empty"><i class="fa-solid fa-circle-info"></i> No volumes are currently presented to <b>${esc(host)}</b>.</div>`;
+                return;
+            }
+            const body = rows.map((v) =>
+                `<tr><td>${v.lun === null || v.lun === undefined ? "&mdash;" : esc(String(v.lun))}</td>` +
+                `<td>${esc(v.vv_name || "")}</td><td>${esc(v.host_name || "")}</td>` +
+                `<td>${esc(v.type || "")}</td></tr>`
+            ).join("");
+            box.innerHTML =
+                `<div class="pv-title"><i class="fa-solid fa-circle-check"></i> ` +
+                `${rows.length} volume(s) presented to <b>${esc(host)}</b> ` +
+                `<span class="pv-cmd">showvlun -t -host ${esc(host)}</span></div>` +
+                `<table class="pv-table"><thead><tr><th>LUN</th><th>Volume</th><th>Host</th><th>Type</th></tr></thead>` +
+                `<tbody>${body}</tbody></table>`;
+        } catch (err) {
+            box.innerHTML = `<div class="pv-empty warn"><i class="fa-solid fa-triangle-exclamation"></i> Could not read exports: ${esc(err && err.message ? err.message : String(err))}</div>`;
+        }
+    }
+
     // ---- Tab navigation ----------------------------------------------------
     const VIEW_FOR = {
         dashboard: "dashboard", replication: "replication",
@@ -568,7 +607,7 @@
         if (name === "monitoring") { loadMonitoring(); monInterval = setInterval(loadMonitoring, 10000); }
         else if (name === "reports") { loadReports(); }
         else if (name === "settings") { loadSettings(); }
-        else if (name === "droperations") { loadStatus(); loadHosts(); }
+        else if (name === "droperations") { loadStatus(); loadHosts().then(loadPresentedVolumes); }
         else if (name === "replication") { loadStatus(); }
     }
 
@@ -592,6 +631,7 @@
         const brs = $("btnRestore"); if (brs) brs.addEventListener("click", () => onExec("restore", "dropDry"));
         const bp = $("btnPresent"); if (bp) bp.addEventListener("click", () => onExec("present", "dropDry"));
         const bu = $("btnUnpresent"); if (bu) bu.addEventListener("click", () => onExec("unpresent", "dropDry"));
+        const ph = $("presentHost"); if (ph) ph.addEventListener("change", loadPresentedVolumes);
         const rr = $("repRefresh"); if (rr) rr.addEventListener("click", loadStatus);
         const dor = $("dropRefresh"); if (dor) dor.addEventListener("click", loadStatus);
         const mr = $("monRefresh"); if (mr) mr.addEventListener("click", loadMonitoring);

@@ -1572,6 +1572,20 @@ body.dark{--pg-bg:var(--hpe-base-color-grey-1300);--surface:var(--hpe-base-color
 .present-host{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-dim);}
 .present-host select{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:14px;min-width:200px;}
 
+/* Presented-volumes table (dashboard view of `showvlun -t -host <host>`) */
+.presented-volumes{margin-top:14px;}
+.presented-volumes:empty{display:none;}
+.pv-loading,.pv-empty{font-size:13px;color:var(--ink-dim);display:flex;align-items:center;gap:8px;padding:8px 0;}
+.pv-empty.warn{color:var(--warn,#e0a800);}
+.pv-title{font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.pv-title i{color:var(--ok,#2ecc71);}
+.pv-cmd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ink-dim);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 8px;}
+.pv-table{width:100%;border-collapse:collapse;font-size:13px;}
+.pv-table th,.pv-table td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);}
+.pv-table th{color:var(--ink-dim);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.04em;}
+.pv-table td{color:var(--ink);}
+.pv-table tbody tr:hover{background:var(--surface-2);}
+
 /* Fork: two mutually-exclusive paths after a failover (Revert OR Reverse Sync) */
 .flow-fork{font-size:12px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin:2px 0 12px;}
 .flow-branch{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:14px;}

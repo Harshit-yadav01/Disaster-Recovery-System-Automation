@@ -266,18 +266,25 @@ def dr_hosts(
 def dr_exports(
     which: str = "recovery",
     vv_pattern: str | None = None,
+    templates: bool = False,
+    host: str | None = None,
     current_user: str = Depends(get_current_user),
     settings: Settings = Depends(get_settings),
 ) -> dict:
-    """List current VLUN exports on an array (read-only `showvlun -a`), optionally
-    scoped to volumes matching `vv_pattern`. Also returns the primary LUN map so
-    the UI can preview how DR volumes would be matched."""
+    """List current VLUN exports on an array (read-only), optionally scoped to
+    volumes matching `vv_pattern`. With `templates=true` it reads VLUN templates
+    (`showvlun -t`) instead of active VLUNs (`showvlun -a`); `host` filters the
+    result to one host/hostset. Also returns the primary LUN map so the UI can
+    preview how DR volumes would be matched."""
     try:
-        exports = list_exports(settings, which, vv_pattern)
+        exports = list_exports(settings, which, vv_pattern, templates=templates)
     except DrError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"showvlun failed: {exc}")
+    if host:
+        h = host.strip().lower()
+        exports = [v for v in exports if (v.host_name or "").strip().lower() == h]
     lun_map: dict = {}
     if which == "recovery":
         try:
@@ -286,6 +293,8 @@ def dr_exports(
             lun_map = {}
     return {
         "which": which,
+        "host": host,
+        "templates": templates,
         "exports": [dataclasses.asdict(v) for v in exports],
         "primary_lun_map": lun_map,
     }

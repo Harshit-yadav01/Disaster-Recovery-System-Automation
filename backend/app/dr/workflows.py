@@ -27,6 +27,7 @@ from dataclasses import dataclass
 
 from ..config import Settings
 from .showrcopy import RcopyGroup, RcopyStatus, parse_showrcopy
+from .showvlun import Host, Vlun, parse_showhost, parse_showvlun
 from .ssh_client import ArraySSH, SSHConfig, SSHError
 
 logger = logging.getLogger("dr.workflows")
@@ -130,6 +131,50 @@ def resolve_primary(
     raise DrError(
         f"No reachable array holds group '{base_group}' as Primary. Seen: {seen}"
     )
+
+
+# --------------------------------------------------------------------------- #
+# Present-to-host: read-only discovery (showhost / showvlun)
+# --------------------------------------------------------------------------- #
+def list_hosts(settings: Settings, which: str = "recovery") -> list[Host]:
+    """Return the hosts defined on the primary or recovery (DR) array (read-only)."""
+    host = _recovery_host(settings) if which == "recovery" else _primary_host(settings)
+    if not host:
+        raise DrError(f"No {which} array configured.")
+    with ArraySSH(_ssh_cfg(settings, host, which)) as arr:
+        text = arr.run("showhost")
+    return parse_showhost(text)
+
+
+def list_exports(
+    settings: Settings, which: str = "recovery", vv_pattern: str | None = None
+) -> list[Vlun]:
+    """Return current VLUN exports on the primary or recovery array (read-only).
+
+    ``vv_pattern`` optionally scopes to specific volumes (glob), e.g. the DR
+    group's volumes, so we never list unrelated exports.
+    """
+    host = _recovery_host(settings) if which == "recovery" else _primary_host(settings)
+    if not host:
+        raise DrError(f"No {which} array configured.")
+    cmd = "showvlun -a" + (f" -v {vv_pattern}" if vv_pattern else "")
+    with ArraySSH(_ssh_cfg(settings, host, which)) as arr:
+        text = arr.run(cmd)
+    return parse_showvlun(text)
+
+
+def primary_lun_map(settings: Settings, base_group: str = DEFAULT_GROUP) -> dict[str, int]:
+    """Map each PRIMARY-side volume name -> its LUN, read from the primary array.
+
+    Used to present DR volumes on the same LUN as their primary twin. Only
+    reachable when the primary is up (planned failover/test); callers should
+    cache the result for use during an unplanned failover.
+    """
+    out: dict[str, int] = {}
+    for v in list_exports(settings, which="primary"):
+        if v.lun is not None and v.vv_name and v.vv_name not in out:
+            out[v.vv_name] = v.lun
+    return out
 
 
 # --------------------------------------------------------------------------- #

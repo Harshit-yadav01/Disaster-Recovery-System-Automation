@@ -51,6 +51,15 @@ class Settings(BaseSettings):
     # Deprecated single-array alias (used as primary if the primary URL is blank).
     alletra_base_url: str = ""
 
+    # --- Present-to-host (after failover, export DR volumes to DR ESXi) ---
+    # Target the DR array exports the failed-over group's volumes to. Use a host
+    # set with the "set:" prefix (e.g. "set:DR_Intern_Automation") or a single
+    # host name. Leave blank until configured; the UI can also override per-run.
+    dr_host_target: str = ""
+    # LUN assignment strategy when presenting: "match" = reuse each volume's
+    # primary-side LUN (falls back to auto if unknown); "auto" = let the array pick.
+    dr_present_lun: str = "match"
+
     @property
     def cors_origin_list(self) -> list[str]:
         """CORS origins as a clean list."""

@@ -10,13 +10,22 @@ threadpool rather than blocking the event loop.
 """
 from __future__ import annotations
 
+import dataclasses
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from ..config import Settings, get_settings
 from ..dr import jobs
 from ..dr.ssh_client import SSHConfig
-from ..dr.workflows import DEFAULT_GROUP, DrError, gather_status
+from ..dr.workflows import (
+    DEFAULT_GROUP,
+    DrError,
+    gather_status,
+    list_exports,
+    list_hosts,
+    primary_lun_map,
+)
 from ..security import get_current_user
 
 router = APIRouter(prefix="/api/dr", tags=["dr"])
@@ -190,3 +199,56 @@ def dr_job(job_id: str, current_user: str = Depends(get_current_user)) -> dict:
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return job.to_dict()
+
+
+# --------------------------------------------------------------------------- #
+# Present-to-host: read-only discovery
+# --------------------------------------------------------------------------- #
+@router.get("/hosts")
+def dr_hosts(
+    which: str = "recovery",
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """List hosts on the recovery (default) or primary array, for picking a
+    present-to-host target. Read-only (`showhost`)."""
+    try:
+        hosts = list_hosts(settings, which)
+    except DrError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:  # noqa: BLE001 - surface SSH/parse issues cleanly
+        raise HTTPException(status_code=502, detail=f"showhost failed: {exc}")
+    return {
+        "which": which,
+        "hosts": [dataclasses.asdict(h) for h in hosts],
+        "configured_target": settings.dr_host_target,
+    }
+
+
+@router.get("/exports")
+def dr_exports(
+    which: str = "recovery",
+    vv_pattern: str | None = None,
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """List current VLUN exports on an array (read-only `showvlun -a`), optionally
+    scoped to volumes matching `vv_pattern`. Also returns the primary LUN map so
+    the UI can preview how DR volumes would be matched."""
+    try:
+        exports = list_exports(settings, which, vv_pattern)
+    except DrError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"showvlun failed: {exc}")
+    lun_map: dict = {}
+    if which == "recovery":
+        try:
+            lun_map = primary_lun_map(settings)
+        except Exception:  # noqa: BLE001 - primary may be down; not fatal
+            lun_map = {}
+    return {
+        "which": which,
+        "exports": [dataclasses.asdict(v) for v in exports],
+        "primary_lun_map": lun_map,
+    }

@@ -1371,6 +1371,18 @@ body{
 .rpt-actions{display:flex;gap:10px;align-items:center;}
 .rpt-summary{margin-bottom:20px;}
 .rpt-table{width:100%;border-collapse:collapse;}
+
+/* RTO / RPO objective tiles */
+.obj-tiles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.obj-tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow-card);}
+.obj-head{font-size:13px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px;}
+.obj-head i{color:var(--hpe-green);}
+.obj-value{font-size:30px;font-weight:800;color:var(--ink);line-height:1;}
+.obj-sub{font-size:12px;color:var(--ink-dim);}
+.obj-badge{margin-left:auto;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:none;letter-spacing:0;}
+.obj-badge.ok{background:rgba(46,204,113,.15);color:#2ecc71;}
+.obj-badge.bad{background:rgba(231,76,60,.15);color:#e74c3c;}
+@media(max-width:900px){.obj-tiles{grid-template-columns:1fr;}}
 .rpt-table th{background:var(--surface-2);color:var(--ink);text-align:left;padding:12px;font-size:13px;}
 .rpt-table td{padding:12px;border-bottom:1px solid var(--line);color:var(--ink);font-size:13px;}
 .set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}

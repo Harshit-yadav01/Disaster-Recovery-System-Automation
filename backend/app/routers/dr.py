@@ -11,6 +11,7 @@ threadpool rather than blocking the event loop.
 from __future__ import annotations
 
 import dataclasses
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -236,6 +237,127 @@ def dr_job(job_id: str, current_user: str = Depends(get_current_user)) -> dict:
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return job.to_dict()
+
+
+def _parse_array_time(text: str) -> datetime | None:
+    """Best-effort parse of a Remote Copy ``last_sync_time`` into UTC.
+
+    Handles ISO strings and the common 3PAR/Alletra ``YYYY-MM-DD HH:MM:SS``
+    layout (optionally with a trailing timezone token, which is ignored).
+    Returns None when it cannot be parsed, so RPO simply reads as unknown.
+    """
+    if not text:
+        return None
+    raw = text.strip()
+    try:
+        dt = datetime.fromisoformat(raw)
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    except ValueError:
+        pass
+    core = " ".join(raw.split(" ")[:2])  # drop a trailing tz token if present
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+        try:
+            return datetime.strptime(core, fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+    return None
+
+
+@router.get("/metrics")
+def dr_metrics(
+    group: str = DEFAULT_GROUP,
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """Recovery objectives for the Reports view (read-only):
+
+    * **RTO** - *measured* from real (execute) failover/failback job durations.
+    * **RPO** - derived from live replication mode + sync state / last-sync time.
+      Synchronous + fully synced == 0s (zero data loss); periodic estimates the
+      time since the last successful sync.
+    """
+    # ---- RTO: measured from job history ---------------------------------
+    recovery_kinds = {"failover", "failback"}
+    durations: list[float] = []
+    last_failover: float | None = None
+    for j in jobs.recent_jobs(100):
+        if (j.kind in recovery_kinds and j.state == "succeeded" and not j.dry_run
+                and j.created_at and j.finished_at):
+            try:
+                secs = (datetime.fromisoformat(j.finished_at)
+                        - datetime.fromisoformat(j.created_at)).total_seconds()
+            except ValueError:
+                continue
+            if secs < 0:
+                continue
+            durations.append(secs)
+            if j.kind == "failover" and last_failover is None:
+                last_failover = secs
+    rto_target = settings.rto_target_seconds or 0
+    rto_value = last_failover if last_failover is not None else (
+        durations[0] if durations else None)
+    rto = {
+        "seconds": round(rto_value) if rto_value is not None else None,
+        "avg_seconds": round(sum(durations) / len(durations)) if durations else None,
+        "samples": len(durations),
+        "target_seconds": rto_target or None,
+        "met": bool(rto_value is not None and rto_target and rto_value <= rto_target)
+        if rto_target else None,
+        "basis": ("last successful failover" if last_failover is not None
+                  else "last successful recovery op" if durations
+                  else "no recovery operations recorded yet"),
+    }
+
+    # ---- RPO: derived from live replication ------------------------------
+    rpo: dict = {
+        "seconds": None, "mode": None, "synced": None, "last_sync_time": None,
+        "target_seconds": settings.rpo_target_seconds or None, "met": None,
+        "detail": "replication state unavailable",
+    }
+    try:
+        views = gather_status(settings, group)
+    except DrError:
+        views = []
+    src = next((v.group for v in views if v.group and v.group.is_primary), None)
+    if src is None:
+        src = next((v.group for v in views if v.group), None)
+    if src is not None:
+        mode = (src.mode or "").strip()
+        synced = src.all_synced()
+        last_sync = ""
+        for vol in src.volumes:
+            t = (vol.last_sync_time or "").strip()
+            if t and t.upper() not in ("-", "NA", "N/A") and t > last_sync:
+                last_sync = t
+        is_sync = mode.lower().startswith("sync")
+        rpo_seconds: int | None
+        if is_sync and synced:
+            rpo_seconds = 0
+            detail = "Synchronous replication, all volumes synced - zero data loss."
+        elif is_sync:
+            rpo_seconds = None
+            detail = "Synchronous but not all volumes synced - RPO at risk."
+        else:
+            rpo_seconds = None
+            detail = f"{mode or 'Periodic'} replication."
+            parsed = _parse_array_time(last_sync)
+            if parsed is not None:
+                rpo_seconds = max(
+                    0, round((datetime.now(timezone.utc) - parsed).total_seconds()))
+                detail += f" ~{rpo_seconds}s since last sync."
+        rpo_target = settings.rpo_target_seconds or 0
+        rpo = {
+            "seconds": rpo_seconds,
+            "mode": mode or "unknown",
+            "synced": synced,
+            "last_sync_time": last_sync or None,
+            "target_seconds": rpo_target or None,
+            "met": bool(rpo_seconds is not None and rpo_target and rpo_seconds <= rpo_target)
+            if rpo_target else None,
+            "detail": detail,
+        }
+
+    return {"group": group, "rto": rto, "rpo": rpo}
 
 
 # --------------------------------------------------------------------------- #

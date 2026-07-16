@@ -60,6 +60,13 @@ class Settings(BaseSettings):
     # primary-side LUN (falls back to auto if unknown); "auto" = let the array pick.
     dr_present_lun: str = "match"
 
+    # --- DR objectives (Reports) ---
+    # Target Recovery Time Objective / Recovery Point Objective in seconds, used
+    # only to show compliance (met / breached) next to the measured values.
+    # 0 disables the target comparison.
+    rto_target_seconds: int = 0
+    rpo_target_seconds: int = 0
+
     @property
     def cors_origin_list(self) -> list[str]:
         """CORS origins as a clean list."""

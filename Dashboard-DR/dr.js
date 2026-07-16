@@ -474,14 +474,46 @@
         const s = Math.round(ms / 1000);
         return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
     }
+    function fmtSecs(s) {
+        if (s === null || s === undefined) return "—";
+        if (s === 0) return "0s";
+        if (s < 60) return `${s}s`;
+        const m = Math.floor(s / 60), r = s % 60;
+        return r ? `${m}m ${r}s` : `${m}m`;
+    }
+    // RTO / RPO objective tiles for the Reports summary.
+    function objectiveTiles(m) {
+        if (!m) return "";
+        const rto = m.rto || {}, rpo = m.rpo || {};
+        const badge = (met) => met === true
+            ? `<span class="obj-badge ok">Met</span>`
+            : met === false ? `<span class="obj-badge bad">Breached</span>` : "";
+        const rtoSub = rto.target_seconds
+            ? `target ${fmtSecs(rto.target_seconds)} · ${esc(rto.basis || "")}`
+            : esc(rto.basis || "measured");
+        const rpoSub = rpo.mode
+            ? `${esc(rpo.mode)}${rpo.synced === false ? " · not synced" : ""}`
+            : esc(rpo.detail || "");
+        return `<div class="obj-tiles">
+            <div class="obj-tile"><div class="obj-head"><i class="fa-solid fa-stopwatch"></i> RTO ${badge(rto.met)}</div>
+                <div class="obj-value">${fmtSecs(rto.seconds)}</div>
+                <div class="obj-sub">${rtoSub}${rto.avg_seconds != null ? ` · avg ${fmtSecs(rto.avg_seconds)} (${rto.samples})` : ""}</div></div>
+            <div class="obj-tile"><div class="obj-head"><i class="fa-solid fa-shield-halved"></i> RPO ${badge(rpo.met)}</div>
+                <div class="obj-value">${fmtSecs(rpo.seconds)}</div>
+                <div class="obj-sub" title="${esc(rpo.detail || "")}">${rpoSub}${rpo.target_seconds ? ` · target ${fmtSecs(rpo.target_seconds)}` : ""}</div></div>
+        </div>`;
+    }
     async function loadReports() {
         try { const d = await window.api.get("/dr/jobs?limit=50"); reportJobs = d.jobs || []; }
         catch (e) { $("rptTable").innerHTML = `<p class="dr-error">${esc(e.message)}</p>`; return; }
+        // Recovery objectives (RTO / RPO) - fetched separately; non-fatal.
+        let metrics = null;
+        try { metrics = await window.api.get("/dr/metrics"); } catch (e) { metrics = null; }
         const fo = reportJobs.filter((j) => j.kind === "failover").length;
         const fb = reportJobs.filter((j) => j.kind === "failback").length;
         const succ = reportJobs.filter((j) => j.state === "succeeded").length;
         const rate = reportJobs.length ? Math.round((succ / reportJobs.length) * 100) : 0;
-        $("rptSummary").innerHTML = `<div class="mon-tiles">
+        $("rptSummary").innerHTML = objectiveTiles(metrics) + `<div class="mon-tiles">
             <div class="mon-tile"><span class="mon-tile-label">Total operations</span><span class="mon-tile-value">${reportJobs.length}</span></div>
             <div class="mon-tile"><span class="mon-tile-label">Failovers</span><span class="mon-tile-value">${fo}</span></div>
             <div class="mon-tile"><span class="mon-tile-label">Failbacks</span><span class="mon-tile-value">${fb}</span></div>

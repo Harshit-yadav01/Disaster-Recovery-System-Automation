@@ -1,4 +1,4 @@
-r"""DR control CLI - chunk 1: status + start/stop/sync replication link ops.
+"""DR control CLI - chunk 1: status + start/stop/sync replication link ops.
 
 Scoped to ONE Remote Copy group (default: Intern_Automation). State-changing
 operations are DRY-RUN by default; pass --execute to actually run them. A typed

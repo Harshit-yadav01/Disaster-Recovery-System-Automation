@@ -1424,8 +1424,29 @@ body{
 /* position anchor for notif dropdown */
 .profile{position:relative;}
 
-/* Dark theme (Settings -> Theme). Flips the shared color variables to the darkest token tier. */
-body.dark{--pg-bg:var(--hpe-base-color-grey-1300);--surface:var(--hpe-base-color-grey-1300);--surface-2:var(--hpe-base-color-grey-1200);--panel:var(--hpe-base-color-grey-1300);--panel-deep:var(--hpe-base-color-grey-1300);--line:var(--hpe-base-color-grey-1000);--ink:var(--hpe-base-color-grey-200);--ink-dim:var(--hpe-base-color-grey-500);--pg-grad-a:var(--hpe-base-color-grey-1300);--pg-grad-b:var(--hpe-base-color-grey-1300);--pg-grad-c:var(--hpe-base-color-black-opacity100);}
+/* Light theme (Settings -> Theme). Flips the shared color variables to a white
+   surface / dark-text palette (reverse contrast of the default dark theme).
+   Applied via body.light; the default :root palette IS the dark theme. */
+body.light{
+  --pg-bg:#f4f6f8;
+  --surface:#ffffff;                                  /* sidebar / panels / boxes */
+  --surface-2:#eceff3;                                /* subtle fills / table headers */
+  --panel:#ffffff;
+  --panel-deep:#f6f8fa;                               /* nested panels / console */
+  --line:#d7dbe0;                                     /* borders */
+  --ink:#1a1c20;                                      /* primary text (dark) */
+  --ink-dim:#4d525b;                                  /* secondary text */
+  --ink-muted:#787e88;                                /* tertiary / labels */
+  --tint-grey:rgba(0,0,0,.06);
+  --pg-glow:var(--hpe-deprecated-base-color-green-400-Opacity12);
+  --pg-grad-a:#ffffff;
+  --pg-grad-b:#f4f6f8;
+  --pg-grad-c:#eef1f4;
+  --elev-1:0 2px 10px rgba(16,24,40,.08);
+  --elev-2:0 14px 36px rgba(16,24,40,.12);
+  --shadow-card:0 1px 3px rgba(16,24,40,.10);
+  --shadow-raised:0 12px 30px rgba(16,24,40,.14);
+}
 
 /* Print (Reports -> Print / PDF): show only the report */
 @media print{

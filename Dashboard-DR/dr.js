@@ -555,9 +555,9 @@
         $("setAccount").innerHTML = `<div class="set-row"><span>Signed in as</span><b>${esc(localStorage.getItem("drUser") || "admin")}</b></div>`;
         const dd = localStorage.getItem("drDryRunDefault");
         $("setDryDefault").checked = dd === null ? true : dd === "true";
-        $("setTheme").value = localStorage.getItem("drTheme") || "light";
+        $("setTheme").value = localStorage.getItem("drTheme") || "dark";
     }
-    function applyTheme(t) { document.body.classList.toggle("dark", t === "dark"); }
+    function applyTheme(t) { document.body.classList.toggle("light", t === "light"); }
     function applyDryDefault() {
         const dd = localStorage.getItem("drDryRunDefault");
         const on = dd === null ? true : dd === "true";
@@ -644,7 +644,7 @@
     }
 
     function init() {
-        applyTheme(localStorage.getItem("drTheme") || "light");
+        applyTheme(localStorage.getItem("drTheme") || "dark");
         applyDryDefault();
         const items = document.querySelectorAll(".sidebar li");
         items.forEach((li) => {

@@ -213,6 +213,7 @@ class AlletraProvider(StorageProvider):
         p_name = p_sys.get("name") or "Primary"
         primary_util = self._util(p_sys)
         total_bytes = (p_sys.get("totalCapacityMiB") or 0) * 1024 * 1024
+        used_bytes = self._used_mib(p_sys) * 1024 * 1024
 
         volumes = primary.volumes
         protected_volumes = len(volumes)
@@ -271,7 +272,7 @@ class AlletraProvider(StorageProvider):
             ],
             replication=ReplicationHealth(
                 primary=SiteStatus(name="Primary Site", array_model=f"{p_name} ({p_model})",
-                                   status="Healthy", tone="green"),
+                                   status=repl_status, tone=repl_tone),
                 recovery=SiteStatus(name="Recovery Site", array_model=rec_model,
                                     status=rec_status, tone=rec_tone),
             ),
@@ -285,7 +286,8 @@ class AlletraProvider(StorageProvider):
                 StorageUsage(label="Primary Array", percent=primary_util, detail=f"{primary_util}% Utilized"),
                 StorageUsage(label="Recovery Array", percent=rec_util,
                              detail=(f"{rec_util}% Utilized" if rec_reachable else rec_status)),
-                StorageUsage(label="Usable Capacity", percent=100, detail=self._human_bytes(total_bytes)),
+                StorageUsage(label="Usable Capacity", percent=primary_util,
+                             detail=f"{self._human_bytes(used_bytes)} of {self._human_bytes(total_bytes)}"),
             ],
             alerts=self._alerts_from_rcgroups(rcgroups, recovery),
             timeline=[
@@ -366,8 +368,10 @@ class AlletraProvider(StorageProvider):
             alerts.append(Alert(time=stamp, event="No remote copy groups found", status="Check", tone="warning"))
             return alerts
         for g in rcgroups[:6]:
+            failover = any(t.get("roleReversed") for t in g.get("targets", []))
+            status, tone = ("Failover Active", "blue") if failover else ("Synchronized", "green")
             alerts.append(
                 Alert(time=stamp, event=f"RC Group {g.get('name', 'rcgroup')}",
-                      status="Synchronized", tone="green")
+                      status=status, tone=tone)
             )
         return alerts

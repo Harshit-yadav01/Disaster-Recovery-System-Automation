@@ -30,8 +30,9 @@ class Settings(BaseSettings):
         "http://localhost:5500,http://127.0.0.1:5500"
     )
 
-    # Storage backend selection: "simulated" or "alletra"
-    storage_provider: str = "simulated"
+    # Storage backend: the dashboard reads real data from the HPE Alletra array
+    # over WSAPI. Reported on the /health endpoint for diagnostics.
+    storage_provider: str = "alletra"
 
     # Real HPE Alletra Storage MP (WSAPI) connection.
     # Provide management IPs/hostnames only; the provider adds https:// and :443.

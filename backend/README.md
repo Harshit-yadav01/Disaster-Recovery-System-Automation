@@ -4,8 +4,9 @@ FastAPI backend that authenticates dashboard users, serves live disaster
 recovery data, and drives one-click DR operations on HPE Alletra Storage MP /
 3PAR arrays. It talks to one or two arrays over the **WSAPI** (HTTPS, port 443)
 for dashboard data, and over **SSH** (port 22) for all DR automation (status,
-failover, failback, present/unpresent, and replication link control). Falls back
-to **simulated data** so the whole stack runs with zero hardware.
+failover, failback, present/unpresent, and replication link control). All
+displayed values are read live from the real arrays — there is no simulated or
+demo data: values are real, or not shown at all.
 
 ## Architecture
 
@@ -17,9 +18,9 @@ Frontend (Dashboard-DR)  ──HTTP──▶  FastAPI (backend/app)
                                           │
                               ┌─────────┴─────────┐
                               │ StorageProvider        │ DR workflows (SSH)
-                              │ ├─ SimulatedProvider   │ ├─ showrcopy (status)
-                              │ └─ AlletraProvider     │ ├─ failover / failback
-                              │     (WSAPI, 2 arrays)  │ ├─ recover / restore
+                              │ └─ AlletraProvider     │ ├─ showrcopy (status)
+                              │     (WSAPI, 2 arrays)  │ ├─ failover / failback
+                              │                        │ ├─ recover / restore
                               │                        │ ├─ revert
                               │                        │ └─ present / unpresent
                               └────────────────────────┘
@@ -101,10 +102,11 @@ The `AlletraProvider` (`app/providers/alletra.py`) logs in via
 `POST /api/v1/credentials` to obtain a session key, then reads `system`,
 `volumes`, `remotecopygroups` and `cpgs` from each array and maps them to the
 dashboard contract. Only the **primary** is required: if it is unreachable the
-service logs a warning and returns simulated data so the UI never breaks; if
-only the **recovery** is unreachable the primary still renders and the recovery
-site is marked "Unreachable". The client is strictly read-only for storage data
-(the only writes are session login/logout).
+service logs a warning and the dashboard reports "unavailable" (nothing is
+shown) rather than fabricating data; if only the **recovery** is unreachable the
+primary still renders and the recovery site is marked "Unreachable". The client
+is strictly read-only for storage data (the only writes are session
+login/logout).
 
 ### Verify connectivity
 
@@ -160,10 +162,9 @@ backend/
                                        revert, present, unpresent, start, stop, sync,
                                        jobs, jobs/{id})
     services/
-      dashboard_service.py  provider selection + safe fallback
+      dashboard_service.py  live array data (real, or unavailable)
     providers/
       __init__.py           StorageProvider interface
-      simulated.py          demo data
       alletra.py            real HPE Alletra MP WSAPI client (2 arrays)
     dr/
       ssh_client.py         Paramiko SSH session + exec/shell mode auto-detection

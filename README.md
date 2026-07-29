@@ -12,21 +12,20 @@ verified, step-by-step workflow.
 > Scope note: this project automates the **array replication layer** only.
 > VMware SRM VM orchestration, Ansible application recovery, and Terraform/DNS
 > redirection are **not** implemented. Virtualization figures shown on the
-> dashboard (ESXi hosts, VMs) are derived/simulated, not read from vCenter.
+> dashboard (ESXi hosts, VMs) are array-derived, not read from vCenter.
 
 ## Architecture
 
 ```
 Dashboard-DR (static frontend)        backend/app (FastAPI)
   login.html   (entry point)            /api/auth/login   → JWT
-  index.html  (Replication /            /api/dashboard    → live/simulated data
+  index.html  (Replication /            /api/dashboard    → live array data
    Failover / Failback tabs)            /api/dr/status    → showrcopy (read-only)
   api.js / dr.js / script.js            /api/dr/failover|failback|start|stop|sync
                                         /api/dr/jobs[/{id}] → live job progress
         │                                        │
         └────────────── HTTP ────────────────────┤
                                                   ├─ StorageProvider (dashboard data)
-                                                  │    ├─ SimulatedProvider  (demo data)
                                                   │    └─ AlletraProvider ─▶ Alletra WSAPI (HTTPS/443)
                                                   └─ DR workflows ─▶ Alletra/3PAR CLI over SSH
                                                        (showrcopy, startrcopygroup,
@@ -42,9 +41,10 @@ frontend; opening the root redirects to the login page.
 - **JWT authentication** — `/api/auth/login` issues a bearer token; every
   dashboard and DR endpoint requires it. Credentials come from config
   (single user; no Operator/Admin roles).
-- **Live dashboard data** — `/api/dashboard` returns metrics via a provider
-  abstraction: real **HPE Alletra (WSAPI)** or **Simulated** demo data, with
-  automatic fallback to simulated if an array is unreachable.
+- **Live dashboard data** — `/api/dashboard` returns metrics read live from the
+  real **HPE Alletra (WSAPI)** arrays. If the array is unreachable the dashboard
+  reports "unavailable" rather than showing fabricated values — real, or not
+  shown at all.
 - **Replication status** — `/api/dr/status` parses `showrcopy` on both arrays
   (read-only) and reports role, sync state, and per-volume detail for the group.
 - **One-click DR actions** — all operations run as **background jobs**; the
@@ -142,8 +142,8 @@ RTO_TARGET_SECONDS=0
 RPO_TARGET_SECONDS=0
 ```
 
-Leave `STORAGE_PROVIDER=simulated` (the default) to run the entire stack with
-no hardware.
+The dashboard reads all data live from the real arrays; if an array is
+unreachable the affected sections are hidden rather than showing demo data.
 
 ## Requirements
 
@@ -161,4 +161,4 @@ detection, and automated RTO/RPO SLA enforcement. The dashboard's Reports tab
 displays measured RTO/RPO values and compliance against configured targets
 (`RTO_TARGET_SECONDS` / `RPO_TARGET_SECONDS`) but does not generate or export
 formal compliance reports. ESXi host and VMware VM figures on the dashboard
-are array-derived or simulated, not read from vCenter.
+are array-derived, not read from vCenter.

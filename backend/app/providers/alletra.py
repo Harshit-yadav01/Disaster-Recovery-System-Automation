@@ -11,9 +11,10 @@ Talks to one or two real arrays over the WSAPI (default port 443):
 
 Two arrays are supported: a Primary (source) and an optional Recovery (target),
 matching the DR topology on the dashboard. If the Primary is unreachable we
-raise AlletraError so the service layer falls back to simulated data; if only
-the Recovery is unreachable the dashboard still renders with a clear
-"unreachable" marker for the recovery site.
+raise AlletraError so the service layer reports the dashboard as unavailable
+(nothing is shown rather than fabricated data); if only the Recovery is
+unreachable the dashboard still renders with a clear "unreachable" marker for
+the recovery site.
 
 Fields owned by the virtualization layer (ESXi hosts, VMware VMs) are not
 exposed by the array; where the array cannot supply a value we derive the

@@ -149,11 +149,11 @@ Disaster Recovery Dashboard
 
 <!-- Cards -->
 
-<div class="cards" id="cardsGrid"></div>
+<div class="cards" id="cardsGrid" hidden></div>
 
 <!-- Replication -->
 
-<div class="section">
+<div class="section" id="repHealthSection" hidden>
 
 <h2>
 
@@ -168,7 +168,7 @@ Replication Health
      Infrastructure Health
 ============================ -->
 
-<div class="section">
+<div class="section" id="infraSection" hidden>
 
     <div class="section-header">
         <h2>Infrastructure Health</h2>
@@ -183,7 +183,7 @@ Replication Health
 Storage Health
 ============================ -->
 
-<div class="section">
+<div class="section" id="storageSection" hidden>
 
 <h2>Storage Health</h2>
 
@@ -239,7 +239,7 @@ Replication Groups (RPO)
 Recent Alerts
 ============================ -->
 
-<div class="section">
+<div class="section" id="alertsSection" hidden>
 
 <h2>Recent Alerts</h2>
 
@@ -253,7 +253,7 @@ Recent Alerts
 Activity Timeline
 ============================ -->
 
-<div class="section">
+<div class="section" id="timelineSection" hidden>
 
 <h2>Automation Timeline</h2>
 
@@ -263,7 +263,7 @@ Activity Timeline
 <!-- ===========================
 Disaster Recovery Readiness============================ -->
 
-<div class="section">
+<div class="section" id="readinessSection" hidden>
 
 <h2>Disaster Recovery Readiness</h2>
 
@@ -440,7 +440,7 @@ Disaster Recovery Readiness============================ -->
 
 <script src="config.js"></script>
 <script src="api.js"></script>
-<script src="script.js?v=realdata3"></script>
+<script src="script.js?v=realdata4"></script>
 <script src="dr.js?v=theme1"></script>
 </body>
 

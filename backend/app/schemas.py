@@ -79,7 +79,7 @@ class DrReadiness(BaseModel):
 # --------------------------------------------------------------------------- #
 class DashboardData(BaseModel):
     generated_at: str
-    source: str  # "simulated" or "alletra"
+    source: str  # "alletra"
     cards: list[MetricCard]
     replication: ReplicationHealth
     infrastructure: list[InfraItem]

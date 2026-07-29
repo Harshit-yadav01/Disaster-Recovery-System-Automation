@@ -1,8 +1,7 @@
 """Storage provider abstraction.
 
 A provider knows how to produce a full ``DashboardData`` payload. The
-``simulated`` provider returns realistic demo data; the ``alletra`` provider
-talks to a real HPE Alletra 6000 array over its REST API.
+``alletra`` provider talks to a real HPE Alletra array over its WSAPI.
 """
 from __future__ import annotations
 
@@ -14,7 +13,7 @@ from ..schemas import DashboardData
 class StorageProvider(ABC):
     """Interface implemented by every storage data source."""
 
-    #: short identifier reported back to the frontend ("simulated"/"alletra")
+    #: short identifier reported back to the frontend ("alletra")
     name: str = "base"
 
     @abstractmethod

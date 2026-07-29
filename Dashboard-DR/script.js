@@ -74,21 +74,6 @@ function renderStorage(items) {
         .join("");
 }
 
-function renderAlerts(alerts) {
-    const rows = alerts
-        .map(
-            (a) => `
-        <tr>
-            <td>${esc(a.time)}</td>
-            <td>${esc(a.event)}</td>
-            <td><span class="status ${esc(a.tone)}">${esc(a.status)}</span></td>
-        </tr>`
-        )
-        .join("");
-    $("alertsTable").innerHTML =
-        `<tr><th>Time</th><th>Event</th><th>Status</th></tr>` + rows;
-}
-
 function renderTimeline(events) {
     $("timeline").innerHTML = events
         .map(
@@ -122,18 +107,21 @@ function setStatus(source, ok) {
     if (!ok) {
         el.className = "data-status error";
         el.textContent = "Backend offline";
-        return;
-    }
-    if (source === "alletra") {
-        el.className = "data-status live";
-        el.textContent = "Live \u2022 HPE Alletra";
-    } else {
-        el.className = "data-status sim";
-        el.textContent = "Demo data";
     }
 }
 
 // ---- Data load -----------------------------------------------------------
+function showDashboardSections(show) {
+    [
+        "cardsGrid",
+        "repHealthSection",
+        "infraSection",
+        "storageSection",
+        "timelineSection",
+        "readinessSection",
+    ].forEach((id) => toggleSection(id, show));
+}
+
 async function loadDashboard() {
     try {
         const data = await window.api.getDashboard();
@@ -141,11 +129,12 @@ async function loadDashboard() {
         renderReplication(data.replication);
         renderInfra(data.infrastructure);
         renderStorage(data.storage);
-        renderAlerts(data.alerts);
         renderTimeline(data.timeline);
         renderReadiness(data.readiness);
+        showDashboardSections(true);
     } catch (err) {
         console.error("Failed to load dashboard:", err);
+        showDashboardSections(false);
     }
 }
 
@@ -221,7 +210,10 @@ function renderHealthCapacity(cap) {
 }
 
 function renderHealthAlerts(alerts) {
-    if (!alerts || !alerts.length) return; // keep whatever the dashboard supplied
+    if (!alerts || !alerts.length) {
+        toggleSection("alertsSection", false);
+        return;
+    }
     const rows = alerts
         .map(
             (a) => `
@@ -234,6 +226,7 @@ function renderHealthAlerts(alerts) {
         .join("");
     $("alertsTable").innerHTML =
         `<tr><th>Time</th><th>Event</th><th>Severity</th></tr>` + rows;
+    toggleSection("alertsSection", true);
 }
 
 function renderHealthReplication(repl) {

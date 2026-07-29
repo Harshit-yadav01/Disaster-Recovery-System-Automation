@@ -1446,6 +1446,9 @@ body.light{
   --elev-2:0 14px 36px rgba(16,24,40,.12);
   --shadow-card:0 1px 3px rgba(16,24,40,.10);
   --shadow-raised:0 12px 30px rgba(16,24,40,.14);
+  --border-soft:rgba(16,24,40,.10);
+  --surface-grad:linear-gradient(180deg,#ffffff 0%, #fafbfc 55%, #f6f8fa 100%);
+  --surface-grad-2:linear-gradient(180deg,#ffffff 0%, #f4f6f9 100%);
 }
 
 /* Print (Reports -> Print / PDF): show only the report */

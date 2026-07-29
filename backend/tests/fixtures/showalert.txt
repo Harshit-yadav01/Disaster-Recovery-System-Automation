@@ -1,0 +1,50 @@
+AlletraMP_D22U27 cli% showalert -n
+Id          : 125
+State       : New
+Message Code: 0x0140000
+Time        : 2026-05-24 18:25:22 IST
+Severity    : Fatal
+Type        : Notification
+Message     : HPE added test ABTS event 1
+
+Id          : 126
+State       : New
+Message Code: 0x0140000
+Time        : 2026-05-24 22:32:03 IST
+Severity    : Fatal
+Type        : Notification
+Message     : HPE added test ABTS event 2
+
+Id          : 129
+State       : New
+Message Code: 0x00e000a
+Time        : 2026-05-31 00:00:00 IST
+Severity    : Minor
+Type        : Task failed
+Message     : Task 15615 (type "scheduled_task", name "compactcpg_SSD_r6_sun") has failed (Task Failed). Please see task status for details.
+
+Id          : 135
+State       : New
+Message Code: 0x03a00fa
+Time        : 2026-06-24 15:38:59 IST
+Severity    : Major
+Type        : Component state change
+Message     : Remote Copy Link 20(AlletraMP_E18U31_1_4_3) Failed (Link Has Been Down For More Than 4 Hours)
+
+Id          : 46
+State       : New
+Message Code: 0x06700de
+Time        : 2026-06-25 15:11:28 IST
+Severity    : Degraded
+Type        : Component state change
+Message     : Automatic failover 0 Degraded (Single RC link active)
+
+Id          : 47
+State       : New
+Message Code: 0x0680001
+Time        : 2026-07-21 22:34:11 IST
+Severity    : Major
+Type        : Quorum Witness
+Message     : Node: 1 SysId: 188150 Quorum server unreachable.
+
+13 alerts

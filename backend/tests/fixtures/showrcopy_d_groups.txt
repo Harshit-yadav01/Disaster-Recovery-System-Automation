@@ -1,0 +1,31 @@
+AlletraMP_D22U27 cli% showrcopy -d groups
+
+Remote Copy System Information
+Status: Started, Normal
+
+Group Information
+
+Name         ID   Target           Status   Role       Mode     LocalUserCpg RmUserCpg  Options
+APP_Test       13 AlletraMP_E18U31 Started  Secondary  Sync     SSD_r6       SSD_r6     auto_recover,auto_synchronize,active_active
+  LocalVV      ID   RemoteVV     ID   SyncStatus    Resync_ss Sync_ss  VV_iter R_iter S_iter LastSyncTime  LocalSet RemoteSet
+  APP.test.vv  4754 APP.test.vv   531 Synced        none      none     NA      NA     NA     NA            APP_Test APP_Test
+
+Name              ID   Target           Status   Role       Mode     LocalUserCpg RmUserCpg  Options
+Intern_Automation   17 AlletraMP_E18U31 Started  Primary    Sync     SSD_r6       SSD_r6
+  LocalVV      ID   RemoteVV     ID   SyncStatus    Resync_ss Sync_ss  VV_iter R_iter S_iter LastSyncTime  LocalSet RemoteSet
+  Automation1  6199 Automation1   687 Synced        none      none     NA      NA     NA     NA            NA       NA
+  Automation2  6200 Automation2   688 Synced        none      none     NA      NA     NA     NA            NA       NA
+  Automation3  6201 Automation3   689 Synced        none      none     NA      NA     NA     NA            NA       NA
+  Automation4  6202 Automation4   690 Synced        none      none     NA      NA     NA     NA            NA       NA
+
+Name         ID   Target           Status   Role       Mode     LocalUserCpg RmUserCpg  Options
+Test-RCG       14 AlletraMP_E18U31 Stopped  Primary    Sync
+  LocalVV      ID   RemoteVV     ID   SyncStatus    Resync_ss      Sync_ss  VV_iter R_iter S_iter LastSyncTime            LocalSet RemoteSet
+  TestRC_VV1   4838 TestRC_VV1    554 Stopped       rcpy.14.4838.5 none     NA      NA     NA     2026-07-27 18:50:42 IST NA       NA
+  TestRC_VV2   4839 TestRC_VV2    555 Stopped       rcpy.14.4839.5 none     NA      NA     NA     2026-07-27 18:50:42 IST NA       NA
+
+Name         ID   Target           Status   Role       Mode     LocalUserCpg RmUserCpg  Options
+Test-RCG2      18 AlletraMP_E18U31 Stopped  Primary    Sync
+  LocalVV      ID   RemoteVV     ID   SyncStatus    Resync_ss      Sync_ss  VV_iter R_iter S_iter LastSyncTime            LocalSet RemoteSet
+  TestRC2_VV1  6857 TestRC2_VV1  1000 Stopped       rcpy.18.6857.5 none     NA      NA     NA     2026-07-27 18:50:42 IST NA       NA
+  TestRC2_VV2  6858 TestRC2_VV2  1001 Stopped       rcpy.18.6858.5 none     NA      NA     NA     2026-07-27 18:50:42 IST NA       NA

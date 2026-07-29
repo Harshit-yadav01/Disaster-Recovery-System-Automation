@@ -111,6 +111,10 @@ Disaster Recovery Dashboard
 
 <span class="data-status" id="dataStatus" title="Live data source">Connecting…</span>
 
+<button class="bell-btn" id="refreshBtn" title="Refresh live data" aria-label="Refresh">
+<i class="fa-solid fa-rotate"></i>
+</button>
+
 <button class="bell-btn" id="bellBtn" title="Notifications" aria-label="Notifications">
 <i class="fa-solid fa-bell"></i>
 <span class="bell-badge" id="bellBadge" hidden></span>
@@ -184,6 +188,48 @@ Storage Health
 <h2>Storage Health</h2>
 
 <div class="storage" id="storageGrid"></div>
+
+</div>
+
+
+
+<!-- ===========================
+Live Performance (SSH)
+============================ -->
+
+<div class="section" id="healthPerfSection" hidden>
+
+<h2>Live Performance</h2>
+
+<div class="infra-grid" id="healthPerfGrid"></div>
+
+</div>
+
+
+
+<!-- ===========================
+Capacity by Pool (CPG)
+============================ -->
+
+<div class="section" id="healthCapacitySection" hidden>
+
+<h2>Capacity by Pool</h2>
+
+<div class="storage" id="healthCapacityGrid"></div>
+
+</div>
+
+
+
+<!-- ===========================
+Replication Groups (RPO)
+============================ -->
+
+<div class="section" id="healthReplSection" hidden>
+
+<h2>Replication Groups</h2>
+
+<table id="healthReplTable"></table>
 
 </div>
 
@@ -394,7 +440,7 @@ Disaster Recovery Readiness============================ -->
 
 <script src="config.js"></script>
 <script src="api.js"></script>
-<script src="script.js?v=realdata1"></script>
+<script src="script.js?v=realdata2"></script>
 <script src="dr.js?v=theme1"></script>
 </body>
 

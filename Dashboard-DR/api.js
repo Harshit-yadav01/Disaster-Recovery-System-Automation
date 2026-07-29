@@ -67,6 +67,12 @@
             return this.get("/dashboard");
         },
 
+        // Live array health (CPU, IOPS/latency, capacity, alerts, replication)
+        // collected over read-only SSH from the primary array.
+        getHealth() {
+            return this.get("/dr/health");
+        },
+
         // Authenticated POST that returns parsed JSON.
         async post(path, body) {
             const res = await fetch(`${cfg.API_BASE}${path}`, {

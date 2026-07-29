@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 from ..config import Settings, get_settings
 from ..dr import jobs
+from ..dr.health import HealthError, collect_health
 from ..dr.ssh_client import SSHConfig
 from ..dr.workflows import (
     DEFAULT_GROUP,
@@ -95,6 +96,22 @@ def dr_status(
         "arrays": _serialize_status(views),
         "active_job_id": active.id if active else None,
     }
+
+
+@router.get("/health")
+def dr_health(
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """Live array health (CPU, IOPS/latency, capacity, alerts, replication).
+
+    Read-only SSH stats collected from the primary array. Any section that the
+    array cannot supply comes back as ``null`` so the frontend hides that tile.
+    """
+    try:
+        return collect_health(settings)
+    except HealthError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
 
 
 def _start(kind: str, payload: OpRequest, settings: Settings) -> dict:

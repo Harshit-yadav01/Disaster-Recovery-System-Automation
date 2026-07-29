@@ -129,7 +129,7 @@ function setStatus(source, ok) {
         el.textContent = "Live \u2022 HPE Alletra";
     } else {
         el.className = "data-status sim";
-        el.textContent = "Simulated data";
+        el.textContent = "Demo data";
     }
 }
 
@@ -148,6 +148,168 @@ async function loadDashboard() {
     } catch (err) {
         console.error("Failed to load dashboard:", err);
         setStatus(null, false);
+    }
+}
+
+// ---- Live array health (read-only SSH via /api/dr/health) ----------------
+function toggleSection(id, show) {
+    const el = $(id);
+    if (el) el.hidden = !show;
+}
+
+function renderHealthPerf(cpu, perf) {
+    const grid = $("healthPerfGrid");
+    if (!grid) return;
+    const cards = [];
+    if (cpu) {
+        cards.push(`
+            <div class="infra-card">
+                <i class="fa-solid fa-microchip"></i>
+                <h3>CPU Usage</h3>
+                <h1>${Number(cpu.percent)}%</h1>
+                <p>${cpu.nodes.map((n) => `Node ${esc(n.node)}: ${Number(n.percent)}%`).join(" &bull; ")}</p>
+            </div>`);
+    }
+    if (perf) {
+        const mbps = (Number(perf.throughput_kbps) / 1024).toFixed(1);
+        const busy = perf.busiest
+            ? `Busiest: ${esc(perf.busiest.name)} (${Number(perf.busiest.iops)} IOPS)`
+            : "Aggregate";
+        cards.push(`
+            <div class="infra-card">
+                <i class="fa-solid fa-gauge-high"></i>
+                <h3>IOPS</h3>
+                <h1>${Number(perf.iops)}</h1>
+                <p>${Number(perf.vv_count)} volumes</p>
+            </div>`);
+        cards.push(`
+            <div class="infra-card">
+                <i class="fa-solid fa-stopwatch"></i>
+                <h3>Latency</h3>
+                <h1>${Number(perf.latency_ms)} ms</h1>
+                <p>Service time</p>
+            </div>`);
+        cards.push(`
+            <div class="infra-card">
+                <i class="fa-solid fa-arrows-left-right"></i>
+                <h3>Throughput</h3>
+                <h1>${mbps} MB/s</h1>
+                <p>${busy}</p>
+            </div>`);
+    }
+    grid.innerHTML = cards.join("");
+    toggleSection("healthPerfSection", cards.length > 0);
+}
+
+function renderHealthCapacity(cap) {
+    const grid = $("healthCapacityGrid");
+    if (!grid || !cap) {
+        toggleSection("healthCapacitySection", false);
+        return;
+    }
+    grid.innerHTML = cap.cpgs
+        .map(
+            (c) => `
+        <div class="storage-box">
+            <h3>${esc(c.name)}</h3>
+            <div class="progress">
+                <div class="progress-fill" style="width:${Number(c.used_pct)}%;"></div>
+            </div>
+            <p>${Number(c.used_pct)}% &bull; ${esc(c.used_human)} of ${esc(c.total_human)}</p>
+        </div>`
+        )
+        .join("");
+    toggleSection("healthCapacitySection", true);
+}
+
+function renderHealthAlerts(alerts) {
+    if (!alerts || !alerts.length) return; // keep whatever the dashboard supplied
+    const rows = alerts
+        .map(
+            (a) => `
+        <tr>
+            <td>${esc(a.time)}</td>
+            <td>${esc(a.message)}</td>
+            <td><span class="status ${esc(a.tone)}">${esc(a.severity)}</span></td>
+        </tr>`
+        )
+        .join("");
+    $("alertsTable").innerHTML =
+        `<tr><th>Time</th><th>Event</th><th>Severity</th></tr>` + rows;
+}
+
+function renderHealthReplication(repl) {
+    const table = $("healthReplTable");
+    if (!table || !repl || !repl.groups.length) {
+        toggleSection("healthReplSection", false);
+        return;
+    }
+    const rows = repl.groups
+        .map((g) => {
+            const tone =
+                g.status === "Started" && g.all_synced
+                    ? "green"
+                    : g.status === "Stopped"
+                    ? "warning"
+                    : "blue";
+            const rpo =
+                g.mode === "Sync" && g.status === "Started" && g.all_synced
+                    ? "0s (synchronous)"
+                    : g.last_sync
+                    ? esc(g.last_sync)
+                    : "&mdash;";
+            return `
+        <tr>
+            <td>${esc(g.name)}</td>
+            <td>${esc(g.role)}</td>
+            <td><span class="status ${tone}">${esc(g.status)}</span></td>
+            <td>${Number(g.synced)}/${Number(g.total)} synced</td>
+            <td>${rpo}</td>
+        </tr>`;
+        })
+        .join("");
+    table.innerHTML =
+        `<tr><th>Group</th><th>Role</th><th>Status</th><th>Volumes</th><th>RPO / Last Sync</th></tr>` +
+        rows;
+    toggleSection("healthReplSection", true);
+}
+
+function setLive(host, ts) {
+    const el = $("dataStatus");
+    if (!el) return;
+    const t = ts ? new Date(ts) : new Date();
+    const stamp = t.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
+    el.className = "data-status live";
+    el.textContent = `Live \u2022 ${host} \u2022 ${stamp}`;
+}
+
+async function loadHealth() {
+    try {
+        const h = await window.api.getHealth();
+        renderHealthPerf(h.cpu, h.performance);
+        renderHealthCapacity(h.capacity);
+        renderHealthAlerts(h.alerts);
+        renderHealthReplication(h.replication);
+        setLive(h.host, h.generated_at);
+    } catch (err) {
+        console.error("Failed to load live health:", err);
+        renderHealthPerf(null, null);
+        renderHealthCapacity(null);
+        renderHealthReplication(null);
+    }
+}
+
+async function refreshAll() {
+    const icon = document.querySelector("#refreshBtn i");
+    if (icon) icon.classList.add("fa-spin");
+    try {
+        await Promise.all([loadDashboard(), loadHealth()]);
+    } finally {
+        if (icon) icon.classList.remove("fa-spin");
     }
 }
 
@@ -207,6 +369,9 @@ async function loadDashboard() {
 })();
 
 loadDashboard();
+loadHealth();
+const refreshBtn = document.getElementById("refreshBtn");
+if (refreshBtn) refreshBtn.addEventListener("click", refreshAll);
 if (window.APP_CONFIG && window.APP_CONFIG.REFRESH_MS) {
-    setInterval(loadDashboard, window.APP_CONFIG.REFRESH_MS);
+    setInterval(refreshAll, window.APP_CONFIG.REFRESH_MS);
 }

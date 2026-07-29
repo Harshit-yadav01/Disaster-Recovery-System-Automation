@@ -144,10 +144,8 @@ async function loadDashboard() {
         renderAlerts(data.alerts);
         renderTimeline(data.timeline);
         renderReadiness(data.readiness);
-        setStatus(data.source, true);
     } catch (err) {
         console.error("Failed to load dashboard:", err);
-        setStatus(null, false);
     }
 }
 
@@ -300,6 +298,7 @@ async function loadHealth() {
         renderHealthPerf(null, null);
         renderHealthCapacity(null);
         renderHealthReplication(null);
+        setStatus(null, false);
     }
 }
 

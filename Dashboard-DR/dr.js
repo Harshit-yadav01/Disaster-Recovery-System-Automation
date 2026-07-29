@@ -558,6 +558,13 @@
         $("setTheme").value = localStorage.getItem("drTheme") || "dark";
     }
     function applyTheme(t) { document.body.classList.toggle("light", t === "light"); }
+    function syncThemeToggle(t) {
+        const b = document.getElementById("themeToggle");
+        if (!b) return;
+        const icon = b.querySelector("i");
+        if (icon) icon.className = t === "light" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+        b.title = t === "light" ? "Switch to dark theme" : "Switch to light theme";
+    }
     function applyDryDefault() {
         const dd = localStorage.getItem("drDryRunDefault");
         const on = dd === null ? true : dd === "true";
@@ -645,6 +652,7 @@
 
     function init() {
         applyTheme(localStorage.getItem("drTheme") || "dark");
+        syncThemeToggle(localStorage.getItem("drTheme") || "dark");
         applyDryDefault();
         const items = document.querySelectorAll(".sidebar li");
         items.forEach((li) => {
@@ -673,7 +681,14 @@
         const sr = $("setRefresh"); if (sr) sr.addEventListener("click", loadSettings);
         const sl = $("setLogout"); if (sl) sl.addEventListener("click", () => { if (confirm("Are you sure you want to sign out?")) window.api.logout(); });
         const sd = $("setDryDefault"); if (sd) sd.addEventListener("change", () => { localStorage.setItem("drDryRunDefault", sd.checked); applyDryDefault(); });
-        const sth = $("setTheme"); if (sth) sth.addEventListener("change", () => { localStorage.setItem("drTheme", sth.value); applyTheme(sth.value); });
+        const sth = $("setTheme"); if (sth) sth.addEventListener("change", () => { localStorage.setItem("drTheme", sth.value); applyTheme(sth.value); syncThemeToggle(sth.value); });
+        const tt = $("themeToggle"); if (tt) tt.addEventListener("click", () => {
+            const next = (localStorage.getItem("drTheme") || "dark") === "dark" ? "light" : "dark";
+            localStorage.setItem("drTheme", next);
+            applyTheme(next);
+            syncThemeToggle(next);
+            const s = $("setTheme"); if (s) s.value = next;
+        });
 
         $("drCancel").addEventListener("click", closeModal);
         $("drConfirm").addEventListener("click", () => { const op = pendingOp; closeModal(); runOp(op, false); });

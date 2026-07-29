@@ -1302,7 +1302,7 @@ body{
 .brand-name{display:flex;flex-direction:column;line-height:1.2;}
 .brand-name strong{color:var(--ink);font-weight:var(--hpe-fontWeight-bold);font-size:17px;}
 .brand-sub{color:var(--ink-dim);font-size:13px;white-space:nowrap;letter-spacing:.2px;}
-.hpe-logo{height:24px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-4xsmall) var(--hpe-spacing-xsmall);border-radius:var(--hpe-radius-xsmall);}
+.hpe-logo{height:44px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-xsmall) var(--hpe-spacing-small);border-radius:var(--hpe-radius-xsmall);}
 
 /* ===== Dashboard: same visual language / colours as the DR tabs ===== */
 #view-dashboard{

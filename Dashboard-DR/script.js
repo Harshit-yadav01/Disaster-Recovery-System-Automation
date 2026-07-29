@@ -303,7 +303,9 @@ async function loadDashboard() {
 // ---- Logout + boot -------------------------------------------------------
 (function initLogout() {
     const btn = document.getElementById("logoutBtn");
-    if (btn) btn.addEventListener("click", () => window.api.logout());
+    if (btn) btn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to sign out?")) window.api.logout();
+    });
 })();
 
 loadDashboard();

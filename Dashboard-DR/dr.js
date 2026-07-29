@@ -671,7 +671,7 @@
         const rc = $("rptCsv"); if (rc) rc.addEventListener("click", exportCsv);
         const rp = $("rptPrint"); if (rp) rp.addEventListener("click", () => window.print());
         const sr = $("setRefresh"); if (sr) sr.addEventListener("click", loadSettings);
-        const sl = $("setLogout"); if (sl) sl.addEventListener("click", () => window.api.logout());
+        const sl = $("setLogout"); if (sl) sl.addEventListener("click", () => { if (confirm("Are you sure you want to sign out?")) window.api.logout(); });
         const sd = $("setDryDefault"); if (sd) sd.addEventListener("change", () => { localStorage.setItem("drDryRunDefault", sd.checked); applyDryDefault(); });
         const sth = $("setTheme"); if (sth) sth.addEventListener("change", () => { localStorage.setItem("drTheme", sth.value); applyTheme(sth.value); });
 

@@ -15,14 +15,10 @@ from ..schemas import (
     DrReadiness,
     InfraItem,
     MetricCard,
-    NetworkStat,
-    PerformanceBar,
-    PerformanceCharts,
     ReplicationHealth,
     SiteStatus,
     StorageUsage,
     TimelineEvent,
-    VirtualMachine,
 )
 from . import StorageProvider
 
@@ -35,9 +31,6 @@ class SimulatedProvider(StorageProvider):
         protected = 160 + random.randint(0, 12)
         primary_util = random.randint(68, 76)
         recovery_util = random.randint(50, 60)
-        cpu = random.randint(32, 45)
-        memory = random.randint(58, 68)
-        iops = round(random.uniform(7.5, 9.0), 1)
         readiness_pct = random.randint(96, 99)
 
         return DashboardData(
@@ -45,7 +38,7 @@ class SimulatedProvider(StorageProvider):
             source=self.name,
             cards=[
                 MetricCard(
-                    title="Protected VMs",
+                    title="Protected Volumes",
                     value=str(protected),
                     subtext=f"+{random.randint(4, 14)} Today",
                     tone="green",
@@ -84,15 +77,15 @@ class SimulatedProvider(StorageProvider):
                 ),
             ),
             infrastructure=[
-                InfraItem(label="ESXi Hosts", value="12", subtext="All Connected", icon="fa-server"),
-                InfraItem(label="Datastores", value="18", subtext="Healthy", icon="fa-hard-drive"),
-                InfraItem(label="Networks", value="8", subtext="No Packet Loss", icon="fa-network-wired"),
-                InfraItem(label="CPU Usage", value=f"{cpu}%", subtext="Optimal", icon="fa-microchip"),
+                InfraItem(label="Arrays Online", value="2", subtext="WSAPI reachable", icon="fa-server"),
+                InfraItem(label="CPGs", value="4", subtext="Provisioning groups", icon="fa-hard-drive"),
+                InfraItem(label="Volumes", value=str(protected), subtext="Provisioned", icon="fa-network-wired"),
+                InfraItem(label="RC Groups", value="3", subtext="Replication", icon="fa-microchip"),
             ],
             storage=[
                 StorageUsage(label="Primary Array", percent=primary_util, detail=f"{primary_util}% Utilized"),
                 StorageUsage(label="Recovery Array", percent=recovery_util, detail=f"{recovery_util}% Utilized"),
-                StorageUsage(label="Replication Bandwidth", percent=84, detail="1.8 Gbps"),
+                StorageUsage(label="Usable Capacity", percent=100, detail="120.0 TB"),
             ],
             alerts=[
                 Alert(time="10:14 AM", event="Replication Completed", status="Success", tone="green"),
@@ -105,28 +98,6 @@ class SimulatedProvider(StorageProvider):
                 TimelineEvent(title="Replication Validation", detail="All Volumes Synchronized"),
                 TimelineEvent(title="DR Readiness Check", detail=f"{readiness_pct}% Ready"),
                 TimelineEvent(title="Recovery Plan Generated", detail="Ready for Execution"),
-            ],
-            performance_bars=[
-                PerformanceBar(label="CPU Utilization", percent=cpu, value=f"{cpu}%"),
-                PerformanceBar(label="Memory Usage", percent=memory, value=f"{memory}%"),
-                PerformanceBar(label="Storage IOPS", percent=82, value=f"{iops}K IOPS"),
-            ],
-            performance_charts=PerformanceCharts(
-                cpu_labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-                cpu_series=[random.randint(30, 70) for _ in range(7)],
-                memory_labels=["Host1", "Host2", "Host3", "Host4"],
-                memory_series=[random.randint(55, 85) for _ in range(4)],
-            ),
-            virtual_machines=[
-                VirtualMachine(name="ERP-APP-01", host="ESXi-01", status="Running", status_tone="healthy", replication="Healthy"),
-                VirtualMachine(name="Oracle-DB", host="ESXi-02", status="Running", status_tone="healthy", replication="Healthy"),
-                VirtualMachine(name="FileServer", host="ESXi-03", status="Warning", status_tone="warning", replication="Syncing"),
-                VirtualMachine(name="WebServer", host="ESXi-04", status="Running", status_tone="healthy", replication="Healthy"),
-            ],
-            network=[
-                NetworkStat(label="Network Latency", value="2.3 ms", detail="Excellent"),
-                NetworkStat(label="Bandwidth", value="1.8 Gbps", detail="Replication Link"),
-                NetworkStat(label="Datastore Usage", value="68% Used", detail="68% Used", percent=68),
             ],
             readiness=DrReadiness(
                 percent=readiness_pct,

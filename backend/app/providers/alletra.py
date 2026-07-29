@@ -37,14 +37,10 @@ from ..schemas import (
     DrReadiness,
     InfraItem,
     MetricCard,
-    NetworkStat,
-    PerformanceBar,
-    PerformanceCharts,
     ReplicationHealth,
     SiteStatus,
     StorageUsage,
     TimelineEvent,
-    VirtualMachine,
 )
 from . import StorageProvider
 
@@ -250,12 +246,20 @@ class AlletraProvider(StorageProvider):
 
         arrays_online = 1 + (1 if rec_reachable else 0)
         dr_ready = repl_ok and rec_reachable
+        protected_count = len(protected_names)
+        # Real readiness: share of provisioned volumes that are protected by a
+        # remote copy group, gated on the recovery array being reachable.
+        if protected_volumes:
+            protected_ratio = round(protected_count / protected_volumes * 100)
+        else:
+            protected_ratio = 0
+        readiness_pct = protected_ratio if rec_reachable else max(0, protected_ratio - 40)
 
         return DashboardData(
             generated_at=now.isoformat(),
             source=self.name,
             cards=[
-                MetricCard(title="Protected VMs", value=str(len(protected_names) or protected_volumes),
+                MetricCard(title="Protected Volumes", value=str(protected_count),
                            subtext=f"of {protected_volumes} volumes", tone="green"),
                 MetricCard(title="Replication", value=repl_status if repl_ok else "Check",
                            subtext=f"{len(rcgroups)} RC group(s)", tone=repl_tone),
@@ -289,33 +293,14 @@ class AlletraProvider(StorageProvider):
                 TimelineEvent(title="Replication Validation", detail=repl_status),
                 TimelineEvent(title="Live Data", detail=now.strftime("%H:%M UTC")),
             ],
-            performance_bars=[
-                PerformanceBar(label="Primary Utilization", percent=primary_util, value=f"{primary_util}%"),
-                PerformanceBar(label="Recovery Utilization", percent=rec_util,
-                               value=(f"{rec_util}%" if rec_reachable else "N/A")),
-                PerformanceBar(label="Replication", percent=100 if repl_ok else 40, value=repl_status),
-            ],
-            performance_charts=PerformanceCharts(
-                cpu_labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-                cpu_series=[primary_util] * 7,
-                memory_labels=[p_name, (rec_model if rec_reachable else "Recovery")],
-                memory_series=[primary_util, rec_util],
-            ),
-            virtual_machines=self._vms_from_volumes(volumes, protected_names),
-            network=[
-                NetworkStat(label="Arrays Online", value=f"{arrays_online}/{len(self._configs)}", detail="WSAPI"),
-                NetworkStat(label="RC Groups", value=str(len(rcgroups)), detail="Configured"),
-                NetworkStat(label="Primary Usage", value=f"{primary_util}% Used",
-                            detail=f"{primary_util}% Used", percent=primary_util),
-            ],
             readiness=DrReadiness(
-                percent=95 if dr_ready else 60,
+                percent=readiness_pct,
                 headline="Environment Ready" if dr_ready else "Attention Required",
                 checks=[
                     f"Replication {repl_status}",
                     f"Primary array {primary_util}% used",
                     ("Recovery array reachable" if rec_reachable else "Recovery array NOT reachable"),
-                    f"{len(protected_names)} of {protected_volumes} volumes protected",
+                    f"{protected_count} of {protected_volumes} volumes protected",
                 ],
             ),
         )
@@ -385,23 +370,3 @@ class AlletraProvider(StorageProvider):
                       status="Synchronized", tone="green")
             )
         return alerts
-
-    @staticmethod
-    def _vms_from_volumes(volumes: list[dict], protected_names: set[str]) -> list[VirtualMachine]:
-        vms: list[VirtualMachine] = []
-        for v in volumes[:12]:
-            name = v.get("name", "volume")
-            normal = v.get("state", 1) == 1  # WSAPI: 1 = normal
-            vms.append(
-                VirtualMachine(
-                    name=name,
-                    host=v.get("userCPG") or v.get("snapCPG") or "cpg",
-                    status="Normal" if normal else "Degraded",
-                    status_tone="healthy" if normal else "warning",
-                    replication="Protected" if name in protected_names else "Unprotected",
-                )
-            )
-        if not vms:
-            vms.append(VirtualMachine(name="No volumes", host="-", status="N/A",
-                                      status_tone="warning", replication="-"))
-        return vms

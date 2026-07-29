@@ -68,34 +68,6 @@ class TimelineEvent(BaseModel):
     detail: str
 
 
-class PerformanceBar(BaseModel):
-    label: str
-    percent: int
-    value: str
-
-
-class PerformanceCharts(BaseModel):
-    cpu_labels: list[str]
-    cpu_series: list[int]
-    memory_labels: list[str]
-    memory_series: list[int]
-
-
-class VirtualMachine(BaseModel):
-    name: str
-    host: str
-    status: str
-    status_tone: str  # healthy | warning | red
-    replication: str
-
-
-class NetworkStat(BaseModel):
-    label: str
-    value: str
-    detail: str
-    percent: int | None = None
-
-
 class DrReadiness(BaseModel):
     percent: int
     headline: str
@@ -114,8 +86,4 @@ class DashboardData(BaseModel):
     storage: list[StorageUsage]
     alerts: list[Alert]
     timeline: list[TimelineEvent]
-    performance_bars: list[PerformanceBar]
-    performance_charts: PerformanceCharts
-    virtual_machines: list[VirtualMachine]
-    network: list[NetworkStat]
     readiness: DrReadiness

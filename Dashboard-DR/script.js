@@ -18,9 +18,6 @@ const esc = (s) =>
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
     );
 
-let cpuChart = null;
-let memoryChart = null;
-
 // ---- Renderers -----------------------------------------------------------
 function renderCards(cards) {
     $("cardsGrid").innerHTML = cards
@@ -107,50 +104,6 @@ function renderTimeline(events) {
         .join("");
 }
 
-function renderPerfBars(bars) {
-    const colors = ["cpu", "memory", "storage"];
-    $("perfBars").innerHTML = bars
-        .map(
-            (b, idx) => `
-        <div class="performance-card">
-            <h3>${esc(b.label)}</h3>
-            <div class="chart-bar">
-                <div class="chart-fill ${colors[idx % colors.length]}" style="width:${Number(b.percent)}%;"></div>
-            </div>
-            <p>${esc(b.value)}</p>
-        </div>`
-        )
-        .join("");
-}
-
-function renderVMs(vms) {
-    const rows = vms
-        .map(
-            (v) => `
-        <tr>
-            <td>${esc(v.name)}</td>
-            <td>${esc(v.host)}</td>
-            <td><span class="${esc(v.status_tone)}">${esc(v.status)}</span></td>
-            <td>${esc(v.replication)}</td>
-        </tr>`
-        )
-        .join("");
-    $("vmTable").innerHTML =
-        `<tr><th>VM Name</th><th>Host</th><th>Status</th><th>Replication</th></tr>` + rows;
-}
-
-function renderNetwork(items) {
-    $("networkGrid").innerHTML = items
-        .map((n) => {
-            const body =
-                n.percent != null
-                    ? `<div class="progress"><div class="progress-fill" style="width:${Number(n.percent)}%;"></div></div><p>${esc(n.detail)}</p>`
-                    : `<h1>${esc(n.value)}</h1><p>${esc(n.detail)}</p>`;
-            return `<div class="network-card"><h3>${esc(n.label)}</h3>${body}</div>`;
-        })
-        .join("");
-}
-
 function renderReadiness(r) {
     const checks = r.checks.map((c) => `\u2714 ${esc(c)}`).join("<br>");
     $("readinessBox").innerHTML = `
@@ -161,57 +114,6 @@ function renderReadiness(r) {
             <h3>${esc(r.headline)}</h3>
             <p>${checks}</p>
         </div>`;
-}
-
-function renderCharts(charts) {
-    const cpuEl = $("cpuChart");
-    const memEl = $("memoryChart");
-    if (!cpuEl || !memEl || typeof Chart === "undefined") return;
-
-    if (cpuChart) {
-        cpuChart.data.labels = charts.cpu_labels;
-        cpuChart.data.datasets[0].data = charts.cpu_series;
-        cpuChart.update();
-    } else {
-        cpuChart = new Chart(cpuEl, {
-            type: "line",
-            data: {
-                labels: charts.cpu_labels,
-                datasets: [
-                    {
-                        label: "CPU %",
-                        data: charts.cpu_series,
-                        borderColor: "#00d084",
-                        backgroundColor: "rgba(0,208,132,.2)",
-                        fill: true,
-                        tension: 0.4,
-                    },
-                ],
-            },
-            options: {
-                plugins: { legend: { labels: { color: "#33414f" } } },
-                scales: { x: { ticks: { color: "#5a6b7a" } }, y: { ticks: { color: "#5a6b7a" } } },
-            },
-        });
-    }
-
-    if (memoryChart) {
-        memoryChart.data.labels = charts.memory_labels;
-        memoryChart.data.datasets[0].data = charts.memory_series;
-        memoryChart.update();
-    } else {
-        memoryChart = new Chart(memEl, {
-            type: "bar",
-            data: {
-                labels: charts.memory_labels,
-                datasets: [{ label: "Memory %", data: charts.memory_series, backgroundColor: "#00b4ff" }],
-            },
-            options: {
-                plugins: { legend: { labels: { color: "#33414f" } } },
-                scales: { x: { ticks: { color: "#5a6b7a" } }, y: { ticks: { color: "#5a6b7a" } } },
-            },
-        });
-    }
 }
 
 function setStatus(source, ok) {
@@ -241,11 +143,7 @@ async function loadDashboard() {
         renderStorage(data.storage);
         renderAlerts(data.alerts);
         renderTimeline(data.timeline);
-        renderPerfBars(data.performance_bars);
-        renderVMs(data.virtual_machines);
-        renderNetwork(data.network);
         renderReadiness(data.readiness);
-        renderCharts(data.performance_charts);
         setStatus(data.source, true);
     } catch (err) {
         console.error("Failed to load dashboard:", err);

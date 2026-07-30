@@ -1,0 +1,132 @@
+/* ---------------------------------------------------------------------------
+   HPE Graphik — application typeface.
+   OpenType (.otf) files live in "HPE Graphik/HPE Graphik/".
+   Only the weights actually used by the CSS are downloaded by the browser.
+--------------------------------------------------------------------------- */
+
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-Thin.otf") format("opentype");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-ThinItalic.otf") format("opentype");
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-Extralight.otf") format("opentype");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-ExtralightItalic.otf") format("opentype");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-Light.otf") format("opentype");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-LightItalic.otf") format("opentype");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-RegularItalic.otf") format("opentype");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-Medium.otf") format("opentype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-MediumItalic.otf") format("opentype");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-Semibold.otf") format("opentype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-SemiboldItalic.otf") format("opentype");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-Bold.otf") format("opentype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-BoldItalic.otf") format("opentype");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-Black.otf") format("opentype");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-BlackItalic.otf") format("opentype");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-Super.otf") format("opentype");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "HPE Graphik";
+    src: url("HPE%20Graphik/HPE%20Graphik/HPE%20Graphik-SuperItalic.otf") format("opentype");
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}

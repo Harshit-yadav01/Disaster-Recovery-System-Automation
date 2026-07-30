@@ -1,0 +1,480 @@
+AlletraMP_D22U27 cli% showalert -n
+Id          : 125
+State       : New
+Message Code: 0x0140000
+Time        : 2026-05-24 18:25:22 IST
+Severity    : Fatal
+Type        : Notification
+Message     : HPE added test ABTS event 1
+
+Id          : 126
+State       : New
+Message Code: 0x0140000
+Time        : 2026-05-24 22:32:03 IST
+Severity    : Fatal
+Type        : Notification
+Message     : HPE added test ABTS event 2
+
+Id          : 129
+State       : New
+Message Code: 0x00e000a
+Time        : 2026-05-31 00:00:00 IST
+Severity    : Minor
+Type        : Task failed
+Message     : Task 15615 (type "scheduled_task", name "compactcpg_SSD_r6_sun") has failed (Task Failed). Please see task status for details.
+
+Id          : 132
+State       : New
+Message Code: 0x00e000a
+Time        : 2026-06-07 00:00:01 IST
+Severity    : Minor
+Type        : Task failed
+Message     : Task 17401 (type "scheduled_task", name "compactcpg_SSD_r6_sun") has failed (Task Failed). Please see task status for details.
+
+Id          : 133
+State       : New
+Message Code: 0x00e000a
+Time        : 2026-06-14 00:00:00 IST
+Severity    : Minor
+Type        : Task failed
+Message     : Task 19189 (type "scheduled_task", name "compactcpg_SSD_r6_sun") has failed (Task Failed). Please see task status for details.
+
+Id          : 137
+State       : New
+Message Code: 0x00e000a
+Time        : 2026-06-21 00:00:00 IST
+Severity    : Minor
+Type        : Task failed
+Message     : Task 21002 (type "scheduled_task", name "compactcpg_SSD_r6_sun") has failed (Task Failed). Please see task status for details.
+
+Id          : 135
+State       : New
+Message Code: 0x03a00fa
+Time        : 2026-06-24 15:38:59 IST
+Severity    : Major
+Type        : Component state change
+Message     : Remote Copy Link 20(AlletraMP_E18U31_1_4_3) Failed (Link Has Been Down For More Than 4 Hours)
+
+Id          : 46
+State       : New
+Message Code: 0x06700de
+Time        : 2026-06-25 15:11:28 IST
+Severity    : Degraded
+Type        : Component state change
+Message     : Automatic failover 0 Degraded (Single RC link active)
+
+Id          : 143
+State       : New
+Message Code: 0x00e000a
+Time        : 2026-07-14 17:25:42 IST
+Severity    : Minor
+Type        : Task failed
+Message     : Task 27177 (type "remote_copy_reverse", name "Intern_Automation") has failed (Failed to switch target group). Please see task status for details.
+
+Id          : 144
+State       : New
+Message Code: 0x00e000a
+Time        : 2026-07-14 17:49:16 IST
+Severity    : Minor
+Type        : Task failed
+Message     : Task 27202 (type "remote_copy_reverse", name "Intern_Automation") has failed (Failed to switch target group). Please see task status for details.
+
+Id          : 47
+State       : New
+Message Code: 0x0680001
+Time        : 2026-07-21 22:34:11 IST
+Severity    : Major
+Type        : Quorum Witness
+Message     : Node: 1 SysId: 188150 Quorum server unreachable.
+
+Id          : 5
+State       : New
+Message Code: 0x01e0023
+Time        : 2026-07-26 10:45:38 IST
+Severity    : Major
+Type        : Cage degraded
+Message     : Cage cage1 (0x51402EC02320193A) firmware is reporting a degraded status: Noncritical.
+
+Id          : 28
+State       : New
+Message Code: 0x02d0000
+Time        : 2026-07-26 10:45:38 IST
+Severity    : Major
+Type        : Cage I/O Module degraded
+Message     : Cage cage1 (0x51402EC02320193A) I/O Module 2 is Noncritical.
+
+13 alerts
+
+AlletraMP_D22U27 cli% showcpg -space
+                ------------(MiB)------------- ------------ Efficiency ------------
+Id Name   Warn%    Used Shared    Free   Total  Thin Dedup Compress Reduction Total Overprov
+ 2 3sc        -     525      0  179025  179550   >25     -        -         -   >25     0.01
+ 0 SSD_r6     - 1037925 341250  419475 1798650 19.84  1.02     1.03      1.05 20.91     0.48
+ 1 test       -    2100   8400  507150  517650   >25     -        -         -   >25     0.00
+--------------------------------------------------------------------------------------------
+ 3 total        1040550 349650 1105650 2495850 19.95  1.02     1.03      1.05 21.03     0.48
+
+
+AlletraMP_D22U27 cli% statcpu -iter 1
+15:34:24 07/29/2026
+node,cpu user sys idle intr/s ctxt/s
+     0,0   42   0   58
+     0,1   39   0   61
+     0,2   25   1   74
+     0,3    0   0  100
+     0,4    0   0  100
+     0,5    0   0  100
+     0,6    0   0  100
+     0,7    0   0  100
+     0,8    0   0  100
+     0,9    0   0  100
+    0,10    0   0  100
+    0,11    0   0  100
+    0,12    0   0  100
+    0,13    0   0  100
+    0,14    0   0  100
+    0,15    0   0  100
+    0,16    0   0  100
+    0,17    0   0  100
+    0,18    0   0  100
+    0,19    0   0  100
+    0,20    0   0  100
+    0,21    0   0  100
+    0,22    0   0  100
+    0,23    0   0  100
+    0,24    0   0  100
+    0,25    0   0  100
+    0,26    0   0  100
+    0,27    0   0  100
+    0,28    0   0  100
+    0,29    0   0  100
+    0,30    0   0  100
+    0,31    0   0  100
+    0,32   44   0   55
+    0,33   41   0   59
+    0,34   11   0   89
+    0,35    0   0  100
+    0,36    0   0  100
+    0,37    0   0  100
+    0,38    0   0  100
+    0,39    0   0  100
+    0,40    0   0  100
+    0,41    0   0  100
+    0,42    0   0  100
+    0,43    0   0  100
+    0,44    0   0  100
+    0,45    0   0  100
+    0,46    0   0  100
+    0,47    0   0  100
+    0,48    0   0  100
+    0,49    0   0  100
+    0,50    0   0  100
+    0,51    0   0  100
+    0,52    0   0  100
+    0,53    0   0  100
+    0,54    0   0  100
+    0,55    0   0  100
+    0,56    0   0  100
+    0,57    0   0  100
+    0,58    0   0  100
+    0,59    0   0  100
+    0,60    0   0  100
+    0,61    0   0  100
+    0,62    0   0  100
+    0,63    0   0  100
+ 0,total    3   0   97   8401  13492
+
+     1,0   22   0   78
+     1,1   22   0   78
+     1,2   36   0   64
+     1,3   12   0   88
+     1,4   10   0   90
+     1,5    0   0  100
+     1,6   13   0   87
+     1,7    0   0  100
+     1,8    3   0   97
+     1,9    1   0   99
+    1,10    0   0  100
+    1,11    0   0  100
+    1,12    0   0  100
+    1,13    2   1   97
+    1,14    0   0  100
+    1,15    0   0  100
+    1,16    0   1   99
+    1,17    0   0  100
+    1,18    0   0  100
+    1,19    1   0   99
+    1,20    0   0  100
+    1,21    0   0  100
+    1,22    0   0  100
+    1,23    0   0  100
+    1,24    0   0  100
+    1,25    0   0  100
+    1,26    0   0  100
+    1,27    2   0   98
+    1,28    5   0   95
+    1,29    0   0  100
+    1,30    0   0  100
+    1,31    0   0  100
+    1,32   30   0   69
+    1,33   17   0   82
+    1,34   19   0   80
+    1,35   10   0   90
+    1,36   10   0   90
+    1,37    3   0   96
+    1,38    7   0   93
+    1,39    0   0  100
+    1,40    0   0  100
+    1,41    0   0  100
+    1,42    0   0  100
+    1,43    0   0  100
+    1,44    0   1   99
+    1,45    0   0  100
+    1,46    0   0  100
+    1,47    2   0   98
+    1,48    0   0  100
+    1,49    0   0   99
+    1,50    0   0  100
+    1,51    0   0  100
+    1,52    0   0  100
+    1,53    0   0  100
+    1,54    0   0  100
+    1,55    0   0  100
+    1,56    0   0  100
+    1,57    0   0  100
+    1,58    0   0  100
+    1,59    0   0  100
+    1,60    0   0  100
+    1,61    0   0  100
+    1,62    0   0  100
+    1,63    0   0  100
+ 1,total    4   0   96  12754  20553
+
+
+AlletraMP_D22U27 cli% statvv -iter 1
+      15:35:20 07/29/2026 r/w I/O per second KBytes per sec      Svt ms IOSz KB
+                   VVname      Cur  Avg  Max  Cur  Avg  Max   Cur   Avg Cur Avg Qlen
+                    admin   t    2    2    2    8    8    8 0.098 0.098 4.1 4.1    0
+                  .srdata   t    4    4    4   16   16   16 0.118 0.118 4.1 4.1    0
+                .mgmtdata   t    3    3    3   24   24   24 0.139 0.139 7.0 7.0    0
+               test_CRV.r   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_0   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_4   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_5   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_6   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_7   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_8   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_9   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_a   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_b   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_c   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_d   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_e   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         .shared.SSD_r6_f   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    vv100   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    vv101   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                   3sc-vv   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    300gb   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    test5   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    600gb   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    700gb   t  124  124  124  565  565  565 0.144 0.144 4.6 4.6    0
+      rcopy_async_test_vv   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              IBK-test-v1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                dsccvv200   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                  DR_Repl   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_0   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_4   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_5   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_6   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_7   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_8   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_9   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_a   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_b   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_c   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_d   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_e   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           .shared.test_f   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+               AlletraVol   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+  Yoshino_774718_480550.0   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+  Yoshino_774718_480550.1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+         TestVV_23April26   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    test7   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    test8   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    test9   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                   test10   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                      z10   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                     snp1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   dsccvv200.260505170000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r05061200   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    z10.1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    z10.2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    z10.3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    z10.4   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                    z10.5   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              Alletra_VV1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              Alletra_VV2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              Alletra_VV3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                  test999   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+       300gb.260526225429   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+       S-test9_2026060816   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+Yoshino_774718_480550_1TB   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                     dvv1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              APP.test.vv   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+               TestRC_VV1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+               TestRC_VV2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+            Alletra_Test1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+            Alletra_Test2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+            Alletra_Test3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+             New_Test_VV1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+             New_Test_VV2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+             New_Test_VV3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+    devwinvm-basic-core02   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+        devvm-basic-ghb01   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+          Alletra_HPE_VV1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+          Alletra_HPE_VV2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+          Alletra_HPE_VV3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           HPE_ESXi_VLUN1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           HPE_ESXi_VLUN2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           HPE_ESXi_VLUN3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+            HPE_GCC_VLUN1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+            HPE_GCC_VLUN2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+            HPE_GCC_VLUN3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                50GB-Test   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                        2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test8_2026070615_Mon   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              Automation1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              Automation2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              Automation3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              Automation4   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test8_2026070910_Thu   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test8_2026071417_Tue   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              TestRC2_VV1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+              TestRC2_VV2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test7_2026071516_Wed   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test7_2026071613_Thu   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test7_2026072109_Tue   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+          PRD-HANA-DATA01   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           PRD-HANA-LOG01   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                VV1_Esxi1   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                VV2_Esxi2   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                VV3_Esxi3   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test7_2026072115_Tue   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test8_2026072115_Tue   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test7_2026072116_Tue   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   S-test8_2026072116_Tue   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07270800   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07271200   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+                 training   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07271600   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           rcpy.18.6857.5   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           rcpy.18.6858.5   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           rcpy.14.4838.5   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           rcpy.14.4839.5   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07272000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07280000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07280400   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07280800   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07281200   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728153000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728154500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728160000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07281600   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728161500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728163000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728164500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728170000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728171500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728173000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728174500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728180000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728181500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728183000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728184500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728190000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728191500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728193000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728194500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728200000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07282000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728201500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728203000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260728204500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07290000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07290400   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07290800   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729080001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729081501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729083001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729084500   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729090000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729091501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729093001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729094501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729100001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729101501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729103000   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729104501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729110001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729111501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729113001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729114501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729120001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+   snp-test_CRV.r07291200   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729121501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729123001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729124501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729130001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729131501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729133001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+           UBS-Volume-001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729134501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729140001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729141501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729143001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729144501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+       UBS-Volume-0012760   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729150001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729151501   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+     test999.260729153001   t    0    0    0    0    0    0 0.000 0.000 0.0 0.0    0
+------------------------------------------------------------------------------------
+                      189   t  133  133       612  612      0.143 0.143 4.6 4.6    0
+
+
+AlletraMP_D22U27 cli% showrcopy -d groups
+
+Remote Copy System Information
+Status: Started, Normal
+
+Group Information
+
+Name         ID   Target           Status   Role       Mode     LocalUserCpg RmUserCpg  Options
+APP_Test       13 AlletraMP_E18U31 Started  Secondary  Sync     SSD_r6       SSD_r6     auto_recover,auto_synchronize,active_active
+  LocalVV      ID   RemoteVV     ID   SyncStatus    Resync_ss Sync_ss  VV_iter R_iter S_iter LastSyncTime  LocalSet RemoteSet
+  APP.test.vv  4754 APP.test.vv   531 Synced        none      none     NA      NA     NA     NA            APP_Test APP_Test
+
+Name              ID   Target           Status   Role       Mode     LocalUserCpg RmUserCpg  Options
+Intern_Automation   17 AlletraMP_E18U31 Started  Primary    Sync     SSD_r6       SSD_r6
+  LocalVV      ID   RemoteVV     ID   SyncStatus    Resync_ss Sync_ss  VV_iter R_iter S_iter LastSyncTime  LocalSet RemoteSet
+  Automation1  6199 Automation1   687 Synced        none      none     NA      NA     NA     NA            NA       NA
+  Automation2  6200 Automation2   688 Synced        none      none     NA      NA     NA     NA            NA       NA
+  Automation3  6201 Automation3   689 Synced        none      none     NA      NA     NA     NA            NA       NA
+  Automation4  6202 Automation4   690 Synced        none      none     NA      NA     NA     NA            NA       NA
+
+Name         ID   Target           Status   Role       Mode     LocalUserCpg RmUserCpg  Options
+Test-RCG       14 AlletraMP_E18U31 Stopped  Primary    Sync
+  LocalVV      ID   RemoteVV     ID   SyncStatus    Resync_ss      Sync_ss  VV_iter R_iter S_iter LastSyncTime            LocalSet RemoteSet
+  TestRC_VV1   4838 TestRC_VV1    554 Stopped       rcpy.14.4838.5 none     NA      NA     NA     2026-07-27 18:50:42 IST NA       NA
+  TestRC_VV2   4839 TestRC_VV2    555 Stopped       rcpy.14.4839.5 none     NA      NA     NA     2026-07-27 18:50:42 IST NA       NA
+
+Name         ID   Target           Status   Role       Mode     LocalUserCpg RmUserCpg  Options
+Test-RCG2      18 AlletraMP_E18U31 Stopped  Primary    Sync
+  LocalVV      ID   RemoteVV     ID   SyncStatus    Resync_ss      Sync_ss  VV_iter R_iter S_iter LastSyncTime            LocalSet RemoteSet
+  TestRC2_VV1  6857 TestRC2_VV1  1000 Stopped       rcpy.18.6857.5 none     NA      NA     NA     2026-07-27 18:50:42 IST NA       NA
+  TestRC2_VV2  6858 TestRC2_VV2  1001 Stopped       rcpy.18.6858.5 none     NA      NA     NA     2026-07-27 18:50:42 IST NA       NA

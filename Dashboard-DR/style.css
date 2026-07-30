@@ -1304,13 +1304,23 @@ body{
 .brand-sub{color:var(--ink-dim);font-size:13px;white-space:nowrap;letter-spacing:.2px;}
 .hpe-logo{height:44px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-xsmall) var(--hpe-spacing-small);border-radius:var(--hpe-radius-xsmall);}
 
-/* ===== Dashboard: same visual language / colours as the DR tabs ===== */
-#view-dashboard{
+/* ===== All tab views: same seamless panel language as the dashboard ===== */
+#view-dashboard,
+#view-replication,
+#view-droperations,
+#view-monitoring,
+#view-reports,
+#view-settings{
   background:var(--panel-deep);
   padding:18px;
   border-radius:20px;
 }
-#view-dashboard .section{
+#view-dashboard .section,
+#view-replication .section,
+#view-droperations .section,
+#view-monitoring .section,
+#view-reports .section,
+#view-settings .section{
   background:var(--surface-2);
   border:1px solid var(--border-soft);
   box-shadow:none;
@@ -1572,7 +1582,12 @@ body.light{
   border-radius:16px;
 }
 
-#view-dashboard .section{
+#view-dashboard .section,
+#view-replication .section,
+#view-droperations .section,
+#view-monitoring .section,
+#view-reports .section,
+#view-settings .section{
   background:var(--surface-2);
   border:1px solid var(--border-soft);
   border-radius:18px;

@@ -353,13 +353,13 @@
     // ---- Confirmation modal (execute only) ---------------------------------
     function modalBody(op) {
         if (op === "failover")
-            return "Stops the primary group, then promotes the DR array to Read/Write. No health check is performed on the primary.";
+            return "Ensure that the host IOs are stopped to the primary replicated volumes before performing the failover operation. Failover operation will attempt to make the replication role of the secondary volume to new primary. After the failover operation is successful, the replicated volumes on both the sites will become writeable since the Remote Copy links are down. Ensure that the host IOs are written to the volumes of the correct site to avoid data inconsistency. Do you want to perform this action?";
         if (op === "revert")
             return "Reverts the failover on the DR array (setrcopygroup reverse -local -current). This DISCARDS any data written to the DR volumes since the failover and returns to the original Primary. This cannot be undone.";
         if (op === "recover")
-            return "Reverses replication (recover \u2192 sync): the DR array becomes the source and copies its changes back to the original Primary, waiting until fully synced.";
+            return "Performing this operation on failover virtual volume set, will change matching primary virtual volume set on the replication partner system to secondary virtual volume set and then synchronizes. Do you want to perform this action?";
         if (op === "restore")
-            return "Returns the group to its natural direction (Primary R/W, DR Read-Only). Run only after Reverse Sync has completed.";
+            return "Performing this operation will recover the replication after failover and bring back replication to natural direction. Do you want to perform this action?";
         if (op === "present")
             return "Exports this group's volumes to the selected DR host (createvlun) so the recovery VMs can see them. Only the group's own volumes are exported.";
         if (op === "unpresent")

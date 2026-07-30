@@ -5,8 +5,8 @@ recovery data, and drives one-click DR operations on HPE Alletra Storage MP /
 3PAR arrays. It talks to one or two arrays over the **WSAPI** (HTTPS, port 443)
 for dashboard data, and over **SSH** (port 22) for all DR automation (status,
 failover, failback, present/unpresent, and replication link control). All
-displayed values are read live from the real arrays — there is no simulated or
-demo data: values are real, or not shown at all.
+displayed values are read live from the real arrays — values are real, or not
+shown at all.
 
 ## Architecture
 

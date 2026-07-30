@@ -14,7 +14,7 @@ padding:0;
 
 box-sizing:border-box;
 
-font-family:'HPE Graphik','Poppins',sans-serif;
+font-family:'HPE Graphik',sans-serif;
 
 }
 
@@ -1655,4 +1655,4 @@ body.light{
    Font Awesome icons keep their own icon font via the .fa* selectors below. */
 .dr-group-name,.dr-step-cmd,.node-host,.node-name,.dr-console-head,
 .dr-console-body,.hist-time,.stat-host,.stat-vols td,.set-row b,
-.flow-body code,.pv-cmd{font-family:'HPE Graphik','Poppins',sans-serif;}
+.flow-body code,.pv-cmd{font-family:'HPE Graphik',sans-serif;}

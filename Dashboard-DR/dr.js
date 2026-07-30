@@ -355,15 +355,15 @@
         if (op === "failover")
             return "Ensure that the host IOs are stopped to the primary replicated volumes before performing the failover operation. Failover operation will attempt to make the replication role of the secondary volume to new primary. After the failover operation is successful, the replicated volumes on both the sites will become writeable since the Remote Copy links are down. Ensure that the host IOs are written to the volumes of the correct site to avoid data inconsistency. Do you want to perform this action?";
         if (op === "revert")
-            return "Reverts the failover on the DR array (setrcopygroup reverse -local -current). This DISCARDS any data written to the DR volumes since the failover and returns to the original Primary. This cannot be undone.";
+            return "Performing this operation will revert the failover on the secondary virtual volume set and restore the original primary as the active site. Any host IOs written to the secondary volumes after the failover will be permanently discarded and cannot be recovered. Ensure that no required data resides on the secondary volumes before proceeding. Do you want to perform this action?";
         if (op === "recover")
             return "Performing this operation on failover virtual volume set, will change matching primary virtual volume set on the replication partner system to secondary virtual volume set and then synchronizes. Do you want to perform this action?";
         if (op === "restore")
             return "Performing this operation will recover the replication after failover and bring back replication to natural direction. Do you want to perform this action?";
         if (op === "present")
-            return "Exports this group's volumes to the selected DR host (createvlun) so the recovery VMs can see them. Only the group's own volumes are exported.";
+            return "Performing this operation will export the replicated volumes of this group to the selected recovery host so that they become visible to the host. Only the volumes belonging to this group will be presented. Ensure that the volumes are presented to the correct host to avoid data access issues. Do you want to perform this action?";
         if (op === "unpresent")
-            return "Removes this group's volume exports from the DR host (removevlun). The volumes are no longer visible to the host.";
+            return "Performing this operation will remove the export of this group's replicated volumes from the recovery host, after which the volumes will no longer be visible to the host. Ensure that no host IOs are active on these volumes before proceeding to avoid data access disruption. Do you want to perform this action?";
         return `Runs ${op} and verifies the result.`;
     }
     function openModal(op) {

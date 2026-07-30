@@ -48,7 +48,9 @@ position:fixed;
 
 .logo{
 
-margin-bottom:50px;
+margin:4px 0 44px;
+
+padding-left:6px;
 
 }
 
@@ -1302,7 +1304,7 @@ body{
 .brand-name{display:flex;flex-direction:column;line-height:1.2;}
 .brand-name strong{color:var(--ink);font-weight:var(--hpe-fontWeight-bold);font-size:17px;}
 .brand-sub{color:var(--ink-dim);font-size:13px;white-space:nowrap;letter-spacing:.2px;}
-.hpe-logo{height:44px;width:auto;display:block;flex-shrink:0;background:var(--hpe-base-color-white-100);padding:var(--hpe-spacing-xsmall) var(--hpe-spacing-small);border-radius:var(--hpe-radius-xsmall);}
+.hpe-logo{height:56px;width:auto;display:block;flex-shrink:0;color:var(--ink);background:transparent;padding:0;}
 
 /* ===== All tab views: same seamless panel language as the dashboard ===== */
 #view-dashboard,

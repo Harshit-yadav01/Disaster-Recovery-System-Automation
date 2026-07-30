@@ -1650,3 +1650,9 @@ body.light{
   .flow-branch{grid-template-columns:1fr;}
   .flow-branch-or span{width:32px;height:32px;}
 }
+
+/* Enforce HPE Graphik on every text element (override previous monospace uses).
+   Font Awesome icons keep their own icon font via the .fa* selectors below. */
+.dr-group-name,.dr-step-cmd,.node-host,.node-name,.dr-console-head,
+.dr-console-body,.hist-time,.stat-host,.stat-vols td,.set-row b,
+.flow-body code,.pv-cmd{font-family:'HPE Graphik','Poppins',sans-serif;}

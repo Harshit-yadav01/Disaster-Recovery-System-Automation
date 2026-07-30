@@ -548,12 +548,8 @@
         const arrays = (drst && drst.arrays) || [];
         const grp = (drst && drst.group) || "Intern_Automation";
         const rows = arrays.map((a) => `<div class="set-row"><span>${a.role_label === "primary" ? "Primary array" : "DR array"}</span><b>${esc(a.host)}</b></div>`).join("") || "<p class='dr-loading'>Unavailable.</p>";
-        const providerLabel = health
-            ? (String(health.provider).toLowerCase() === "alletra" ? "HPE Alletra (WSAPI)" : esc(health.provider))
-            : "-";
         $("setConn").innerHTML = rows +
             `<div class="set-row"><span>Remote Copy group</span><b>${esc(grp)}</b></div>` +
-            `<div class="set-row"><span>Data provider</span><b>${providerLabel}</b></div>` +
             `<div class="set-row"><span>Service</span><b>${esc(health ? health.status : "-")}</b></div>`;
         $("setAccount").innerHTML = `<div class="set-row"><span>Signed in as</span><b>${esc(localStorage.getItem("drUser") || "admin")}</b></div>`;
         const dd = localStorage.getItem("drDryRunDefault");

@@ -92,9 +92,9 @@ a {
     width: auto;
     display: block;
     flex-shrink: 0;
-    background: var(--hpe-base-color-white-100);
-    padding: var(--hpe-spacing-4xsmall) var(--hpe-spacing-xsmall);
-    border-radius: var(--hpe-radius-xsmall);
+    color: var(--text);
+    background: transparent;
+    padding: 0;
 }
 
 /* ===================== LAYOUT ===================== */

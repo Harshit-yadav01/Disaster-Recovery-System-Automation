@@ -319,6 +319,13 @@
                 if (job.kind === "present" || job.kind === "unpresent") {
                     setTimeout(loadPresentedVolumes, 700);
                 }
+                if (job.kind === "present" && job.state === "succeeded" && !job.dry_run && window._drPushNotif) {
+                    window._drPushNotif(
+                        "Rescan the DR host",
+                        "Rescan the storage adapter on the DR host to see the presented volumes.",
+                        "ok"
+                    );
+                }
             }
         } catch (err) {
             jobRunning = false;
@@ -359,7 +366,7 @@
         if (op === "recover")
             return "Performing this operation on failover virtual volume set, will change matching primary virtual volume set on the replication partner system to secondary virtual volume set and then synchronizes. Do you want to perform this action?";
         if (op === "restore")
-            return "Performing this operation will recover the replication after failover and bring back replication to natural direction. Do you want to perform this action?";
+            return "Ensure that the group's volumes have been unpresented from the DR host before performing the restore. Performing this operation will recover the replication after failover and bring back replication to natural direction. Do you want to perform this action?";
         if (op === "present")
             return "Performing this operation will export the replicated volumes of this group to the selected recovery host so that they become visible to the host. Only the volumes belonging to this group will be presented. Ensure that the volumes are presented to the correct host to avoid data access issues. Do you want to perform this action?";
         if (op === "unpresent")

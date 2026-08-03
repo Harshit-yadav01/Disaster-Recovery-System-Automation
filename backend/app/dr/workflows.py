@@ -960,7 +960,9 @@ def revert_failover(
     if not _run_critical(settings, d_host, "reverse", reverse_cmd, results):
         return results
 
-    # The DR array relinquishes the Primary role as the reversal completes.
+    # The DR array relinquishes the Primary role as the reversal completes. This
+    # is informational only; do not gate the start on it (the DR array may be
+    # unreachable), otherwise the group is left stopped on the primary.
     ok, groups = _poll(
         settings, base_group,
         lambda gs: bool(gs.get(clean_d)) and not gs[clean_d].is_primary,
@@ -969,7 +971,7 @@ def revert_failover(
     results.append(StepResult(
         "verify revert", "showrcopy", ok, _g_detail(groups, d_host),
         snapshot=_snapshot(settings, groups)))
-    if not ok or not p_host:
+    if not p_host:
         return results
 
     # Start replication on the restored original primary so the group leaves the

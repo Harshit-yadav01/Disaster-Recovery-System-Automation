@@ -988,6 +988,8 @@ transform:translateY(-6px);
 .dr-btn.ghost{background:var(--surface-2);color:var(--ink);}
 .dr-btn:hover:not(:disabled){filter:brightness(1.12);}
 .dr-btn:disabled{opacity:.4;cursor:not-allowed;}
+.dr-btn.attn:not(:disabled){box-shadow:0 0 0 1px var(--glow-green,#01a982),0 0 0 4px rgba(1,169,130,.25);animation:drAttnPulse 1.6s ease-in-out infinite;}
+@keyframes drAttnPulse{0%,100%{box-shadow:0 0 0 1px var(--glow-green,#01a982),0 0 0 3px rgba(1,169,130,.18);}50%{box-shadow:0 0 0 1px var(--glow-green,#01a982),0 0 0 6px rgba(1,169,130,.30);}}
 .dr-job{margin-top:22px;background:var(--panel-deep);border:1px solid var(--line);border-radius:12px;padding:18px;}
 .dr-job-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
 .dr-job-state{padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;text-transform:capitalize;}

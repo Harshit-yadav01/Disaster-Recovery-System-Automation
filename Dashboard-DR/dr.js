@@ -28,6 +28,8 @@
     let monInterval = null;
     let monSyncChart = null;
     const monHistory = [];
+    // True while the selected DR host still has this group's volumes presented.
+    let hostHasExports = false;
 
     // Single container for the unified DR Operations panel. The backend allows
     // only one DR job at a time, so all three actions share one stages/status area.
@@ -153,6 +155,9 @@
 
     function setDropButtons(canF, canRevert, canR, canS, canPresent, canUnpresent) {
         const running = jobRunning;
+        // While the host still has volumes presented, keep Unpresent available
+        // regardless of replication state so it can always be cleared.
+        if (hostHasExports) canUnpresent = true;
         const map = { failover: canF, revert: canRevert, recover: canR, restore: canS, present: canPresent };
         [["btnFailover", canF], ["btnRevert", canRevert], ["btnRecover", canR], ["btnRestore", canS],
          ["btnPresent", canPresent], ["btnUnpresent", canUnpresent]].forEach(([id, on]) => {
@@ -612,7 +617,7 @@
         if (!box) return;
         const sel = $("presentHost");
         const host = sel ? sel.value : "";
-        if (!host) { box.innerHTML = ""; return; }
+        if (!host) { box.innerHTML = ""; highlightUnpresent(false); return; }
         box.innerHTML = `<div class="pv-loading"><i class="fa-solid fa-spinner fa-spin"></i> Checking exports on <b>${esc(host)}</b>&hellip;</div>`;
         try {
             const data = await window.api.get(
@@ -620,6 +625,7 @@
             const rows = (data && data.exports) || [];
             if (!rows.length) {
                 box.innerHTML = `<div class="pv-empty"><i class="fa-solid fa-circle-info"></i> No volumes are currently presented to <b>${esc(host)}</b>.</div>`;
+                highlightUnpresent(false);
                 return;
             }
             const body = rows.map((v) =>
@@ -629,14 +635,26 @@
             ).join("");
             box.innerHTML =
                 `<div class="pv-title"><i class="fa-solid fa-circle-check"></i> ` +
-                `${rows.length} volume(s) presented to <b>${esc(host)}</b> ` +
-                `<span class="pv-cmd">showvlun -t -host ${esc(host)}</span></div>` +
+                `${rows.length} volume(s) presented to <b>${esc(host)}</b></div>` +
                 `<table class="pv-table"><thead><tr><th>LUN</th><th>Volume</th><th>Host</th><th>Type</th></tr></thead>` +
                 `<tbody>${body}</tbody></table>`;
+            highlightUnpresent(true);
         } catch (err) {
             box.innerHTML = `<div class="pv-empty warn"><i class="fa-solid fa-triangle-exclamation"></i> Could not read exports: ${esc(err && err.message ? err.message : String(err))}</div>`;
         }
     }
+
+    // Keep the Unpresent button emphasised while the host still has volumes
+    // presented, so it stays visible until the exports are actually removed.
+    function highlightUnpresent(on) {
+        hostHasExports = !!on;
+        const b = $("btnUnpresent");
+        if (b) {
+            b.classList.toggle("attn", !!on);
+            if (on && !jobRunning) b.disabled = false;
+        }
+    }
+
 
     // ---- Tab navigation ----------------------------------------------------
     const VIEW_FOR = {

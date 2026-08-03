@@ -136,7 +136,7 @@ configured primary array.
 | POST   | `/api/dr/failover`        | bearer | Stop on primary, promote DR group (background job) |
 | POST   | `/api/dr/failback`        | bearer | Full three-phase failback (background job)         |
 | POST   | `/api/dr/recover`         | bearer | Phase 1 of failback: `setrcopygroup recover`       |
-| POST   | `/api/dr/restore`         | bearer | Phase 3 of failback: `setrcopygroup reverse` on DR, then `startrcopygroup` on primary |
+| POST   | `/api/dr/restore`         | bearer | Phase 3 of failback: `setrcopygroup restore`       |
 | POST   | `/api/dr/revert`          | bearer | Discard DR writes, reverse failover                |
 | POST   | `/api/dr/present`         | bearer | Export DR volumes to DR host after failover        |
 | POST   | `/api/dr/unpresent`       | bearer | Remove DR volume exports                           |

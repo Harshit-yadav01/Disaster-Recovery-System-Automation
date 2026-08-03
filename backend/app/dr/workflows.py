@@ -333,10 +333,10 @@ def run_link_op(
 # role transitions on the relevant array(s).
 #
 #   FAILOVER : stop on primary  ->  setrcopygroup failover -f -t <t> <dr_group>
-#   FAILBACK : setrcopygroup recover -f -t <t> <dr_group>   (on the DR array)
-#              syncrcopy <dr_group>  (wait Synced)           (on the DR array)
-#              setrcopygroup reverse -f -local -current <dr_group>  (on the DR array)
-#              startrcopygroup <dr_group>  (on the restored primary, resume sync)
+#   FAILBACK : (all on the DR array that took over)
+#              setrcopygroup recover -f -t <t> <dr_group>
+#              syncrcopy <dr_group>  (wait Synced)
+#              setrcopygroup restore -f -t <t> <dr_group>  (wait natural roles)
 # --------------------------------------------------------------------------- #
 def _primary_host(settings: Settings) -> str:
     return settings.alletra_primary_base_url or settings.alletra_base_url
@@ -578,8 +578,7 @@ def failback(
 
     recover_cmd = f"setrcopygroup recover -f -t {d.target} {d.name}"
     sync_cmd = f"syncrcopy {d.name}"
-    restore_cmd = f"setrcopygroup reverse -f -local -current {d.name}"
-    start_cmd = f"startrcopygroup {d.name}"
+    restore_cmd = f"setrcopygroup restore -f -t {d.target} {d.name}"
 
     results.append(
         StepResult(
@@ -601,8 +600,7 @@ def failback(
                 f"execution would be BLOCKED: {precond_msg}"))
         results.append(StepResult("recover", recover_cmd, True, "DRY-RUN: not executed"))
         results.append(StepResult("sync", sync_cmd, True, "DRY-RUN: not executed"))
-        results.append(StepResult("reverse", restore_cmd, True, "DRY-RUN: not executed"))
-        results.append(StepResult("start", start_cmd, True, "DRY-RUN: not executed"))
+        results.append(StepResult("restore", restore_cmd, True, "DRY-RUN: not executed"))
         return results
 
     if not precond_ok:
@@ -652,11 +650,8 @@ def failback(
     if not ok:
         return results
 
-    # 3) Restore: hand the primary role back on the DR array, then resume
-    # replication on the restored original primary.
-    if not _run_critical(settings, d_host, "reverse", restore_cmd, results):
-        return results
-    if not _run_critical(settings, p_host, "start", start_cmd, results):
+    # 3) Restore: return to natural direction (primary R/W, DR read-only).
+    if not _run_critical(settings, d_host, "restore", restore_cmd, results):
         return results
     ok, groups = _poll(
         settings, base_group,
@@ -680,8 +675,7 @@ def failback(
 #
 #   recover : setrcopygroup recover -f -t <t> <dr_group>  (reverse replication)
 #             syncrcopy <dr_group>  (wait until Synced)      -> "Reverse Sync"
-#   restore : setrcopygroup reverse -f -local -current <dr_group>  (on DR site)
-#             startrcopygroup <dr_group>  (on the restored primary, resume sync)
+#   restore : setrcopygroup restore -f -t <t> <dr_group>   (natural direction)
 #
 # ``restore`` may only run after ``recover`` has left the DR group Primary and
 # fully Synced; the precondition below enforces that.
@@ -802,12 +796,10 @@ def restore(
     """Restore (failback step 2): return the group to its natural direction.
 
     Precondition: the reverse sync (``recover``) has completed, so the DR array
-    holds the group as Primary and is fully Synced. Runs ``setrcopygroup reverse
-    -local -current`` on the DR array to hand the primary role back, then
-    ``startrcopygroup`` on the original primary to resume replication, and waits
-    until the original Primary is Primary again (R/W) and the DR array is back to
-    Secondary (Read-Only). ``sink`` lets a background job observe steps live as
-    they are appended.
+    holds the group as Primary and is fully Synced. Runs ``setrcopygroup
+    restore`` on the DR array and waits until the original Primary is Primary
+    again (R/W) and the DR array is back to Secondary (Read-Only). ``sink`` lets
+    a background job observe steps live as they are appended.
     """
     results: list[StepResult] = sink if sink is not None else []
     p_host = _primary_host(settings)
@@ -831,8 +823,7 @@ def restore(
         )
     )
 
-    restore_cmd = f"setrcopygroup reverse -f -local -current {d.name}"
-    start_cmd = f"startrcopygroup {d.name}"
+    restore_cmd = f"setrcopygroup restore -f -t {d.target} {d.name}"
 
     results.append(
         StepResult(
@@ -840,9 +831,8 @@ def restore(
             command="",
             ok=True,
             detail=(
-                f"on DR {clean_d} '{d.name}': reverse -local -current; then "
-                f"startrcopygroup on {clean_p} to resume replication "
-                f"(natural direction: Primary {clean_p} R/W, DR Read-Only)"
+                f"on DR {clean_d} '{d.name}' (-t {d.target}): restore; "
+                f"return to natural direction (Primary {clean_p} R/W, DR Read-Only)"
             ),
             snapshot=_snapshot(settings, groups),
         )
@@ -853,8 +843,7 @@ def restore(
             results.append(StepResult(
                 "precondition", "", False,
                 f"execution would be BLOCKED: {precond_msg}"))
-        results.append(StepResult("reverse", restore_cmd, True, "DRY-RUN: not executed"))
-        results.append(StepResult("start", start_cmd, True, "DRY-RUN: not executed"))
+        results.append(StepResult("restore", restore_cmd, True, "DRY-RUN: not executed"))
         return results
 
     if not precond_ok:
@@ -862,27 +851,15 @@ def restore(
             "Restore precondition not met: " + precond_msg + ". Aborting."
         )
 
-    # 1) Reverse + discard locally on the DR array to hand the primary role back.
-    if not _run_critical(settings, d_host, "reverse", restore_cmd, results):
+    # Restore: return to natural direction (primary R/W, DR read-only).
+    if not _run_critical(settings, d_host, "restore", restore_cmd, results):
         return results
-    # 2) Start replication on the restored original primary to resume sync. The
-    # primary can need a moment after the -local reverse before it accepts the
-    # start, so retry a transient error instead of aborting (which would leave
-    # the group stopped).
-    ok, out = _exec_on(settings, p_host, start_cmd)
-    deadline = time.time() + timeout
-    while (not ok or _looks_like_error(out)) and time.time() < deadline:
-        time.sleep(poll_interval)
-        ok, out = _exec_on(settings, p_host, start_cmd)
-    if not ok or _looks_like_error(out):
-        results.append(StepResult("start", start_cmd, False,
-                                  f"could not start replication: {out}"))
-        return results
-    results.append(StepResult("start", start_cmd, True, out or "replication started"))
-    # Wait until the group is Synced again (startrcopygroup resumes replication).
     ok, groups = _poll(
         settings, base_group,
-        lambda gs: bool(gs.get(clean_p)) and gs[clean_p].all_synced(),
+        lambda gs: (
+            bool(gs.get(clean_p)) and gs[clean_p].is_primary
+            and bool(gs.get(clean_d)) and gs[clean_d].is_secondary
+        ),
         timeout, poll_interval,
     )
     detail = f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}"

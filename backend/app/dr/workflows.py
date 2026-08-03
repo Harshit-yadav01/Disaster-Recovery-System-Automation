@@ -865,15 +865,30 @@ def restore(
     # 1) Reverse locally on the DR array to hand the primary role back.
     if not _run_critical(settings, d_host, "reverse", restore_cmd, results):
         return results
-    # 2) Start replication on the restored original primary to resume sync.
-    if not _run_critical(settings, p_host, "start", start_cmd, results):
-        return results
+    # Wait for the original primary to reclaim the primary role before starting;
+    # otherwise startrcopygroup races the role flip, errors, and the group is
+    # left stopped.
     ok, groups = _poll(
         settings, base_group,
         lambda gs: (
             bool(gs.get(clean_p)) and gs[clean_p].is_primary
             and bool(gs.get(clean_d)) and gs[clean_d].is_secondary
         ),
+        timeout, poll_interval,
+    )
+    results.append(StepResult(
+        "verify reverse", "showrcopy", ok,
+        f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}",
+        snapshot=_snapshot(settings, groups)))
+    if not ok:
+        return results
+    # 2) Start replication on the restored original primary to resume sync.
+    if not _run_critical(settings, p_host, "start", start_cmd, results):
+        return results
+    # Wait until the group is Synced again (startrcopygroup resumes replication).
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: bool(gs.get(clean_p)) and gs[clean_p].all_synced(),
         timeout, poll_interval,
     )
     detail = f"{_g_detail(groups, p_host)} | {_g_detail(groups, d_host)}"

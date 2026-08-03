@@ -925,7 +925,9 @@ def revert_failover(
     )
 
     reverse_cmd = f"setrcopygroup reverse -f -local -current {d.name}"
-    start_cmd = f"startrcopygroup {d.name}"
+    # startrcopygroup runs on the primary, where the group uses the base name
+    # (no .r<sysID> suffix); d.name is the DR-side suffixed name.
+    start_cmd = f"startrcopygroup {base_group}"
 
     results.append(
         StepResult(

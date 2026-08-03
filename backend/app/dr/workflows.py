@@ -948,6 +948,7 @@ def revert_failover(
     )
 
     reverse_cmd = f"setrcopygroup reverse -f -local -current {d.name}"
+    start_cmd = f"startrcopygroup {d.name}"
 
     results.append(
         StepResult(
@@ -969,6 +970,7 @@ def revert_failover(
                 "precondition", "", False,
                 f"execution would be BLOCKED: {precond_msg}"))
         results.append(StepResult("reverse", reverse_cmd, True, "DRY-RUN: not executed"))
+        results.append(StepResult("start", start_cmd, True, "DRY-RUN: not executed"))
         return results
 
     if not precond_ok:
@@ -989,6 +991,31 @@ def revert_failover(
     )
     results.append(StepResult(
         "verify revert", "showrcopy", ok, _g_detail(groups, d_host),
+        snapshot=_snapshot(settings, groups)))
+    if not ok or not p_host:
+        return results
+
+    # Start replication on the restored original primary so the group leaves the
+    # stopped state and resumes syncing. The primary can need a moment after the
+    # -local reverse before it accepts the start, so retry a transient error
+    # instead of leaving the group stopped.
+    ok, out = _exec_on(settings, p_host, start_cmd)
+    deadline = time.time() + timeout
+    while (not ok or _looks_like_error(out)) and time.time() < deadline:
+        time.sleep(poll_interval)
+        ok, out = _exec_on(settings, p_host, start_cmd)
+    if not ok or _looks_like_error(out):
+        results.append(StepResult("start", start_cmd, False,
+                                  f"could not start replication: {out}"))
+        return results
+    results.append(StepResult("start", start_cmd, True, out or "replication started"))
+    ok, groups = _poll(
+        settings, base_group,
+        lambda gs: bool(gs.get(clean_p)) and gs[clean_p].all_synced(),
+        timeout, poll_interval,
+    )
+    results.append(StepResult(
+        "verify sync", "showrcopy", ok, _g_detail(groups, p_host),
         snapshot=_snapshot(settings, groups)))
     return results
 

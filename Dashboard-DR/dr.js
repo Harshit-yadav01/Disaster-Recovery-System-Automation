@@ -291,37 +291,44 @@
     }
 
     // ---- RC group selector -------------------------------------------------
+    // Selector ids in every view that lets the operator pick the active group.
+    const GROUP_SELECTS = ["drGroup", "drGroupRep"];
     function updateGroupLabel() {
         const el = $("dropGroupName");
         if (el) el.textContent = selectedGroup;
     }
+    function fillGroupSelect(id, groups) {
+        const sel = $(id);
+        if (!sel) return;
+        sel.innerHTML = (groups.length ? groups : [selectedGroup])
+            .map((g) => `<option value="${esc(g)}"${g === selectedGroup ? " selected" : ""}>${esc(g)}</option>`)
+            .join("");
+    }
     async function loadGroups() {
-        const sel = $("drGroup");
+        let groups = [];
         try {
             const data = await window.api.get("/dr/groups");
-            const groups = (data && data.groups) || [];
+            groups = (data && data.groups) || [];
             if (groups.length && !groups.includes(selectedGroup)) {
                 selectedGroup = groups.includes(DEFAULT_GROUP) ? DEFAULT_GROUP : groups[0];
                 selectedBranch = localStorage.getItem(branchKey()) || null;
             }
-            if (sel) {
-                sel.innerHTML = (groups.length ? groups : [selectedGroup])
-                    .map((g) => `<option value="${esc(g)}"${g === selectedGroup ? " selected" : ""}>${esc(g)}</option>`)
-                    .join("");
-            }
         } catch (err) {
-            if (sel) sel.innerHTML = `<option value="${esc(selectedGroup)}" selected>${esc(selectedGroup)}</option>`;
+            groups = [];
         }
+        GROUP_SELECTS.forEach((id) => fillGroupSelect(id, groups));
         localStorage.setItem("drSelectedGroup", selectedGroup);
         updateGroupLabel();
     }
     // Switch the active group: reload its own committed path + exports, then
-    // re-drive the flow from that group's live state.
+    // re-drive the flow from that group's live state. Keeps every view's
+    // selector in sync so the choice is shared across tabs.
     function onGroupChange(name) {
         selectedGroup = name || DEFAULT_GROUP;
         localStorage.setItem("drSelectedGroup", selectedGroup);
         selectedBranch = localStorage.getItem(branchKey()) || null;
         hostHasExports = false;
+        GROUP_SELECTS.forEach((id) => { const s = $(id); if (s && s.value !== selectedGroup) s.value = selectedGroup; });
         updateGroupLabel();
         loadStatus();
         loadPresentedVolumes();
@@ -786,7 +793,7 @@
         else if (name === "reports") { loadReports(); }
         else if (name === "settings") { loadSettings(); }
         else if (name === "droperations") { loadGroups().then(loadStatus); loadHosts().then(loadPresentedVolumes); }
-        else if (name === "replication") { loadStatus(); }
+        else if (name === "replication") { loadGroups().then(loadStatus); }
     }
 
     function init() {
@@ -817,6 +824,7 @@
         const cpb = $("btnChangePathB"); if (cpb) cpb.addEventListener("click", () => selectBranch(null));
         const ph = $("presentHost"); if (ph) ph.addEventListener("change", loadPresentedVolumes);
         const gsel = $("drGroup"); if (gsel) gsel.addEventListener("change", () => onGroupChange(gsel.value));
+        const gselR = $("drGroupRep"); if (gselR) gselR.addEventListener("change", () => onGroupChange(gselR.value));
         const rr = $("repRefresh"); if (rr) rr.addEventListener("click", loadStatus);
         const dor = $("dropRefresh"); if (dor) dor.addEventListener("click", loadStatus);
         const mr = $("monRefresh"); if (mr) mr.addEventListener("click", loadMonitoring);

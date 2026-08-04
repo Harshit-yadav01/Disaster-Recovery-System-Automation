@@ -269,6 +269,9 @@ Disaster Recovery Readiness============================ -->
 <div class="view" id="view-replication">
 <div class="section">
 <div class="section-header"><h2>Replication</h2><button class="dr-refresh" id="repRefresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button></div>
+<label class="drop-group">Remote Copy group:
+<select id="drGroupRep"><option value="">Loading groups&hellip;</option></select>
+</label>
 <div class="rep-banner" id="repBanner"><i class="fa-solid fa-circle-notch fa-spin"></i> Checking replication&hellip;</div>
 <div class="dr-status-grid" id="repStatus"></div>
 </div>
@@ -488,7 +491,7 @@ Disaster Recovery Readiness============================ -->
 <script src="config.js"></script>
 <script src="api.js?v=3"></script>
 <script src="script.js?v=realdata5"></script>
-<script src="dr.js?v=group1"></script>
+<script src="dr.js?v=group2"></script>
 </body>
 
 </html>

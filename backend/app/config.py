@@ -45,7 +45,9 @@ class Settings(BaseSettings):
     # Optional path to the array's self-signed certificate (PEM). When set, TLS
     # is verified against this cert instead of being disabled (more secure).
     alletra_ca_cert: str = ""
-    alletra_timeout: int = 15
+    # Read timeout (seconds) for WSAPI calls. The array can be slow to answer
+    # the login/system requests; too low a value trips ReadTimeout.
+    alletra_timeout: int = 45
     # SSH port for the CLI-based DR automation (read/verify + failover/failback).
     # Reuses ALLETRA_USERNAME / ALLETRA_PASSWORD for the SSH login.
     alletra_ssh_port: int = 22

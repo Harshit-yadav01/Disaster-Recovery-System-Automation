@@ -166,8 +166,11 @@ class AlletraProvider(StorageProvider):
             # must be reached directly. Without this, httpx would honor the
             # jumpbox's HTTP(S)_PROXY env vars and route the internal IP through
             # the corporate proxy, which cannot reach it (ConnectTimeout).
+            # Short connect timeout (fail fast if 443 is closed) but a generous
+            # read timeout, since the array can be slow to answer WSAPI calls.
+            timeout = httpx.Timeout(cfg.timeout, connect=10.0)
             async with httpx.AsyncClient(
-                base_url=base, verify=verify, timeout=cfg.timeout, trust_env=False
+                base_url=base, verify=verify, timeout=timeout, trust_env=False
             ) as client:
                 key = await self._login(client, cfg)
                 headers = {

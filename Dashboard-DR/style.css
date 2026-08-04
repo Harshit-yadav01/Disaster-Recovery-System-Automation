@@ -1613,6 +1613,9 @@ body.light{
 
 .drop-dry{margin-bottom:20px;}
 
+.drop-group{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-dim);margin-bottom:16px;}
+.drop-group select{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:14px;min-width:220px;}
+
 .dr-flow{display:flex;flex-direction:column;gap:0;margin-bottom:10px;}
 .flow-step{display:flex;gap:18px;align-items:flex-start;background:var(--surface-grad,var(--panel-deep));border:1px solid var(--line);border-radius:14px;padding:20px 22px;opacity:.6;transition:border-color .25s, box-shadow .25s, opacity .25s;}
 .flow-step.ready{opacity:1;border-color:var(--glow-green);box-shadow:0 0 0 1px var(--glow-green),0 8px 24px rgba(1,169,130,.12);}

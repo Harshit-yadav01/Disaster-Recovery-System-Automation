@@ -32,9 +32,16 @@
     let hostHasExports = false;
     // Latest DR flow state name (normal | failed-over | reverse-synced | ...).
     let currentDrState = null;
+    // Which Remote Copy group the DR Operations flow acts on. All ops, status,
+    // and metrics are scoped to this group (chosen in the DR Operations view).
+    const DEFAULT_GROUP = "Intern_Automation";
+    let selectedGroup = localStorage.getItem("drSelectedGroup") || DEFAULT_GROUP;
+    // Recovery path is committed per group, so switching groups keeps each one's
+    // own progress. Persisted under a group-scoped key.
+    const branchKey = () => `drSelectedBranch:${selectedGroup}`;
     // Recovery path the operator committed to after Present to Host:
     // null (not chosen) | "revert" | "failback". Persisted so a reload keeps it.
-    let selectedBranch = localStorage.getItem("drSelectedBranch") || null;
+    let selectedBranch = localStorage.getItem(branchKey()) || null;
 
     // Single container for the unified DR Operations panel. The backend allows
     // only one DR job at a time, so all three actions share one stages/status area.
@@ -181,7 +188,7 @@
         // means no failover is in progress, so clear any committed path.
         if (st === "reverse-synced") selectedBranch = "failback";
         else if (st !== "failed-over") selectedBranch = null;
-        localStorage.setItem("drSelectedBranch", selectedBranch || "");
+        localStorage.setItem(branchKey(), selectedBranch || "");
 
         // Section visibility
         setEl("branchChooser", st === "failed-over" && exp && !selectedBranch);
@@ -216,7 +223,7 @@
     // Commit to (or clear) a recovery path, then re-drive the flow.
     function selectBranch(branch) {
         selectedBranch = branch;
-        localStorage.setItem("drSelectedBranch", branch || "");
+        localStorage.setItem(branchKey(), branch || "");
         applyFlowState();
     }
 
@@ -283,9 +290,46 @@
         applyFlowState();
     }
 
+    // ---- RC group selector -------------------------------------------------
+    function updateGroupLabel() {
+        const el = $("dropGroupName");
+        if (el) el.textContent = selectedGroup;
+    }
+    async function loadGroups() {
+        const sel = $("drGroup");
+        try {
+            const data = await window.api.get("/dr/groups");
+            const groups = (data && data.groups) || [];
+            if (groups.length && !groups.includes(selectedGroup)) {
+                selectedGroup = groups.includes(DEFAULT_GROUP) ? DEFAULT_GROUP : groups[0];
+                selectedBranch = localStorage.getItem(branchKey()) || null;
+            }
+            if (sel) {
+                sel.innerHTML = (groups.length ? groups : [selectedGroup])
+                    .map((g) => `<option value="${esc(g)}"${g === selectedGroup ? " selected" : ""}>${esc(g)}</option>`)
+                    .join("");
+            }
+        } catch (err) {
+            if (sel) sel.innerHTML = `<option value="${esc(selectedGroup)}" selected>${esc(selectedGroup)}</option>`;
+        }
+        localStorage.setItem("drSelectedGroup", selectedGroup);
+        updateGroupLabel();
+    }
+    // Switch the active group: reload its own committed path + exports, then
+    // re-drive the flow from that group's live state.
+    function onGroupChange(name) {
+        selectedGroup = name || DEFAULT_GROUP;
+        localStorage.setItem("drSelectedGroup", selectedGroup);
+        selectedBranch = localStorage.getItem(branchKey()) || null;
+        hostHasExports = false;
+        updateGroupLabel();
+        loadStatus();
+        loadPresentedVolumes();
+    }
+
     async function loadStatus() {
         try {
-            latestStatus = await window.api.get("/dr/status");
+            latestStatus = await window.api.get(`/dr/status?group=${encodeURIComponent(selectedGroup)}`);
             const cards = cardsFromStatus(latestStatus);
             renderBanner(cards);
             ["repStatus", "dropStatus"].forEach((id) => renderStatusInto(id, cards));
@@ -421,7 +465,7 @@
             $(cont.stages).innerHTML =
                 `<div class="stage active"><div class="stage-num"><i class="fa-solid fa-spinner fa-spin"></i></div>
                  <div class="stage-body"><h4>Starting ${esc(label)}${dryRun ? " (preview)" : ""}&hellip;</h4></div></div>`;
-            const body = { dry_run: dryRun };
+            const body = { dry_run: dryRun, group: selectedGroup };
             if (op === "present" || op === "unpresent") {
                 const hostSel = $("presentHost");
                 body.host = hostSel ? hostSel.value : "";
@@ -492,7 +536,7 @@
     }
     async function loadMonitoring() {
         let dash = null, drst = null, jobs = { jobs: [] };
-        try { drst = await window.api.get("/dr/status"); } catch (e) {}
+        try { drst = await window.api.get(`/dr/status?group=${encodeURIComponent(selectedGroup)}`); } catch (e) {}
         try { dash = await window.api.get("/dashboard"); } catch (e) {}
         try { jobs = await window.api.get("/dr/jobs?limit=6"); } catch (e) {}
         renderMonTiles(dash, drst);
@@ -595,7 +639,7 @@
         catch (e) { $("rptTable").innerHTML = `<p class="dr-error">${esc(e.message)}</p>`; return; }
         // Recovery objectives (RTO / RPO) - fetched separately; non-fatal.
         let metrics = null;
-        try { metrics = await window.api.get("/dr/metrics"); } catch (e) { metrics = null; }
+        try { metrics = await window.api.get(`/dr/metrics?group=${encodeURIComponent(selectedGroup)}`); } catch (e) { metrics = null; }
         const fo = reportJobs.filter((j) => j.kind === "failover").length;
         const fb = reportJobs.filter((j) => j.kind === "failback").length;
         const succ = reportJobs.filter((j) => j.state === "succeeded").length;
@@ -630,10 +674,10 @@
     // ---- Settings ----------------------------------------------------------
     async function loadSettings() {
         let drst = null, health = null;
-        try { drst = await window.api.get("/dr/status"); } catch (e) {}
+        try { drst = await window.api.get(`/dr/status?group=${encodeURIComponent(selectedGroup)}`); } catch (e) {}
         try { health = await window.api.get("/health"); } catch (e) {}
         const arrays = (drst && drst.arrays) || [];
-        const grp = (drst && drst.group) || "Intern_Automation";
+        const grp = (drst && drst.group) || selectedGroup;
         const rows = arrays.map((a) => `<div class="set-row"><span>${a.role_label === "primary" ? "Primary array" : "DR array"}</span><b>${esc(a.host)}</b></div>`).join("") || "<p class='dr-loading'>Unavailable.</p>";
         $("setConn").innerHTML = rows +
             `<div class="set-row"><span>Remote Copy group</span><b>${esc(grp)}</b></div>` +
@@ -741,7 +785,7 @@
         if (name === "monitoring") { loadMonitoring(); monInterval = setInterval(loadMonitoring, 10000); }
         else if (name === "reports") { loadReports(); }
         else if (name === "settings") { loadSettings(); }
-        else if (name === "droperations") { loadStatus(); loadHosts().then(loadPresentedVolumes); }
+        else if (name === "droperations") { loadGroups().then(loadStatus); loadHosts().then(loadPresentedVolumes); }
         else if (name === "replication") { loadStatus(); }
     }
 
@@ -772,6 +816,7 @@
         const cpa = $("btnChangePathA"); if (cpa) cpa.addEventListener("click", () => selectBranch(null));
         const cpb = $("btnChangePathB"); if (cpb) cpb.addEventListener("click", () => selectBranch(null));
         const ph = $("presentHost"); if (ph) ph.addEventListener("change", loadPresentedVolumes);
+        const gsel = $("drGroup"); if (gsel) gsel.addEventListener("change", () => onGroupChange(gsel.value));
         const rr = $("repRefresh"); if (rr) rr.addEventListener("click", loadStatus);
         const dor = $("dropRefresh"); if (dor) dor.addEventListener("click", loadStatus);
         const mr = $("monRefresh"); if (mr) mr.addEventListener("click", loadMonitoring);
@@ -797,7 +842,7 @@
         $("pathCancel").addEventListener("click", closePathModal);
         $("pathConfirm").addEventListener("click", () => { const b = pendingBranch; closePathModal(); selectBranch(b); });
 
-        loadStatus();
+        loadGroups().then(loadStatus);
         statusTimer = setInterval(() => { if (!jobRunning) loadStatus(); }, 30000);
 
         // ---- Bell notifications -----------------------------------------

@@ -133,6 +133,27 @@ def resolve_primary(
     )
 
 
+def list_groups(settings: Settings) -> list[str]:
+    """Return the base names of every Remote Copy group on the primary array.
+
+    Read-only SSH (``showrcopy``). Names are the primary-side base names (no
+    ``.r<sysID>`` DR suffix), which is what the DR operations take as ``group``.
+    """
+    host = _primary_host(settings)
+    if not host:
+        raise DrError("No primary array configured (set ALLETRA_PRIMARY_BASE_URL).")
+    try:
+        with ArraySSH(_ssh_cfg(settings, host, "primary")) as arr:
+            text = arr.run("showrcopy")
+    except SSHError as exc:
+        raise DrError(str(exc)) from exc
+    names: list[str] = []
+    for g in parse_showrcopy(text).groups:
+        if g.name and g.name not in names:
+            names.append(g.name)
+    return names
+
+
 # --------------------------------------------------------------------------- #
 # Present-to-host: read-only discovery (showhost / showvlun)
 # --------------------------------------------------------------------------- #

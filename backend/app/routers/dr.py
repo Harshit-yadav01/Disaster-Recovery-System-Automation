@@ -25,6 +25,7 @@ from ..dr.workflows import (
     DrError,
     gather_status,
     list_exports,
+    list_groups,
     list_hosts,
     primary_lun_map,
 )
@@ -79,13 +80,25 @@ def _serialize_status(views) -> list[dict]:
     return out
 
 
+@router.get("/groups")
+def dr_groups(
+    current_user: str = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """List the Remote Copy groups available for DR operations (read-only SSH)."""
+    try:
+        names = list_groups(settings)
+    except DrError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+    return {"groups": names, "default": DEFAULT_GROUP}
+
+
 @router.get("/status")
 def dr_status(
     group: str = DEFAULT_GROUP,
     current_user: str = Depends(get_current_user),
     settings: Settings = Depends(get_settings),
 ) -> dict:
-    """Live Remote Copy status for the group on both arrays (read-only SSH)."""
     try:
         views = gather_status(settings, group)
     except DrError as exc:

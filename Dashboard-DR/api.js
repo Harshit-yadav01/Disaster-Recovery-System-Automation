@@ -58,7 +58,11 @@
                 throw new Error("Session expired");
             }
             if (!res.ok) {
-                throw new Error(`Request failed (${res.status})`);
+                // Surface the server's error detail (e.g. why WSAPI is
+                // unavailable) instead of a bare status code.
+                let detail = "";
+                try { detail = (await res.json()).detail || ""; } catch (_) {}
+                throw new Error(`Request failed (${res.status})${detail ? ": " + detail : ""}`);
             }
             return res.json();
         },

@@ -32,6 +32,9 @@
     let hostHasExports = false;
     // Latest DR flow state name (normal | failed-over | reverse-synced | ...).
     let currentDrState = null;
+    // Recovery path the operator committed to after Present to Host:
+    // null (not chosen) | "revert" | "failback". Persisted so a reload keeps it.
+    let selectedBranch = localStorage.getItem("drSelectedBranch") || null;
 
     // Single container for the unified DR Operations panel. The backend allows
     // only one DR job at a time, so all three actions share one stages/status area.
@@ -155,19 +158,66 @@
         return { name, p, d, pg, dg };
     }
 
-    function setDropButtons(canF, canRevert, canR, canS, canPresent, canUnpresent) {
-        const running = jobRunning;
-        // While the host still has volumes presented, keep Unpresent available
-        // regardless of replication state so it can always be cleared.
-        if (hostHasExports) canUnpresent = true;
-        const map = { failover: canF, revert: canRevert, recover: canR, restore: canS, present: canPresent };
-        [["btnFailover", canF], ["btnRevert", canRevert], ["btnRecover", canR], ["btnRestore", canS],
-         ["btnPresent", canPresent], ["btnUnpresent", canUnpresent]].forEach(([id, on]) => {
-            const b = $(id); if (b) b.disabled = !on || running;
+    function setEl(id, show) { const e = $(id); if (e) e.hidden = !show; }
+    function setBtn(id, on) { const b = $(id); if (b) b.disabled = !on || jobRunning; }
+
+    // Disable every operation button (used while a job is running / on error).
+    function disableAllOps() {
+        ["btnFailover", "btnPresent", "btnUnpresentA", "btnRevert",
+         "btnRecover", "btnUnpresentB", "btnRestore"].forEach((id) => {
+            const b = $(id); if (b) b.disabled = true;
         });
-        document.querySelectorAll("#dropFlow .flow-step").forEach((el) => {
-            el.classList.toggle("ready", !!map[el.dataset.op] && !running);
+    }
+
+    // Drive the guided, no-backtrack flow from the live array state, whether
+    // the DR host still has exports, and the committed recovery path.
+    // Sequence: Failover -> Present -> [choose path] ->
+    //   revert:   Unpresent(A1) -> Revert(A2)
+    //   failback: Reverse Sync(B1) -> Unpresent(B2) -> Restore(B3)
+    function applyFlowState() {
+        const st = currentDrState;
+        const exp = hostHasExports;
+        // reverse-synced is only reachable via the failback path; normal/unknown
+        // means no failover is in progress, so clear any committed path.
+        if (st === "reverse-synced") selectedBranch = "failback";
+        else if (st !== "failed-over") selectedBranch = null;
+        localStorage.setItem("drSelectedBranch", selectedBranch || "");
+
+        // Section visibility
+        setEl("branchChooser", st === "failed-over" && exp && !selectedBranch);
+        setEl("pathRevert", selectedBranch === "revert");
+        setEl("pathFailback", selectedBranch === "failback");
+        // The path can only be changed before its first step has run (i.e. while
+        // still failed-over with exports present and nothing executed yet).
+        const preExec = st === "failed-over" && exp;
+        setEl("btnChangePathA", selectedBranch === "revert" && preExec);
+        setEl("btnChangePathB", selectedBranch === "failback" && preExec);
+
+        // Button enablement (each true for exactly one step at a time)
+        setBtn("btnFailover", st === "normal");
+        setBtn("btnPresent", st === "failed-over" && !exp && !selectedBranch);
+        setBtn("btnUnpresentA", selectedBranch === "revert" && st === "failed-over" && exp);
+        setBtn("btnRevert", selectedBranch === "revert" && st === "failed-over" && !exp);
+        setBtn("btnRecover", selectedBranch === "failback" && st === "failed-over");
+        setBtn("btnUnpresentB", selectedBranch === "failback" && st === "reverse-synced" && exp);
+        setBtn("btnRestore", selectedBranch === "failback" && st === "reverse-synced" && !exp);
+
+        // Highlight the current step; pulse whichever Unpresent is the live step.
+        document.querySelectorAll("#dropFlow .flow-step").forEach((step) => {
+            const btn = step.querySelector(".dr-btn");
+            const ready = !!(btn && !btn.disabled) && !jobRunning;
+            step.classList.toggle("ready", ready);
         });
+        ["btnUnpresentA", "btnUnpresentB"].forEach((id) => {
+            const b = $(id); if (b) b.classList.toggle("attn", !b.disabled);
+        });
+    }
+
+    // Commit to (or clear) a recovery path, then re-drive the flow.
+    function selectBranch(branch) {
+        selectedBranch = branch;
+        localStorage.setItem("drSelectedBranch", branch || "");
+        applyFlowState();
     }
 
     function updateDrOps(status) {
@@ -178,24 +228,22 @@
         const pHost = s.p ? esc(s.p.host) : "primary";
         const dHost = s.d ? esc(s.d.host) : "DR";
         let cls = "info", icon = "fa-circle-info", msg = "";
-        let canF = false, canRevert = false, canR = false, canS = false;
-        let canPresent = false, canUnpresent = false;
         switch (s.name) {
             case "normal": {
                 const synced = s.pg && s.pg.all_synced;
                 cls = "active"; icon = "fa-circle-check";
                 msg = `Replication is active &mdash; Primary <b>${pHost}</b> &rarr; DR <b>${dHost}</b>, ${synced ? "in sync" : "syncing"}. You can start a <b>Failover</b> (step 1).`;
-                canF = true; break;
+                break;
             }
             case "failed-over": {
                 cls = "active"; icon = "fa-circle-check";
-                msg = `Failed over &mdash; DR <b>${dHost}</b> is now Primary (R/W). <b>Present to Host</b> (1b) to expose the volumes to a DR ESXi host, then choose <b>Revert</b> (2a) to discard DR changes or <b>Reverse Sync</b> (2b) to keep them.`;
-                canRevert = true; canR = true; canPresent = true; break;
+                msg = `Failed over &mdash; DR <b>${dHost}</b> is now Primary (R/W). <b>Present to Host</b> (step 2) to expose the volumes to a DR ESXi host, then choose a recovery path.`;
+                break;
             }
             case "reverse-synced": {
                 cls = "active"; icon = "fa-circle-check";
-                msg = `Reverse sync complete &mdash; DR <b>${dHost}</b> changes are synced back to <b>${pHost}</b>. Run <b>Restore</b> (step 3) to return to normal.`;
-                canR = true; canS = true; break;
+                msg = `Reverse sync complete &mdash; DR <b>${dHost}</b> changes are synced back to <b>${pHost}</b>. <b>Unpresent</b> (B2) then <b>Restore</b> (B3) to return to normal.`;
+                break;
             }
             default: {
                 cls = "down"; icon = "fa-plug-circle-xmark";
@@ -204,7 +252,7 @@
         }
         banner.className = "dr-banner " + cls;
         banner.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
-        setDropButtons(canF, canRevert, canR, canS, canPresent, canUnpresent);
+        applyFlowState();
     }
 
     async function loadStatus() {
@@ -219,7 +267,7 @@
             if (b) { b.className = "rep-banner down"; b.innerHTML = `<i class="fa-solid fa-plug-circle-xmark"></i> Status unavailable: ${esc(err.message)}`; }
             const db = $("dropBanner");
             if (db) { db.className = "dr-banner down"; db.innerHTML = `<i class="fa-solid fa-plug-circle-xmark"></i> Array state unavailable: ${esc(err.message)}`; }
-            setDropButtons(false, false, false, false, false, false);
+            disableAllOps();
             ["repStatus", "dropStatus"].forEach((id) => {
                 const el = $(id); if (el) el.innerHTML = `<p class="dr-error">Status unavailable: ${esc(err.message)}</p>`;
             });
@@ -341,7 +389,7 @@
         const label = OP_LABEL[op] || op;
         try {
             jobRunning = true;
-            setDropButtons(false, false, false, false, false, false);
+            disableAllOps();
             $(cont.stages).innerHTML =
                 `<div class="stage active"><div class="stage-num"><i class="fa-solid fa-spinner fa-spin"></i></div>
                  <div class="stage-body"><h4>Starting ${esc(label)}${dryRun ? " (preview)" : ""}&hellip;</h4></div></div>`;
@@ -616,7 +664,7 @@
         if (!box) return;
         const sel = $("presentHost");
         const host = sel ? sel.value : "";
-        if (!host) { box.innerHTML = ""; highlightUnpresent(false); return; }
+        if (!host) { box.innerHTML = ""; setExports(false); return; }
         box.innerHTML = `<div class="pv-loading"><i class="fa-solid fa-spinner fa-spin"></i> Checking exports on <b>${esc(host)}</b>&hellip;</div>`;
         try {
             const data = await window.api.get(
@@ -624,7 +672,7 @@
             const rows = (data && data.exports) || [];
             if (!rows.length) {
                 box.innerHTML = `<div class="pv-empty"><i class="fa-solid fa-circle-info"></i> No volumes are currently presented to <b>${esc(host)}</b>.</div>`;
-                highlightUnpresent(false);
+                setExports(false);
                 return;
             }
             const body = rows.map((v) =>
@@ -637,24 +685,17 @@
                 `${rows.length} volume(s) presented to <b>${esc(host)}</b></div>` +
                 `<table class="pv-table"><thead><tr><th>LUN</th><th>Volume</th><th>Host</th><th>Type</th></tr></thead>` +
                 `<tbody>${body}</tbody></table>`;
-            highlightUnpresent(true);
+            setExports(true);
         } catch (err) {
             box.innerHTML = `<div class="pv-empty warn"><i class="fa-solid fa-triangle-exclamation"></i> Could not read exports: ${esc(err && err.message ? err.message : String(err))}</div>`;
         }
     }
 
-    // Keep the Unpresent button emphasised while the host still has volumes
-    // presented, so it stays visible until the exports are actually removed.
-    // The pulse only appears after a failover + present-to-host (post-failover
-    // states), not when a host happens to have exports during normal operation.
-    function highlightUnpresent(on) {
+    // Record whether the host still has this group's volumes presented, then
+    // re-drive the guided flow so the correct Unpresent step lights up.
+    function setExports(on) {
         hostHasExports = !!on;
-        const b = $("btnUnpresent");
-        if (!b) return;
-        const postFailover = currentDrState === "failed-over" || currentDrState === "reverse-synced";
-        b.classList.toggle("attn", !!on && postFailover);
-        // Unpresent is only interactable once volumes are actually presented.
-        if (!jobRunning) b.disabled = !on;
+        applyFlowState();
     }
 
 
@@ -696,7 +737,12 @@
         const brc = $("btnRecover"); if (brc) brc.addEventListener("click", () => onExec("recover", "dropDry"));
         const brs = $("btnRestore"); if (brs) brs.addEventListener("click", () => onExec("restore", "dropDry"));
         const bp = $("btnPresent"); if (bp) bp.addEventListener("click", () => onExec("present", "dropDry"));
-        const bu = $("btnUnpresent"); if (bu) bu.addEventListener("click", () => onExec("unpresent", "dropDry"));
+        const bua = $("btnUnpresentA"); if (bua) bua.addEventListener("click", () => onExec("unpresent", "dropDry"));
+        const bub = $("btnUnpresentB"); if (bub) bub.addEventListener("click", () => onExec("unpresent", "dropDry"));
+        const chr = $("btnChooseRevert"); if (chr) chr.addEventListener("click", () => selectBranch("revert"));
+        const chf = $("btnChooseFailback"); if (chf) chf.addEventListener("click", () => selectBranch("failback"));
+        const cpa = $("btnChangePathA"); if (cpa) cpa.addEventListener("click", () => selectBranch(null));
+        const cpb = $("btnChangePathB"); if (cpb) cpb.addEventListener("click", () => selectBranch(null));
         const ph = $("presentHost"); if (ph) ph.addEventListener("change", loadPresentedVolumes);
         const rr = $("repRefresh"); if (rr) rr.addEventListener("click", loadStatus);
         const dor = $("dropRefresh"); if (dor) dor.addEventListener("click", loadStatus);

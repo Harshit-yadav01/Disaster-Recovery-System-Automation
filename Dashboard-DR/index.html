@@ -8,7 +8,7 @@
 <title>HPE DR Automation</title>
 
 <link rel="stylesheet" href="fonts.css?v=1">
-<link rel="stylesheet" href="style.css?v=23">
+<link rel="stylesheet" href="style.css?v=24">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <link rel="stylesheet"
@@ -284,7 +284,7 @@ Disaster Recovery Readiness============================ -->
 
 <label class="dr-dryrun drop-dry"><input type="checkbox" id="dropDry" checked> <span>Dry-run (preview only)</span></label>
 
-<!-- Flow: state-driven actions in sequence -->
+<!-- Flow: state-driven guided steps with two selectable recovery paths -->
 <div class="dr-flow" id="dropFlow">
 
 <div class="flow-step" data-op="failover">
@@ -299,7 +299,7 @@ Disaster Recovery Readiness============================ -->
 <div class="flow-connector"></div>
 
 <div class="flow-step" data-op="present">
-<div class="flow-num">1b</div>
+<div class="flow-num">2</div>
 <div class="flow-body">
 <h4>Present to Host</h4>
 <p>Export the failed-over group's volumes to a DR ESXi host so the recovery VMs can be powered on. Only this group's own volumes are exported. Pick the host below (defaults to the configured target).</p>
@@ -308,7 +308,6 @@ Disaster Recovery Readiness============================ -->
 <select id="presentHost"><option value="">Loading hosts&hellip;</option></select>
 </label>
 <button class="dr-btn primary" id="btnPresent" disabled><i class="fa-solid fa-plug"></i> Present to Host</button>
-<button class="dr-btn ghost" id="btnUnpresent" disabled><i class="fa-solid fa-plug-circle-xmark"></i> Unpresent</button>
 </div>
 <div id="presentedVolumes" class="presented-volumes"></div>
 </div>
@@ -316,40 +315,83 @@ Disaster Recovery Readiness============================ -->
 
 <div class="flow-connector"></div>
 
-<div class="flow-fork">After a failover, choose one path</div>
+<!-- Path chooser: shown after Present to Host, before a path is picked -->
+<div class="flow-chooser" id="branchChooser" hidden>
+<div class="flow-fork">Choose a recovery path to continue</div>
+<div class="branch-cards">
+<div class="branch-card revert">
+<h4><i class="fa-solid fa-rotate-left"></i> Path to Revert Failover</h4>
+<p><b>Discards</b> the DR site's changes and returns to the original Primary. Steps: <b>Unpresent to Host &rarr; Revert Failover</b>. Choose this when the writes made on the DR site during the outage are <b>not</b> to be kept. This cannot be undone.</p>
+<button class="dr-btn danger" id="btnChooseRevert"><i class="fa-solid fa-hand-pointer"></i> Choose this path</button>
+</div>
+<div class="branch-card failback">
+<h4><i class="fa-solid fa-right-left"></i> Path to Normal Failback</h4>
+<p><b>Keeps</b> the DR site's changes and syncs them back to the original Primary. Steps: <b>Reverse Sync &rarr; Unpresent to Host &rarr; Restore</b>. Choose this when the DR writes made during the outage must be preserved.</p>
+<button class="dr-btn primary" id="btnChooseFailback"><i class="fa-solid fa-hand-pointer"></i> Choose this path</button>
+</div>
+</div>
+</div>
 
-<div class="flow-branch">
+<!-- Path A: Revert Failover -->
+<div class="flow-path" id="pathRevert" hidden>
+<div class="flow-path-head"><span class="flow-path-title"><i class="fa-solid fa-rotate-left"></i> Path to Revert Failover</span>
+<button class="flow-change" id="btnChangePathA" type="button" hidden><i class="fa-solid fa-arrow-left"></i> Change path</button></div>
 
-<div class="flow-step branch-opt" data-op="revert">
-<div class="flow-num">2a</div>
+<div class="flow-step" data-op="unpresentA">
+<div class="flow-num">A1</div>
+<div class="flow-body">
+<h4>Unpresent to Host</h4>
+<p>Remove this group's volume exports from the DR host. Do this before reverting so the host no longer sees the volumes.</p>
+<button class="dr-btn ghost" id="btnUnpresentA" disabled><i class="fa-solid fa-plug-circle-xmark"></i> Unpresent</button>
+</div>
+</div>
+
+<div class="flow-connector"></div>
+
+<div class="flow-step" data-op="revert">
+<div class="flow-num">A2</div>
 <div class="flow-body">
 <h4>Revert Failover</h4>
 <p><b>Discards</b> the DR site's changes and returns to the original Primary in one step (<code>setrcopygroup reverse -local -current</code>). Use when the DR writes made during the outage are <b>not</b> to be kept. This cannot be undone.</p>
 <button class="dr-btn danger" id="btnRevert" disabled><i class="fa-solid fa-rotate-left"></i> Revert Failover</button>
 </div>
 </div>
+</div>
 
-<div class="flow-branch-or"><span>OR</span></div>
+<!-- Path B: Normal Failback -->
+<div class="flow-path" id="pathFailback" hidden>
+<div class="flow-path-head"><span class="flow-path-title"><i class="fa-solid fa-right-left"></i> Path to Normal Failback</span>
+<button class="flow-change" id="btnChangePathB" type="button" hidden><i class="fa-solid fa-arrow-left"></i> Change path</button></div>
 
-<div class="flow-step branch-opt" data-op="recover">
-<div class="flow-num">2b</div>
+<div class="flow-step" data-op="recover">
+<div class="flow-num">B1</div>
 <div class="flow-body">
 <h4>Reverse Sync</h4>
-<p><b>Keeps</b> the DR site's changes: reverse replication and copy them back to the original Primary (<code>recover</code> &rarr; <code>sync</code>), waiting until every volume is synchronized. Then continue to Restore.</p>
+<p><b>Keeps</b> the DR site's changes: reverse replication and copy them back to the original Primary (<code>recover</code> &rarr; <code>sync</code>), waiting until every volume is synchronized.</p>
 <button class="dr-btn primary" id="btnRecover" disabled><i class="fa-solid fa-right-left"></i> Execute Reverse Sync</button>
 </div>
 </div>
 
+<div class="flow-connector"></div>
+
+<div class="flow-step" data-op="unpresentB">
+<div class="flow-num">B2</div>
+<div class="flow-body">
+<h4>Unpresent to Host</h4>
+<p>Remove this group's volume exports from the DR host now that the changes are synced back, before restoring the natural direction.</p>
+<button class="dr-btn ghost" id="btnUnpresentB" disabled><i class="fa-solid fa-plug-circle-xmark"></i> Unpresent</button>
+</div>
 </div>
 
 <div class="flow-connector"></div>
 
 <div class="flow-step" data-op="restore">
-<div class="flow-num">3</div>
+<div class="flow-num">B3</div>
 <div class="flow-body">
 <h4>Restore</h4>
-<p>Only after a Reverse Sync (2b). Hand control back: return to the natural direction with the Primary Read/Write (source) again and the DR array Read-Only (target).</p>
+<p>Hand control back: return to the natural direction with the Primary Read/Write (source) again and the DR array Read-Only (target).</p>
 <button class="dr-btn primary" id="btnRestore" disabled><i class="fa-solid fa-arrow-rotate-left"></i> Execute Restore</button>
+</div>
 </div>
 </div>
 
@@ -429,7 +471,7 @@ Disaster Recovery Readiness============================ -->
 <script src="config.js"></script>
 <script src="api.js"></script>
 <script src="script.js?v=realdata4"></script>
-<script src="dr.js?v=warn8"></script>
+<script src="dr.js?v=warn9"></script>
 </body>
 
 </html>

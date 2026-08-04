@@ -1639,18 +1639,36 @@ body.light{
 .pv-table td{color:var(--ink);}
 .pv-table tbody tr:hover{background:var(--surface-2);}
 
-/* Fork: two mutually-exclusive paths after a failover (Revert OR Reverse Sync) */
+/* Fork: choose one of two recovery paths after Present to Host */
 .flow-fork{font-size:12px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin:2px 0 12px;}
 .flow-branch{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:14px;}
 .flow-branch .branch-opt{margin:0;}
 .flow-branch-or{display:flex;align-items:center;justify-content:center;}
 .flow-branch-or span{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-muted);font-size:12px;font-weight:700;}
 
+/* Path chooser cards */
+.flow-chooser[hidden],.flow-path[hidden],.flow-change[hidden]{display:none;}
+.branch-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.branch-card{background:var(--surface-grad,var(--panel-deep));border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;}
+.branch-card.revert{border-top:3px solid var(--accent-red);}
+.branch-card.failback{border-top:3px solid var(--accent-green);}
+.branch-card h4{font-size:16px;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.branch-card p{font-size:13.5px;color:var(--ink-dim);line-height:1.6;margin-bottom:16px;flex:1;}
+.branch-card .dr-btn{align-self:flex-start;}
+
+/* Selected-path container */
+.flow-path{display:flex;flex-direction:column;gap:0;}
+.flow-path-head{display:flex;align-items:center;justify-content:space-between;margin:2px 0 12px;}
+.flow-path-title{font-size:13px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px;}
+.flow-change{background:none;border:1px solid var(--line);color:var(--ink-dim);border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;}
+.flow-change:hover{color:var(--ink);border-color:var(--ink-dim);}
+
 @media(max-width:640px){
   .flow-step{flex-direction:column;gap:12px;}
   .flow-connector{display:none;}
   .flow-branch{grid-template-columns:1fr;}
   .flow-branch-or span{width:32px;height:32px;}
+  .branch-cards{grid-template-columns:1fr;}
 }
 
 /* Enforce HPE Graphik on every text element (override previous monospace uses).

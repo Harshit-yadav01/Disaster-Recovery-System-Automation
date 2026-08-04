@@ -19,7 +19,7 @@ pwdToggle.addEventListener("keydown", (e) => {
 });
 
 // Sign in -> authenticate against the backend, store the JWT, then load the
-// dashboard (dashboard.html). Shows an inline error if credentials are rejected.
+// dashboard (index.html). Shows an inline error if credentials are rejected.
 const form = document.getElementById("loginForm");
 const errorEl = document.getElementById("loginError");
 const submitBtn = form.querySelector(".btn-signin");
@@ -52,7 +52,7 @@ form.addEventListener("submit", async (e) => {
 
     try {
         await window.api.login(username, password);
-        window.location.href = "dashboard.html";
+        window.location.href = "index.html";
     } catch (err) {
         showError(err.message || "Unable to sign in. Please try again.");
         submitBtn.disabled = false;

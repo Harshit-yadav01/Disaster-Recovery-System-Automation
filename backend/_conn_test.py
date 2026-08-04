@@ -2,13 +2,24 @@
 import asyncio
 import socket
 import ssl
+import time
+from urllib.parse import urlparse
 
 import httpx
 
 from app.config import get_settings
 
 s = get_settings()
-host = s.alletra_primary_base_url
+
+
+def _clean_host(raw: str) -> str:
+    raw = (raw or "").strip().rstrip("/")
+    if not raw.startswith(("http://", "https://")):
+        raw = "https://" + raw
+    return urlparse(raw).hostname or raw
+
+
+host = _clean_host(s.alletra_primary_base_url or s.alletra_base_url)
 user = s.alletra_username
 CANDIDATE_PORTS = [443, 8080, 8443, 5783]
 
@@ -57,22 +68,25 @@ def http_probe(port: int) -> str:
 
 
 async def wsapi_login(scheme: str, port: int) -> str:
+    start = time.monotonic()
     try:
         async with httpx.AsyncClient(
             base_url=f"{scheme}://{host}:{port}",
             verify=False,
-            timeout=12,
+            timeout=httpx.Timeout(50, connect=10.0),
             trust_env=False,
         ) as client:
             resp = await client.post(
                 "/api/v1/credentials",
                 json={"user": user, "password": s.alletra_password},
             )
+            dt = time.monotonic() - start
             if resp.status_code == 201 and resp.json().get("key"):
-                return f"LOGIN OK (HTTP 201, key received) via {scheme}:{port}"
-            return f"HTTP {resp.status_code}: {resp.text[:200]}"
+                return f"LOGIN OK (HTTP 201, key received) via {scheme}:{port} in {dt:.1f}s"
+            return f"HTTP {resp.status_code} in {dt:.1f}s: {resp.text[:200]}"
     except Exception as exc:  # noqa: BLE001
-        return f"FAIL - {type(exc).__name__}: {exc!r}"
+        dt = time.monotonic() - start
+        return f"FAIL after {dt:.1f}s - {type(exc).__name__}: {exc!r}"
 
 
 async def main() -> None:

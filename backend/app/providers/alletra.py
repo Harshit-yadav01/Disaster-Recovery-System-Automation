@@ -188,8 +188,12 @@ class AlletraProvider(StorageProvider):
                     cpgs=cpgs,
                 )
         except httpx.HTTPError as exc:
-            logger.warning("Alletra %s array (%s) unreachable: %s", cfg.role, base, exc)
-            return ArrayData(role=cfg.role, reachable=False, error=str(exc))
+            # Connection-level errors (ConnectError/ConnectTimeout) often have an
+            # empty str(), so include the exception type to keep it diagnosable.
+            detail = str(exc).strip() or exc.__class__.__name__
+            reason = f"{cfg.role} array unreachable at {base}: {detail}"
+            logger.warning("Alletra %s", reason)
+            return ArrayData(role=cfg.role, reachable=False, error=reason)
 
     # ------------------------------------------------------------------ #
     # Public API

@@ -209,6 +209,11 @@
         setBtn("btnUnpresentB", selectedBranch === "failback" && st === "reverse-synced" && exp);
         setBtn("btnRestore", selectedBranch === "failback" && st === "reverse-synced" && !exp);
 
+        // The host picker is only meaningful once the group has failed over; keep
+        // it locked in the normal/unknown state so a host can't be chosen early.
+        const hostSel = $("presentHost");
+        if (hostSel) hostSel.disabled = jobRunning || !(st === "failed-over" || st === "reverse-synced");
+
         // Highlight the current step; pulse whichever Unpresent is the live step.
         document.querySelectorAll("#dropFlow .flow-step").forEach((step) => {
             const btn = step.querySelector(".dr-btn");

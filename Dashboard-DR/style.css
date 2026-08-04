@@ -1631,6 +1631,7 @@ body.light{
 .present-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
 .present-host{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-dim);}
 .present-host select{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:14px;min-width:200px;}
+.present-host select:disabled{opacity:.45;cursor:not-allowed;}
 
 /* Presented-volumes table (dashboard view of `showvlun -t -host <host>`) */
 .presented-volumes{margin-top:14px;}

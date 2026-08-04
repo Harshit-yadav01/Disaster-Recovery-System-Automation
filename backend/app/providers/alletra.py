@@ -152,7 +152,9 @@ class AlletraProvider(StorageProvider):
     @staticmethod
     async def _logout(client: httpx.AsyncClient, key: str, headers: dict) -> None:
         try:
-            await client.delete(f"/api/v1/credentials/{key}", headers=headers)
+            await client.delete(
+                f"/api/v1/credentials/{key}", headers=headers, timeout=10.0
+            )
         except httpx.HTTPError:  # best-effort cleanup
             pass
 
@@ -177,19 +179,23 @@ class AlletraProvider(StorageProvider):
                     "X-HP3PAR-WSAPI-SessionKey": key,
                     "Accept": "application/json",
                 }
-                system = await self._get(client, "/api/v1/system", headers)
-                volumes = (await self._get(client, "/api/v1/volumes", headers)).get("members", [])
-                rcgroups = (await self._get(client, "/api/v1/remotecopygroups", headers)).get("members", [])
-                cpgs = (await self._get(client, "/api/v1/cpgs", headers)).get("members", [])
-                await self._logout(client, key, headers)
-                return ArrayData(
-                    role=cfg.role,
-                    reachable=True,
-                    system=system,
-                    volumes=volumes,
-                    rcgroups=rcgroups,
-                    cpgs=cpgs,
-                )
+                # Always release the session, even if a later call fails, so a
+                # partial cycle never leaks a WSAPI session (the pool is small).
+                try:
+                    system = await self._get(client, "/api/v1/system", headers)
+                    volumes = (await self._get(client, "/api/v1/volumes", headers)).get("members", [])
+                    rcgroups = (await self._get(client, "/api/v1/remotecopygroups", headers)).get("members", [])
+                    cpgs = (await self._get(client, "/api/v1/cpgs", headers)).get("members", [])
+                    return ArrayData(
+                        role=cfg.role,
+                        reachable=True,
+                        system=system,
+                        volumes=volumes,
+                        rcgroups=rcgroups,
+                        cpgs=cpgs,
+                    )
+                finally:
+                    await self._logout(client, key, headers)
         except httpx.HTTPError as exc:
             # Connection-level errors (ConnectError/ConnectTimeout) often have an
             # empty str(), so include the exception type to keep it diagnosable.

@@ -8,7 +8,7 @@
 <title>HPE DR Automation</title>
 
 <link rel="stylesheet" href="fonts.css?v=1">
-<link rel="stylesheet" href="style.css?v=24">
+<link rel="stylesheet" href="style.css?v=25">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <link rel="stylesheet"
@@ -468,10 +468,23 @@ Disaster Recovery Readiness============================ -->
     </div>
 </div>
 
+<!-- Recovery-path selection modal -->
+<div class="dr-modal-overlay" id="pathModal" hidden>
+    <div class="dr-modal">
+        <h3 id="pathModalTitle">Choose path</h3>
+        <p id="pathModalBody"></p>
+        <div class="path-steps" id="pathModalSteps"></div>
+        <div class="dr-modal-actions">
+            <button class="dr-btn ghost" id="pathCancel">Cancel</button>
+            <button class="dr-btn primary" id="pathConfirm">Choose this path</button>
+        </div>
+    </div>
+</div>
+
 <script src="config.js"></script>
 <script src="api.js"></script>
 <script src="script.js?v=realdata4"></script>
-<script src="dr.js?v=warn9"></script>
+<script src="dr.js?v=warn10"></script>
 </body>
 
 </html>

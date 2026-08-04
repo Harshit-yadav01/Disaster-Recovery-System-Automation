@@ -220,6 +220,34 @@
         applyFlowState();
     }
 
+    // What each recovery path does + the ordered steps it will lead through.
+    const PATH_INFO = {
+        revert: {
+            title: "Path to Revert Failover",
+            body: "This path <b>discards</b> the changes made on the DR site during the outage and hands control back to the original Primary. Any host writes made to the DR volumes since the failover will be <b>permanently lost</b>. Replication then resumes in the original direction (Primary &rarr; DR).",
+            steps: ["Unpresent the group's volumes from the DR host", "Revert Failover (discard DR writes, restore original Primary)"],
+        },
+        failback: {
+            title: "Path to Normal Failback",
+            body: "This path <b>keeps</b> the changes made on the DR site and syncs them back to the original Primary before returning to normal. No data written during the outage is lost. Replication ends in the natural direction (Primary &rarr; DR) with the DR changes retained.",
+            steps: ["Reverse Sync (copy DR changes back to the original Primary)", "Unpresent the group's volumes from the DR host", "Restore the original replication direction"],
+        },
+    };
+
+    let pendingBranch = null;
+    function openPathModal(branch) {
+        const info = PATH_INFO[branch];
+        if (!info) { selectBranch(branch); return; }
+        pendingBranch = branch;
+        $("pathModalTitle").textContent = info.title;
+        $("pathModalBody").innerHTML = info.body;
+        $("pathModalSteps").innerHTML =
+            `<div class="path-steps-title">Steps in this path</div><ol>` +
+            info.steps.map((s) => `<li>${s}</li>`).join("") + `</ol>`;
+        $("pathModal").hidden = false;
+    }
+    function closePathModal() { $("pathModal").hidden = true; pendingBranch = null; }
+
     function updateDrOps(status) {
         const banner = $("dropBanner");
         if (!banner) return;
@@ -739,8 +767,8 @@
         const bp = $("btnPresent"); if (bp) bp.addEventListener("click", () => onExec("present", "dropDry"));
         const bua = $("btnUnpresentA"); if (bua) bua.addEventListener("click", () => onExec("unpresent", "dropDry"));
         const bub = $("btnUnpresentB"); if (bub) bub.addEventListener("click", () => onExec("unpresent", "dropDry"));
-        const chr = $("btnChooseRevert"); if (chr) chr.addEventListener("click", () => selectBranch("revert"));
-        const chf = $("btnChooseFailback"); if (chf) chf.addEventListener("click", () => selectBranch("failback"));
+        const chr = $("btnChooseRevert"); if (chr) chr.addEventListener("click", () => openPathModal("revert"));
+        const chf = $("btnChooseFailback"); if (chf) chf.addEventListener("click", () => openPathModal("failback"));
         const cpa = $("btnChangePathA"); if (cpa) cpa.addEventListener("click", () => selectBranch(null));
         const cpb = $("btnChangePathB"); if (cpb) cpb.addEventListener("click", () => selectBranch(null));
         const ph = $("presentHost"); if (ph) ph.addEventListener("change", loadPresentedVolumes);
@@ -766,6 +794,8 @@
         $("drConfirm").addEventListener("click", () => { const op = pendingOp; closeModal(); runOp(op, false); });
         $("drTypeInput").addEventListener("input", validateModal);
         $("drAck").addEventListener("change", validateModal);
+        $("pathCancel").addEventListener("click", closePathModal);
+        $("pathConfirm").addEventListener("click", () => { const b = pendingBranch; closePathModal(); selectBranch(b); });
 
         loadStatus();
         statusTimer = setInterval(() => { if (!jobRunning) loadStatus(); }, 30000);

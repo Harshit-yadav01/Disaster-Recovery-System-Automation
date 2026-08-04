@@ -1019,6 +1019,10 @@ transform:translateY(-6px);
 .dr-type{display:block;color:var(--ink);font-size:14px;margin-bottom:24px;}
 .dr-type input{width:100%;margin-top:10px;padding:13px;border-radius:8px;border:1px solid var(--line);background:var(--panel-deep);color:var(--on-accent);font-size:15px;}
 .dr-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.path-steps{background:var(--panel-deep);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:22px;}
+.path-steps-title{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-dim);font-weight:700;margin-bottom:10px;}
+.path-steps ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px;}
+.path-steps li{color:var(--ink);font-size:14.5px;line-height:1.5;}
 @media(max-width:900px){.dr-arrays{grid-template-columns:1fr;}}
 
 /* ===========================

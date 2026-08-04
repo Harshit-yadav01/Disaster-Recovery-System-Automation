@@ -30,6 +30,8 @@
     const monHistory = [];
     // True while the selected DR host still has this group's volumes presented.
     let hostHasExports = false;
+    // Latest DR flow state name (normal | failed-over | reverse-synced | ...).
+    let currentDrState = null;
 
     // Single container for the unified DR Operations panel. The backend allows
     // only one DR job at a time, so all three actions share one stages/status area.
@@ -172,6 +174,7 @@
         const banner = $("dropBanner");
         if (!banner) return;
         const s = drState(status);
+        currentDrState = s.name;
         const pHost = s.p ? esc(s.p.host) : "primary";
         const dHost = s.d ? esc(s.d.host) : "DR";
         let cls = "info", icon = "fa-circle-info", msg = "";
@@ -646,13 +649,15 @@
 
     // Keep the Unpresent button emphasised while the host still has volumes
     // presented, so it stays visible until the exports are actually removed.
+    // The pulse only appears after a failover + present-to-host (post-failover
+    // states), not when a host happens to have exports during normal operation.
     function highlightUnpresent(on) {
         hostHasExports = !!on;
         const b = $("btnUnpresent");
-        if (b) {
-            b.classList.toggle("attn", !!on);
-            if (on && !jobRunning) b.disabled = false;
-        }
+        if (!b) return;
+        const postFailover = currentDrState === "failed-over" || currentDrState === "reverse-synced";
+        b.classList.toggle("attn", !!on && postFailover);
+        if (on && !jobRunning) b.disabled = false;
     }
 
 

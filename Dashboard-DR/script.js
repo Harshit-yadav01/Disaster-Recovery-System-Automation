@@ -122,20 +122,34 @@ function showDashboardSections(show) {
     ].forEach((id) => toggleSection(id, show));
 }
 
-async function loadDashboard() {
+// Render one section in isolation: reveal it only when its data is present and
+// rendering succeeds, so a failure in one section can't blank the others.
+function renderSection(sectionId, hasData, render) {
     try {
-        const data = await window.api.getDashboard();
-        renderCards(data.cards);
-        renderReplication(data.replication);
-        renderInfra(data.infrastructure);
-        renderStorage(data.storage);
-        renderTimeline(data.timeline);
-        renderReadiness(data.readiness);
-        showDashboardSections(true);
+        if (hasData) { render(); toggleSection(sectionId, true); }
+        else { toggleSection(sectionId, false); }
+    } catch (err) {
+        console.error(`Failed to render ${sectionId}:`, err);
+        toggleSection(sectionId, false);
+    }
+}
+
+async function loadDashboard() {
+    let data;
+    try {
+        data = await window.api.getDashboard();
     } catch (err) {
         console.error("Failed to load dashboard:", err);
         showDashboardSections(false);
+        return;
     }
+    const has = (v) => Array.isArray(v) ? v.length > 0 : !!v;
+    renderSection("cardsGrid", has(data.cards), () => renderCards(data.cards));
+    renderSection("repHealthSection", has(data.replication), () => renderReplication(data.replication));
+    renderSection("infraSection", has(data.infrastructure), () => renderInfra(data.infrastructure));
+    renderSection("storageSection", has(data.storage), () => renderStorage(data.storage));
+    renderSection("timelineSection", has(data.timeline), () => renderTimeline(data.timeline));
+    renderSection("readinessSection", has(data.readiness), () => renderReadiness(data.readiness));
 }
 
 // ---- Live array health (read-only SSH via /api/dr/health) ----------------

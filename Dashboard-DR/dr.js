@@ -188,14 +188,14 @@
                 canF = true; break;
             }
             case "failed-over": {
-                cls = "warn"; icon = "fa-triangle-exclamation";
+                cls = "active"; icon = "fa-circle-check";
                 msg = `Failed over &mdash; DR <b>${dHost}</b> is now Primary (R/W). <b>Present to Host</b> (1b) to expose the volumes to a DR ESXi host, then choose <b>Revert</b> (2a) to discard DR changes or <b>Reverse Sync</b> (2b) to keep them.`;
-                canRevert = true; canR = true; canPresent = true; canUnpresent = true; break;
+                canRevert = true; canR = true; canPresent = true; break;
             }
             case "reverse-synced": {
                 cls = "active"; icon = "fa-circle-check";
                 msg = `Reverse sync complete &mdash; DR <b>${dHost}</b> changes are synced back to <b>${pHost}</b>. Run <b>Restore</b> (step 3) to return to normal.`;
-                canR = true; canS = true; canUnpresent = true; break;
+                canR = true; canS = true; break;
             }
             default: {
                 cls = "down"; icon = "fa-plug-circle-xmark";
@@ -315,9 +315,12 @@
                 if (!job.dry_run && window._drPushNotif) {
                     const ok = job.state === "succeeded";
                     const label = OP_LABEL[job.kind] || job.kind;
+                    let body = ok ? `${label} completed successfully.` : `${label} did not complete — check the steps.`;
+                    if (ok && job.kind === "present")
+                        body = "Volumes presented successfully. Please rescan the host to see the presented volumes.";
                     window._drPushNotif(
                         `${label} ${ok ? "succeeded" : "failed"}`,
-                        ok ? `${label} completed successfully.` : `${label} did not complete — check the steps.`,
+                        body,
                         ok ? "ok" : "error"
                     );
                 }
@@ -326,13 +329,6 @@
                 // table so the operator sees the resulting exports immediately.
                 if (job.kind === "present" || job.kind === "unpresent") {
                     setTimeout(loadPresentedVolumes, 700);
-                }
-                if (job.kind === "present" && job.state === "succeeded" && !job.dry_run && window._drPushNotif) {
-                    window._drPushNotif(
-                        "Rescan the DR host",
-                        "Rescan the storage adapter on the DR host to see the presented volumes.",
-                        "ok"
-                    );
                 }
             }
         } catch (err) {
@@ -370,7 +366,7 @@
         if (op === "failover")
             return "Ensure that the host IOs are stopped to the primary replicated volumes before performing the failover operation. Failover operation will attempt to make the replication role of the secondary volume to new primary. After the failover operation is successful, the replicated volumes on both the sites will become writeable since the Remote Copy links are down. Ensure that the host IOs are written to the volumes of the correct site to avoid data inconsistency. Do you want to perform this action?";
         if (op === "revert")
-            return "Performing this operation will revert the failover on the secondary virtual volume set and restore the original primary as the active site. Any host IOs written to the secondary volumes after the failover will be permanently discarded and cannot be recovered. Ensure that no required data resides on the secondary volumes before proceeding. Do you want to perform this action?";
+            return "Ensure that the group's volumes have been unpresented from the DR host before performing the revert. Performing this operation will revert the failover on the secondary virtual volume set and restore the original primary as the active site. Any host IOs written to the secondary volumes after the failover will be permanently discarded and cannot be recovered. Ensure that no required data resides on the secondary volumes before proceeding. Do you want to perform this action?";
         if (op === "recover")
             return "Performing this operation on failover virtual volume set, will change matching primary virtual volume set on the replication partner system to secondary virtual volume set and then synchronizes. Do you want to perform this action?";
         if (op === "restore")
@@ -657,7 +653,8 @@
         if (!b) return;
         const postFailover = currentDrState === "failed-over" || currentDrState === "reverse-synced";
         b.classList.toggle("attn", !!on && postFailover);
-        if (on && !jobRunning) b.disabled = false;
+        // Unpresent is only interactable once volumes are actually presented.
+        if (!jobRunning) b.disabled = !on;
     }
 
 
